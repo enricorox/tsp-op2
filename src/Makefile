@@ -1,20 +1,12 @@
 OBJS = main.o tsp.o
-HEADERS = tsp.h 
+HEADERS = tsp.h
 EXE = tsp
 all: $(EXE) 
 setting = -1   
 OS := $(shell uname)
 
 # ---------------------------------------------------------------------
-# Compiler selection and libraries for Cplex -- windows
-# ---------------------------------------------------------------------
-#
-#CC = c:/usr/mingw/bin/gcc -mno-cygwin
-#LIBS = -Lc:/usr/cplex -lcplex
-#INC = -Ic:/usr/cplex
-#
-# ---------------------------------------------------------------------
-# Compiler selection and libraries for Cplex 
+# Compiler selection and libraries for Cplex (Linux)
 # ---------------------------------------------------------------------
 # 
 
