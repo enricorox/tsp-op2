@@ -1,4 +1,3 @@
-src/tsp.o
-src/main.o
-src/tsp
+build/*
 .idea/*
+src/build-and-run.sh
