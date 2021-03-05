@@ -1,2 +1,3 @@
 src/tsp.o
 src/main.o
+.idea/*
