@@ -4,16 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define VERBOSE 50
-
 // define a general instance of the problem
 typedef struct{
     // input data
     int tot_nodes;
-    int *xcoord, *ycoord;
-    char *input_file_name; // can be very large if it contains parent directories
+    double *xcoord, *ycoord;
+    char *input_file_name; // can be very large if it contains parent directories!
     double time_limit;
-
+    int verbose;
 } instance;
 
 
