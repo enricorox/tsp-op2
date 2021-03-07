@@ -3,9 +3,13 @@ project(tsp_op2 C)
 
 set(CMAKE_C_STANDARD 11)
 
+# change path if needed
+set(CPLEX_HEADERS "/opt/ibm/ILOG/CPLEX_Studio201/cplex/include/ilcplex")
+set(CPLEX_LIBS "/opt/ibm/ILOG/CPLEX_Studio201/cplex/lib/x86-64_linux/static_pic")
+
 include_directories(src)
-include_directories(/opt/ibm/ILOG/CPLEX_Studio201/cplex/include/ilcplex)
-link_directories(/opt/ibm/ILOG/CPLEX_Studio201/cplex/lib/x86-64_linux/static_pic)
+include_directories(${CPLEX_HEADERS})
+link_directories(${CPLEX_LIBS})
 
 add_executable(tsp
         src/main.c
