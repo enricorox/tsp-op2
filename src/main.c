@@ -143,6 +143,7 @@ void parse_tsp_file(instance *inst){
         for(int i=0; i < inst->tot_nodes; i++)
             printf("n%d = (%f, %f)\n", i+1, inst->xcoord[i], inst->ycoord[i]);
     }
+    fclose(fin);
 }
 
 int main(int argc, char **argv){
