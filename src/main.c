@@ -26,7 +26,7 @@ void parse_command_line(int argc, char **argv, instance *inst){
         if(strcmp(argv[i], "--verbose") == 0){ inst->verbose = atoi(argv[++i]); continue;}
         if (strcmp(argv[i],"--help") == 0) { help = 1; continue; }
 
-        printf(RED "ERROR: Unknown option: %s\n" RESET, argv[i]);
+        printf(RED "[ERROR] Unknown option: %s\n" RESET, argv[i]);
         help = 1; // need to show help if came here
     }
 
@@ -47,7 +47,7 @@ void parse_command_line(int argc, char **argv, instance *inst){
     }
 
     if((inst->input_file_name == NULL) || (inst->time_limit == -1)){
-        printf(RED "ERROR: Check mandatory arguments!\n" RESET);
+        printf(RED "[ERROR] Check mandatory arguments!\n" RESET);
         exit(1);
     }
 }
@@ -61,7 +61,7 @@ void parse_tsp_file(instance *inst){
     // open file
     FILE *fin = fopen(inst->input_file_name, "r");
     if (fin == NULL ){
-        printf(RED "ERROR: input file %s not found!" RESET, inst->input_file_name);
+        printf(RED "[ERROR] input file %s not found!" RESET, inst->input_file_name);
         free_instance(inst);
         exit(1);}
 
@@ -71,20 +71,20 @@ void parse_tsp_file(instance *inst){
     char done = 0;
     while(!done){
         if(fgets(line, sizeof(line), fin) == NULL){
-            printf(RED "ERROR: EOF not found!\n" RESET);
+            printf(RED "[ERROR] EOF not found!\n" RESET);
             free_instance(inst);
             exit(1);
         }
         if(inst->verbose >= 3) printf("Reading line: %s", line);
         param_name = strtok(line, ": \n");
         param = strtok(NULL, ": \n");
-        if(inst->verbose >= 3) printf("param_name= %s, param = %s\n", param_name, param);
+        if(inst->verbose >= 2) printf("param_name = %s, param = %s\n", param_name, param);
 
         if(strncmp(param_name, "NAME", 4) == 0) continue;
 
         if(strncmp(param_name, "TYPE", 4) == 0){
             if(strncmp(param, "TSP",3) != 0){
-                printf(RED "ERROR: TYPE %s not supported yet.\n" RESET, param);
+                printf(RED "[ERROR] TYPE %s not supported yet.\n" RESET, param);
                 free_instance(inst);
                 exit(1);
             }
@@ -100,7 +100,7 @@ void parse_tsp_file(instance *inst){
 
         if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){
             if(strncmp(param, "ATT", 3) != 0){
-                printf(RED "ERROR: EDGE_WEIGHT_TYPE %s not supported yet." RESET, param);
+                printf(RED "[ERROR] EDGE_WEIGHT_TYPE %s not supported yet." RESET, param);
                 free_instance(inst);
                 exit(1);
             }
@@ -109,7 +109,7 @@ void parse_tsp_file(instance *inst){
 
         if(strncmp(param_name, "NODE_COORD_SECTION", 18) == 0) {
             if(inst->tot_nodes <= 0){
-                printf("ERROR: Cannot allocate %d nodes!", inst->tot_nodes);
+                printf("[ERROR] Cannot allocate %d nodes!", inst->tot_nodes);
                 free_instance(inst);
                 exit(1);
             }
@@ -118,19 +118,19 @@ void parse_tsp_file(instance *inst){
 
             for(int n = 0; n < inst->tot_nodes; n++){
                 if((fgets(line, sizeof(line), fin) == NULL) || (strncmp(line, "EOF", 3) == 0)){
-                    printf(RED "ERROR: Too few nodes! Expected %d, got %d\n" RESET, inst->tot_nodes, n);
+                    printf(RED "[ERROR] Too few nodes! Expected %d, got %d\n" RESET, inst->tot_nodes, n);
                     free_instance(inst);
                     exit(1);
                 }
                 if(inst->verbose >= 3) printf("Reading line: %s", line);
                 if(atoi(strtok(line, " ")) != n+1){
-                    printf(RED "ERROR: Nodes must be ordered!\n" RESET);
+                    printf(RED "[ERROR] Nodes must be ordered!\n" RESET);
                     free_instance(inst);
                     exit(1);
                 }
                 inst->xcoord[n] = atof(strtok(NULL, " "));
                 inst->ycoord[n] = atof(strtok(NULL, " "));
-                if(inst->verbose >=3) printf("n%d = (%f, %f)\n", n+1, inst->xcoord[n], inst->ycoord[n]);
+                if(inst->verbose >=2) printf("n%d = (%f, %f)\n", n+1, inst->xcoord[n], inst->ycoord[n]);
             }
             continue;
         }
