@@ -125,7 +125,7 @@ void parse_tsp_file(instance *inst){
                 }
                 if(inst->verbose >= 3) printf("Reading line: %s", line);
                 if(atoi(strtok(line, " ")) != n+1){
-                    printf(BOLDRED "[ERROR] Nodes must be ordeBOLDRED!\n" RESET);
+                    printf(BOLDRED "[ERROR] Nodes must be ordered!\n" RESET);
                     free_instance(inst);
                     exit(1);
                 }
