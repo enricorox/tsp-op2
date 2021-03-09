@@ -26,11 +26,11 @@ void parse_command_line(int argc, char **argv, instance *inst){
         if(strcmp(argv[i], "--verbose") == 0){ inst->verbose = atoi(argv[++i]); continue;}
         if (strcmp(argv[i],"--help") == 0) { help = 1; continue; }
 
-        printf(RED "[ERROR] Unknown option: %s\n" RESET, argv[i]);
+        printf(BOLDRED "[ERROR] Unknown option: %s\n" RESET, argv[i]);
         help = 1; // need to show help if came here
     }
 
-    if(inst->verbose >=2) printf("[*] Command line arguments parsed.\n");
+    if(inst->verbose >=1) printf(BOLDGREEN "[*] Command line arguments parsed.\n" RESET);
 
     // print arguments
     if(inst->verbose >= 2){
@@ -47,13 +47,13 @@ void parse_command_line(int argc, char **argv, instance *inst){
     }
 
     if((inst->input_file_name == NULL) || (inst->time_limit == -1)){
-        printf(RED "[ERROR] Check mandatory arguments!\n" RESET);
+        printf(BOLDRED "[ERROR] Check mandatory arguments!\n" RESET);
         exit(1);
     }
 }
 
 void parse_tsp_file(instance *inst){
-    if(inst->verbose >=2) printf("[ ] Parsing tsp file...\n");
+    if(inst->verbose >=1) printf(BOLDGREEN "[*] Parsing tsp file...\n" RESET);
     // put default instance values
     inst->tot_nodes = -1;
     inst->xcoord = inst->ycoord = NULL;
@@ -61,17 +61,16 @@ void parse_tsp_file(instance *inst){
     // open file
     FILE *fin = fopen(inst->input_file_name, "r");
     if (fin == NULL ){
-        printf(RED "[ERROR] input file %s not found!" RESET, inst->input_file_name);
+        printf(BOLDRED "[ERROR] input file %s not found!" RESET, inst->input_file_name);
         free_instance(inst);
         exit(1);}
 
     // parse file
     char line[256];
     char *param_name, *param;
-    char done = 0;
-    while(!done){
+    while(1){
         if(fgets(line, sizeof(line), fin) == NULL){
-            printf(RED "[ERROR] EOF not found!\n" RESET);
+            printf(BOLDRED "[ERROR] EOF not found!\n" RESET);
             free_instance(inst);
             exit(1);
         }
@@ -80,11 +79,13 @@ void parse_tsp_file(instance *inst){
         param = strtok(NULL, ": \n");
         if(inst->verbose >= 2) printf("param_name = %s, param = %s\n", param_name, param);
 
+        if(strcmp(param_name, "") == 0) continue;
+
         if(strncmp(param_name, "NAME", 4) == 0) continue;
 
         if(strncmp(param_name, "TYPE", 4) == 0){
             if(strncmp(param, "TSP",3) != 0){
-                printf(RED "[ERROR] TYPE %s not supported yet.\n" RESET, param);
+                printf(BOLDRED "[ERROR] TYPE %s not supported yet.\n" RESET, param);
                 free_instance(inst);
                 exit(1);
             }
@@ -100,7 +101,7 @@ void parse_tsp_file(instance *inst){
 
         if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){
             if(strncmp(param, "ATT", 3) != 0){
-                printf(RED "[ERROR] EDGE_WEIGHT_TYPE %s not supported yet." RESET, param);
+                printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE %s not supported yet." RESET, param);
                 free_instance(inst);
                 exit(1);
             }
@@ -118,13 +119,13 @@ void parse_tsp_file(instance *inst){
 
             for(int n = 0; n < inst->tot_nodes; n++){
                 if((fgets(line, sizeof(line), fin) == NULL) || (strncmp(line, "EOF", 3) == 0)){
-                    printf(RED "[ERROR] Too few nodes! Expected %d, got %d\n" RESET, inst->tot_nodes, n);
+                    printf(BOLDRED "[ERROR] Too few nodes! Expected %d, got %d\n" RESET, inst->tot_nodes, n);
                     free_instance(inst);
                     exit(1);
                 }
                 if(inst->verbose >= 3) printf("Reading line: %s", line);
                 if(atoi(strtok(line, " ")) != n+1){
-                    printf(RED "[ERROR] Nodes must be ordered!\n" RESET);
+                    printf(BOLDRED "[ERROR] Nodes must be ordeBOLDRED!\n" RESET);
                     free_instance(inst);
                     exit(1);
                 }
@@ -135,9 +136,12 @@ void parse_tsp_file(instance *inst){
             continue;
         }
 
-        if(strncmp(param_name, "EOF", 3) == 0) done = 1;
+        if(strncmp(param_name, "EOF", 3) == 0) break;
+
+        printf(BOLDRED "[ERROR] param_name = %s is unknown\n" RESET, param_name);
+        exit(1);
     }
-    if(inst->verbose >=2) printf("[*] Tsp file parsed.\n");
+    if(inst->verbose >=1) printf(BOLDGREEN "[*] Tsp file parsed.\n" BOLDGREEN);
     fclose(fin);
 }
 

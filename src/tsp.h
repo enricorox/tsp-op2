@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// shell escape definitions from stackoverflow
+// ANSI escape sequences (from stackoverflow)
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
 #define RED     "\033[31m"      /* Red */
@@ -26,12 +26,13 @@
 
 // define a general instance of the problem
 typedef struct{
-    // input data
-    int tot_nodes;
-    double *xcoord, *ycoord;
+    // from cli
     char *input_file_name; // can be very large if it contains parent directories!
     double time_limit;
     int verbose;
+    // from file
+    int tot_nodes;
+    double *xcoord, *ycoord;
 } instance;
 
 
