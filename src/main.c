@@ -131,7 +131,7 @@ void parse_tsp_file(instance *inst){
             // allocate arrays
             inst->xcoord = (double *) calloc(inst->tot_nodes, sizeof(double));
             inst->ycoord = (double *) calloc(inst->tot_nodes, sizeof(double));
-            int node_number = 0;
+            int node_number;
             // find nodes
             for(int n = 0; n < inst->tot_nodes; n++){
                 if(fgets(line, sizeof(line), fin) == NULL){
