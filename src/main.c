@@ -61,7 +61,7 @@ void parse_tsp_file(instance *inst){
     // open file
     FILE *fin = fopen(inst->input_file_name, "r");
     if (fin == NULL ){
-        printf(BOLDRED "[ERROR] input file %s not found!" RESET, inst->input_file_name);
+        printf(BOLDRED "[ERROR] input file %s not found!\n" RESET, inst->input_file_name);
         free_instance(inst);
         exit(1);}
 
@@ -69,17 +69,25 @@ void parse_tsp_file(instance *inst){
     char line[256];
     char *param_name, *param;
     while(1){
+        // check for error & read line
         if(fgets(line, sizeof(line), fin) == NULL){
             printf(BOLDRED "[ERROR] EOF not found!\n" RESET);
             free_instance(inst);
             exit(1);
         }
+
+        // verbose output
         if(inst->verbose >= 3) printf("Reading line: %s", line);
+
+        // tokenize line
         param_name = strtok(line, ": \n");
         param = strtok(NULL, ": \n");
+
+        // show tokenized line
         if(inst->verbose >= 2) printf("param_name = %s, param = %s\n", param_name, param);
 
-        if(strcmp(param_name, "") == 0) continue;
+        // --------- compare strings --------- //
+        if(strcmp(param_name, "") == 0) continue; // ignore empty lines
 
         if(strncmp(param_name, "NAME", 4) == 0) continue;
 
@@ -96,12 +104,16 @@ void parse_tsp_file(instance *inst){
 
         if(strncmp(param_name, "DIMENSION", 9) == 0){
             inst->tot_nodes = atoi(param);
+            if(inst->tot_nodes <= 0) {
+                printf("[ERROR] Cannot allocate %d nodes!\n", inst->tot_nodes);
+                exit(1);
+            }
             continue;
         }
 
         if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){
             if(strncmp(param, "ATT", 3) != 0){
-                printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE %s not supported yet." RESET, param);
+                printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE %s is not supported yet." RESET, param);
                 free_instance(inst);
                 exit(1);
             }
@@ -109,28 +121,36 @@ void parse_tsp_file(instance *inst){
         }
 
         if(strncmp(param_name, "NODE_COORD_SECTION", 18) == 0) {
+            // check if tot_nodes is given
             if(inst->tot_nodes <= 0){
-                printf("[ERROR] Cannot allocate %d nodes!", inst->tot_nodes);
+                printf("[ERROR] DIMENSION must be before NODE_COORD_SECTION!\n");
                 free_instance(inst);
                 exit(1);
             }
+
+            // allocate arrays
             inst->xcoord = (double *) calloc(inst->tot_nodes, sizeof(double));
             inst->ycoord = (double *) calloc(inst->tot_nodes, sizeof(double));
-
+            int node_number = 0;
+            // find nodes
             for(int n = 0; n < inst->tot_nodes; n++){
-                if((fgets(line, sizeof(line), fin) == NULL) || (strncmp(line, "EOF", 3) == 0)){
-                    printf(BOLDRED "[ERROR] Too few nodes! Expected %d, got %d\n" RESET, inst->tot_nodes, n);
+                if(fgets(line, sizeof(line), fin) == NULL){
+                    printf(BOLDRED "[ERROR] Format error" RESET);
                     free_instance(inst);
                     exit(1);
                 }
                 if(inst->verbose >= 3) printf("Reading line: %s", line);
-                if(atoi(strtok(line, " ")) != n+1){
-                    printf(BOLDRED "[ERROR] Nodes must be ordered!\n" RESET);
+                node_number = atoi(strtok(line, " "));
+                if(node_number != n+1){
+                    printf((node_number == 0) ? BOLDRED "[ERROR] Too few nodes!\n" RESET:
+                        BOLDRED "[ERROR] Nodes must be ordered!\n" RESET);
                     free_instance(inst);
                     exit(1);
                 }
                 inst->xcoord[n] = atof(strtok(NULL, " "));
                 inst->ycoord[n] = atof(strtok(NULL, " "));
+
+                // show node
                 if(inst->verbose >=2) printf("n%d = (%f, %f)\n", n+1, inst->xcoord[n], inst->ycoord[n]);
             }
             continue;
@@ -138,6 +158,7 @@ void parse_tsp_file(instance *inst){
 
         if(strncmp(param_name, "EOF", 3) == 0) break;
 
+        // default case
         printf(BOLDRED "[ERROR] param_name = %s is unknown\n" RESET, param_name);
         exit(1);
     }
