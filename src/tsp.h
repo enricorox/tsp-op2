@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <cplex.h>
+
 // ANSI escape sequences (from stackoverflow)
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -35,6 +37,6 @@ typedef struct{
     double *xcoord, *ycoord;
 } instance;
 
-
+int TSPOpt(instance inst);
 
 #endif // end ifndef

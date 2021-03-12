@@ -83,27 +83,32 @@ void parse_tsp_file(instance *inst){
         param_name = strtok(line, ": \n");
         param = strtok(NULL, ": \n");
 
-        // show tokenized line
-        if(inst->verbose >= 2) printf("param_name = %s, param = %s\n", param_name, param);
-
         // --------- compare strings --------- //
         if(strcmp(param_name, "") == 0) continue; // ignore empty lines
 
-        if(strncmp(param_name, "NAME", 4) == 0) continue;
+        if(strncmp(param_name, "NAME", 4) == 0) {
+            if(inst->verbose >=2) printf("NAME = %s\n", param);
+            continue;
+        }
 
         if(strncmp(param_name, "TYPE", 4) == 0){
+            if(inst->verbose >=2) printf("TYPE = %s\n", param);
             if(strncmp(param, "TSP",3) != 0){
-                printf(BOLDRED "[ERROR] TYPE %s not supported yet.\n" RESET, param);
+                printf(BOLDRED "[ERROR] TYPE = %s not supported yet.\n" RESET, param);
                 free_instance(inst);
                 exit(1);
             }
             continue;
         }
 
-        if(strncmp(param_name, "COMMENT", 7) == 0) continue;
+        if(strncmp(param_name, "COMMENT", 7) == 0) {
+            if(inst->verbose >=2) printf("COMMENT = %s\n", param);
+            continue;
+        }
 
         if(strncmp(param_name, "DIMENSION", 9) == 0){
             inst->tot_nodes = atoi(param);
+            if(inst->verbose >=2) printf("DIMENSION = %d\n", inst->tot_nodes);
             if(inst->tot_nodes <= 0) {
                 printf("[ERROR] Cannot allocate %d nodes!\n", inst->tot_nodes);
                 exit(1);
@@ -112,8 +117,9 @@ void parse_tsp_file(instance *inst){
         }
 
         if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){
+            if(inst->verbose >=2) printf("EDGE_WEIGHT_TYPE = %s\n", param);
             if(strncmp(param, "ATT", 3) != 0){
-                printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE %s is not supported yet." RESET, param);
+                printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE = %s is not supported yet." RESET, param);
                 free_instance(inst);
                 exit(1);
             }
@@ -127,7 +133,7 @@ void parse_tsp_file(instance *inst){
                 free_instance(inst);
                 exit(1);
             }
-
+            if(inst->verbose >=2) printf("NODE_COORD_SECTION:\n");
             // allocate arrays
             inst->xcoord = (double *) calloc(inst->tot_nodes, sizeof(double));
             inst->ycoord = (double *) calloc(inst->tot_nodes, sizeof(double));
@@ -135,7 +141,7 @@ void parse_tsp_file(instance *inst){
             // find nodes
             for(int n = 0; n < inst->tot_nodes; n++){
                 if(fgets(line, sizeof(line), fin) == NULL){
-                    printf(BOLDRED "[ERROR] Format error" RESET);
+                    printf(BOLDRED "[ERROR] I/O error" RESET);
                     free_instance(inst);
                     exit(1);
                 }
@@ -156,13 +162,16 @@ void parse_tsp_file(instance *inst){
             continue;
         }
 
-        if(strncmp(param_name, "EOF", 3) == 0) break;
+        if(strncmp(param_name, "EOF", 3) == 0) {
+            if(inst->verbose >=2) printf("End Of File\n");
+            break;
+        }
 
         // default case
         printf(BOLDRED "[ERROR] param_name = %s is unknown\n" RESET, param_name);
         exit(1);
     }
-    if(inst->verbose >=1) printf(BOLDGREEN "[*] Tsp file parsed.\n" BOLDGREEN);
+    if(inst->verbose >=1) printf(BOLDGREEN "[*] Tsp file parsed.\n" RESET);
     fclose(fin);
 }
 
@@ -170,5 +179,18 @@ int main(int argc, char **argv){
     instance inst;
     parse_command_line(argc, argv, &inst);
     parse_tsp_file(&inst);
+    for(int i = 0; i < inst.tot_nodes; i++)
+        for(int j = i+1; j < inst.tot_nodes; j++){
+            int pos1 = i * inst.tot_nodes + j - (( i + 1 ) * ( i + 2 )) / 2;
+            //int pos2 = i * (inst.tot_nodes) + j - 1 - (i * (i + 1))/2;
+            int pos2 = j -1 + i*(inst.tot_nodes-1 ) - i*(i+1)/2;
+            if(pos1 != pos2)
+                printf("pos1 = %d != pos2 = %d in (%d,%d)\n", pos1, pos2, i, j);
+            else
+                printf("pos1 = %d = pos2 = %d in (%d,%d)\n", pos1, pos2, i, j);
+        }
+
+    TSPOpt(inst);
+
     free_instance(&inst); // release memory!
 }
