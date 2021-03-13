@@ -1,5 +1,29 @@
 #include "tsp.h"
 
+void free_instance(instance *inst){
+    free(inst->xcoord);
+    free(inst->ycoord);
+    free(inst->input_file_name);
+    free(inst->name);
+    free(inst->comment);
+}
+
+void init_instance(instance *inst){
+    // from cli
+    inst->input_file_name = NULL;
+    inst->time_limit = -1;
+    inst->verbose = 1;
+
+    // from file
+    inst->name = NULL;
+    inst->comment = NULL;
+    inst->tot_nodes = 0;
+    inst->xcoord = inst->ycoord = NULL;
+
+    // other parameters
+    inst->integer_costs = 0;
+}
+
 // return CPLEX column position given the coordinates of an adjacency cell
 int xpos(int i, int j, instance *inst) {
     if((i == j) || (j < 0) || (i < 0) || (j >= inst->tot_nodes) || (i >= inst->tot_nodes)){
@@ -22,10 +46,9 @@ double dist(int i, int j, instance *inst) {
     return dis+0.0;
 }
 
-int build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
-    double zero = 0.0;
+void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
     char binary = 'B';
-    int err = 0;
+    int err;
     // allocate array for variable's name
     char **cname = (char **) calloc(1, sizeof(char *));		// string array required by cplex...
     cname[0] = (char *) calloc(128, sizeof(char));

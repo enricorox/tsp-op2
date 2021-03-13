@@ -1,27 +1,22 @@
 #include <string.h>
 #include "tsp.h"
 #include "plot.h"
-#define USAGE   "Usage: ./tsp --file <input-file> --time-limit <time> [options]\n" \
-                "--file <input-file>                file in tsp format\n"\
+#define USAGE   "Usage: ./tsp --file <file-tsp> [options]\n"\
+                "Options:" \
                 "--time-limit <time>                max overall time in seconds\n" \
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
 
-void free_instance(instance *inst){
-    free(inst->xcoord);
-    free(inst->ycoord);
-}
-
 void parse_command_line(int argc, char **argv, instance *inst){
-    // put default instance value
-    inst->input_file_name = NULL;
-    inst->time_limit = -1;
-    inst->verbose = 1;
-
-    // parse cli
-    char help = (argc >= 3) ? 0 : 1;
+        // parse cli
+    char help = (argc >= 2) ? 0 : 1;
     for(int i = 1; i < argc; i++){
-        if(strcmp(argv[i],"--file") == 0){ inst->input_file_name = argv[++i]; continue;}
+        if(strcmp(argv[i],"--file") == 0){
+            i++;
+            inst->input_file_name = malloc(strlen(argv[i])+1);
+            strcpy(inst->input_file_name, argv[i]);
+            continue;
+        }
         if(strcmp(argv[i],"--time-limit") == 0){ inst->time_limit = atof(argv[++i]); continue;}
         if(strcmp(argv[i], "--verbose") == 0){ inst->verbose = atoi(argv[++i]); continue;}
         if (strcmp(argv[i],"--help") == 0) { help = 1; continue; }
@@ -46,18 +41,13 @@ void parse_command_line(int argc, char **argv, instance *inst){
         exit(1);
     }
 
-    if((inst->input_file_name == NULL) || (inst->time_limit == -1)){
+    if(inst->input_file_name == NULL){
         printf(BOLDRED "[ERROR] Check mandatory arguments!\n" RESET);
         exit(1);
     }
 }
 
 void parse_tsp_file(instance *inst){
-    // put default instance values
-    inst->tot_nodes = -1;
-    inst->xcoord = inst->ycoord = NULL;
-    inst->integer_costs = 0;
-
     // open file
     FILE *fin = fopen(inst->input_file_name, "r");
     if (fin == NULL ){
@@ -87,7 +77,9 @@ void parse_tsp_file(instance *inst){
         if(strcmp(param_name, "") == 0) continue; // ignore empty lines
 
         if(strncmp(param_name, "NAME", 4) == 0) {
-            if(inst->verbose >=2) printf("NAME = %s\n", param);
+            inst->name = malloc(strlen(param)+1);
+            strcpy(inst->name, param);
+            if(inst->verbose >=2) printf("NAME = %s\n", inst->name);
             continue;
         }
 
@@ -102,7 +94,11 @@ void parse_tsp_file(instance *inst){
         }
 
         if(strncmp(param_name, "COMMENT", 7) == 0) {
-            if(inst->verbose >=2) printf("COMMENT = %s\n", param);
+            inst->comment = malloc(strlen(line)+1);
+            // revert tokenization!
+            if(strtok(NULL,"\n") != NULL) param[strlen(param)] = ' ';
+            strcpy(inst->comment, param);
+            if(inst->verbose >=2) printf("COMMENT = %s\n", inst->comment);
             continue;
         }
 
@@ -177,6 +173,8 @@ void parse_tsp_file(instance *inst){
 
 int main(int argc, char **argv){
     instance inst;
+    init_instance(&inst);
+
     parse_command_line(argc, argv, &inst);
     parse_tsp_file(&inst);
 

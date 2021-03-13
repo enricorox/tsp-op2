@@ -34,6 +34,8 @@ typedef struct{
     int verbose;
 
     // from file
+    char * name;
+    char * comment;
     int tot_nodes;
     double *xcoord, *ycoord;
 
@@ -41,9 +43,11 @@ typedef struct{
     char integer_costs;
 } instance;
 
+void init_instance(instance * inst);
+void free_instance(instance *inst);
 char * TSPOpt(instance *inst);
 double dist(int i, int j, instance *inst);
 int xpos(int i, int j, instance *inst);
-int build_model(instance *inst, CPXENVptr env, CPXLPptr lp);
+void build_model(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 #endif // end ifndef
