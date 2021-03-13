@@ -1,10 +1,10 @@
 #include <string.h>
 #include "tsp.h"
-
+#include "plot.h"
 #define USAGE   "Usage: ./tsp --file <input-file> --time-limit <time> [options]\n" \
                 "--file <input-file>                file in tsp format\n"\
                 "--time-limit <time>                max overall time in seconds\n" \
-                "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=very verbose\n" \
+                "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
 
 void free_instance(instance *inst){
@@ -30,7 +30,7 @@ void parse_command_line(int argc, char **argv, instance *inst){
         help = 1; // need to show help if came here
     }
 
-    if(inst->verbose >=1) printf(BOLDGREEN "[*] Command line arguments parsed.\n" RESET);
+    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Command line arguments parsed.\n" RESET);
 
     // print arguments
     if(inst->verbose >= 2){
@@ -53,10 +53,10 @@ void parse_command_line(int argc, char **argv, instance *inst){
 }
 
 void parse_tsp_file(instance *inst){
-    if(inst->verbose >=1) printf(BOLDGREEN "[*] Parsing tsp file...\n" RESET);
     // put default instance values
     inst->tot_nodes = -1;
     inst->xcoord = inst->ycoord = NULL;
+    inst->integer_costs = 0;
 
     // open file
     FILE *fin = fopen(inst->input_file_name, "r");
@@ -118,7 +118,7 @@ void parse_tsp_file(instance *inst){
 
         if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){
             if(inst->verbose >=2) printf("EDGE_WEIGHT_TYPE = %s\n", param);
-            if(strncmp(param, "ATT", 3) != 0){
+            if(strncmp(param, "EUC_2D", 3) != 0){
                 printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE = %s is not supported yet." RESET, param);
                 free_instance(inst);
                 exit(1);
@@ -171,7 +171,7 @@ void parse_tsp_file(instance *inst){
         printf(BOLDRED "[ERROR] param_name = %s is unknown\n" RESET, param_name);
         exit(1);
     }
-    if(inst->verbose >=1) printf(BOLDGREEN "[*] Tsp file parsed.\n" RESET);
+    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Tsp file parsed.\n" RESET);
     fclose(fin);
 }
 
@@ -179,18 +179,9 @@ int main(int argc, char **argv){
     instance inst;
     parse_command_line(argc, argv, &inst);
     parse_tsp_file(&inst);
-    for(int i = 0; i < inst.tot_nodes; i++)
-        for(int j = i+1; j < inst.tot_nodes; j++){
-            int pos1 = i * inst.tot_nodes + j - (( i + 1 ) * ( i + 2 )) / 2;
-            //int pos2 = i * (inst.tot_nodes) + j - 1 - (i * (i + 1))/2;
-            int pos2 = j -1 + i*(inst.tot_nodes-1 ) - i*(i+1)/2;
-            if(pos1 != pos2)
-                printf("pos1 = %d != pos2 = %d in (%d,%d)\n", pos1, pos2, i, j);
-            else
-                printf("pos1 = %d = pos2 = %d in (%d,%d)\n", pos1, pos2, i, j);
-        }
 
-    TSPOpt(inst);
+    char *rxstar = TSPOpt(&inst);
+    plot(&inst, rxstar);
 
     free_instance(&inst); // release memory!
 }

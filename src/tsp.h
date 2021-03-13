@@ -32,11 +32,18 @@ typedef struct{
     char *input_file_name; // can be very large if it contains parent directories!
     double time_limit;
     int verbose;
+
     // from file
     int tot_nodes;
     double *xcoord, *ycoord;
+
+    // other parameters
+    char integer_costs;
 } instance;
 
-int TSPOpt(instance inst);
+char * TSPOpt(instance *inst);
+double dist(int i, int j, instance *inst);
+int xpos(int i, int j, instance *inst);
+int build_model(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 #endif // end ifndef
