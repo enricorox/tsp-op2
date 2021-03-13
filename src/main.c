@@ -1,6 +1,7 @@
 #include <string.h>
 #include "tsp.h"
 #include "plot.h"
+
 #define USAGE   "Usage: ./tsp --file <file-tsp> [options]\n"\
                 "Options:" \
                 "--time-limit <time>                max overall time in seconds\n" \
@@ -8,7 +9,7 @@
                 "--help                             show this help\n\n"
 
 void parse_command_line(int argc, char **argv, instance *inst){
-        // parse cli
+    // parse cli
     char help = (argc >= 2) ? 0 : 1;
     for(int i = 1; i < argc; i++){
         if(strcmp(argv[i],"--file") == 0){
@@ -61,9 +62,7 @@ void parse_tsp_file(instance *inst){
     while(1){
         // check for error & read line
         if(fgets(line, sizeof(line), fin) == NULL){
-            printf(BOLDRED "[ERROR] EOF not found!\n" RESET);
-            free_instance(inst);
-            exit(1);
+            printf(BOLDRED "[WARN] EOF not found!\n" RESET);
         }
 
         // verbose output
@@ -113,6 +112,7 @@ void parse_tsp_file(instance *inst){
         }
 
         if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){
+            inst->integer_costs = 0;
             if(inst->verbose >=2) printf("EDGE_WEIGHT_TYPE = %s\n", param);
             if(strncmp(param, "EUC_2D", 3) != 0){
                 printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE = %s is not supported yet." RESET, param);

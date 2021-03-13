@@ -59,7 +59,7 @@ void plot(instance *inst, char const *rxstar){
             ymin = inst->ycoord[i];
     }
 
-    fprintf(fcom, "plot [%f:%f][%f:%f] '" GPDATA "' with circles\n",
+    fprintf(fcom, "plot [%f:%f][%f:%f] '" GPDATA "' with circles fillcolor 'cyan' fillstyle solid border linecolor 'blue'\n",
             xmin-5, xmax+5,
             ymin-5, ymax+5);
 
