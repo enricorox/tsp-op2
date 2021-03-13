@@ -9,7 +9,6 @@ Install [IMB CPLEX Optimizer](https://www.ibm.com/analytics/cplex-optimizer).
 ## How to run
 Type `./tsp --help` to see available parameters.  
 Mandatory parameters are:
-1. `--file <file>` specify tsp file path 
-2. `--time-limit <time>` specify overall time in seconds
+1. `--file <file>` specify tsp file path
 ## Data
 You can download tsp input files from [here](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/).
