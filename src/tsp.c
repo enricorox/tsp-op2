@@ -75,28 +75,32 @@ void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
             // define its upper bound
             double ub = 1.0;
             if ( (err = CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname)) ) {
-                printf(BOLDRED "[ERROR] CPXnewcols(): error code %d" RESET, err);
+                printf(BOLDRED "[ERROR] CPXnewcols(): error code %d\n" RESET, err);
                 exit(1);
             }
-            // check xpos on the fly (can be removed?)
-            if ( (err = CPXgetnumcols(env,lp)-1 != xpos(i,j, inst)) ) {
-                printf(BOLDRED "[ERROR] CPXgetnumcols() error code %d" RESET, err);
+            // check xpos on the fly (can be removed if I'm sure it's ok?)
+            if (CPXgetnumcols(env,lp)-1 != xpos(i,j, inst)) {
+                printf(BOLDRED "[ERROR] xpos() got a bad index!\n" RESET);
             }
         }
     }
 
     // add the 2 degree constraints
     for ( int h = 0; h < inst->tot_nodes; h++ ){
-        int lastrow = CPXgetnumrows(env,lp);
+        // define right hand side
         double rhs = 2.0;
-        char sense = 'E';                            // 'E' for equality constraint
+        // define the type of constraint (array) ('E' for equality)
+        char sense = 'E';
+        // define constraint name (array)
         sprintf(cname[0], "degree(%d)", h+1);
         if ( (err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
-            printf(BOLDRED "[ERROR] CPXnewrows() error code %d" RESET, err);
+            printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
             exit(1);
         }
+        int lastrow = CPXgetnumrows(env,lp) - 1;
+        // change last row coefficients from 0 to 1
         for ( int i = 0; i < inst->tot_nodes; i++ ){
-            if ( i == h ) continue;
+            if ( i == h ) continue; // skip auto-loops
             if ( (err = CPXchgcoef(env, lp, lastrow, xpos(i,h, inst), 1.0)) ) {
                 printf(BOLDRED "[ERROR] Cannot change coefficient: error code %d", err);
             }

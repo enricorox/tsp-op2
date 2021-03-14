@@ -1,8 +1,8 @@
 NAME : pla33810
-COMMENT : Programmed logic array (Johnson)
+COMMENT : Programmed logic array (Johnson, modded by Enrico)
 TYPE : TSP
 DIMENSION : 33810
-EDGE_WEIGHT_TYPE : CEIL_2D
+EDGE_WEIGHT_TYPE : EUC_2D
 NODE_COORD_SECTION 
 1 455050 14175
 2 454850 0

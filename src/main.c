@@ -132,7 +132,7 @@ void parse_tsp_file(instance *inst, char opt){
             inst->integer_costs = 0;
             if(inst->verbose >=2) printf("EDGE_WEIGHT_TYPE = %s\n", param);
             if(strncmp(param, "EUC_2D", 3) != 0){
-                printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE = %s is not supported yet." RESET, param);
+                printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE = %s is not supported yet.\n" RESET, param);
                 free_instance(inst);
                 exit(1);
             }
