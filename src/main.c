@@ -187,5 +187,8 @@ int main(int argc, char **argv){
     char *rxstar = TSPOpt(&inst);
     plot(&inst, rxstar);
 
-    free_instance(&inst); // release memory!
+    // release memory!
+    free(rxstar);
+    free_instance(&inst);
+    return 0;
 }
