@@ -2,6 +2,7 @@
 #include "tsp.h"
 #include "plot.h"
 
+#define BUFLEN 256
 #define USAGE   "Usage: ./tsp --file <file-tsp> [options]\n"\
                 "Options:" \
                 "--time-limit <time>                max overall time in seconds\n" \
@@ -57,7 +58,7 @@ void parse_tsp_file(instance *inst){
         exit(1);}
 
     // parse file
-    char line[256];
+    char line[BUFLEN];
     char *param_name, *param;
     while(1){
         // check for error & read line
@@ -76,7 +77,7 @@ void parse_tsp_file(instance *inst){
         if(strcmp(param_name, "") == 0) continue; // ignore empty lines
 
         if(strncmp(param_name, "NAME", 4) == 0) {
-            inst->name = malloc(strlen(param)+1);
+            inst->name = malloc(sizeof(param)+1);
             strcpy(inst->name, param);
             if(inst->verbose >=2) printf("NAME = %s\n", inst->name);
             continue;
@@ -93,7 +94,7 @@ void parse_tsp_file(instance *inst){
         }
 
         if(strncmp(param_name, "COMMENT", 7) == 0) {
-            inst->comment = malloc(strlen(line)+1);
+            inst->comment = malloc(sizeof(line)+1);
             // revert tokenization!
             if(strtok(NULL,"\n") != NULL) param[strlen(param)] = ' ';
             strcpy(inst->comment, param);
@@ -124,15 +125,20 @@ void parse_tsp_file(instance *inst){
 
         if(strncmp(param_name, "NODE_COORD_SECTION", 18) == 0) {
             // check if tot_nodes is given
-            if(inst->tot_nodes <= 0){
+            if (inst->tot_nodes <= 0) {
                 printf("[ERROR] DIMENSION must be before NODE_COORD_SECTION!\n");
                 free_instance(inst);
                 exit(1);
             }
-            if(inst->verbose >=2) printf("NODE_COORD_SECTION:\n");
+            if (inst->verbose >= 2) printf("NODE_COORD_SECTION:\n");
             // allocate arrays
             inst->xcoord = (double *) calloc(inst->tot_nodes, sizeof(double));
             inst->ycoord = (double *) calloc(inst->tot_nodes, sizeof(double));
+            if (inst->xcoord == NULL || inst->ycoord == NULL){
+                printf(BOLDRED "[ERROR] Can't allocate memory: too many nodes!\n" RESET);
+                free_instance(inst);
+                exit(1);
+            }
             int node_number;
             // find nodes
             for(int n = 0; n < inst->tot_nodes; n++){

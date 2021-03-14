@@ -120,7 +120,7 @@ char * TSPOpt(instance *inst){
         printf(BOLDRED "[ERROR] CPXmipopt(env, lp): error code %d\n" RESET, err);
         exit(1);
     }
-    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization Finished!\n" RESET);
+    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization finished!\n" RESET);
 
     // get solution
     int tot_cols = CPXgetnumcols(env, lp);
