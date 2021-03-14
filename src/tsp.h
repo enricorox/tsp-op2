@@ -29,15 +29,17 @@
 // define a general instance of the problem
 typedef struct{
     // from cli
-    char *input_file_name; // can be very large if it contains parent directories!
+    char *input_tsp_file_name; // can be very large if it contains parent directories!
+    char *input_opt_file_name;
     double time_limit;
     int verbose;
 
-    // from file
-    char * name;
-    char * comment;
+    // from file (2nd cell for opt tour)
+    char * name[2];
+    char * comment[2];
     int tot_nodes;
     double *xcoord, *ycoord;
+    int *opt_tour;
 
     // other parameters
     char integer_costs;

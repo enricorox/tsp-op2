@@ -1,30 +1,37 @@
 #include "tsp.h"
 
 void free_instance(instance *inst){
+    free(inst->input_tsp_file_name);
+    free(inst->input_opt_file_name);
+    free(inst->name[0]);
+    free(inst->name[1]);
+    free(inst->comment[0]);
+    free(inst->comment[1]);
+
     free(inst->xcoord);
     free(inst->ycoord);
-    free(inst->input_file_name);
-    free(inst->name);
-    free(inst->comment);
+    free(inst->opt_tour);
 }
 
 void init_instance(instance *inst){
     // from cli
-    inst->input_file_name = NULL;
+    inst->input_tsp_file_name = NULL;
+    inst->input_opt_file_name = NULL;
     inst->time_limit = -1;
     inst->verbose = 1;
 
     // from file
-    inst->name = NULL;
-    inst->comment = NULL;
-    inst->tot_nodes = 0;
+    inst->name[0] = inst->name[1] = NULL;
+    inst->comment[0] = inst->comment[1] = NULL;
+    inst->tot_nodes = -1;
     inst->xcoord = inst->ycoord = NULL;
+    inst->opt_tour = NULL;
 
     // other parameters
     inst->integer_costs = 0;
 }
 
-// return CPLEX column position given the coordinates of an adjacency cell
+// return CPLEX column position given the coordinates of a cell in adjacency matrix
 int xpos(int i, int j, instance *inst) {
     if((i == j) || (j < 0) || (i < 0) || (j >= inst->tot_nodes) || (i >= inst->tot_nodes)){
         printf(BOLDRED"[ERROR] xpos(): unexpected i = %d, j = %d\n" RESET, i, j);
@@ -42,24 +49,30 @@ double dist(int i, int j, instance *inst) {
     double dx = inst->xcoord[i] - inst->xcoord[j];
     double dy = inst->ycoord[i] - inst->ycoord[j];
     if ( !inst->integer_costs ) return sqrt(dx*dx+dy*dy);
-    int dis = (int) (sqrt(dx*dx+dy*dy) + 0.499999999); 					// nearest integer
+    int dis = (int) (sqrt(dx*dx+dy*dy) + 0.499999999); // nearest integer
     return dis+0.0;
 }
 
 void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
     char binary = 'B';
     int err;
-    // allocate array for variable's name
-    char **cname = (char **) calloc(1, sizeof(char *));		// string array required by cplex...
+
+    // allocate array for variable's name with trick
+    //char **cname = (char **) calloc(1, sizeof(char *)); // don't need to dynamically allocate 1 element
+    char *cname[1]; // string array required by cplex
     cname[0] = (char *) calloc(128, sizeof(char));
 
     // add binary vars x(i,j) for i < j
     // one for each edge
     for ( int i = 0; i < inst->tot_nodes; i++ ){
         for ( int j = i+1; j < inst->tot_nodes; j++ ){
+            // define variable name
             sprintf(cname[0], "x(%d,%d)", i+1,j+1);
+            // define its cost
             double obj = dist(i,j,inst); // cost == distance
+            // define its lower bound
             double lb = 0.0;
+            // define its upper bound
             double ub = 1.0;
             if ( (err = CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname)) ) {
                 printf(BOLDRED "[ERROR] CPXnewcols(): error code %d" RESET, err);
@@ -93,7 +106,6 @@ void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
     if (inst->verbose >= 0) CPXwriteprob(env, lp, "model.lp", NULL);
 
     free(cname[0]);
-    free(cname);
 
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Model built.\n" RESET);
 }

@@ -28,7 +28,7 @@ void plot(instance *inst, char const *rxstar){
                            "unset xtics\n"
                            "unset ytics\n"
                            "unset border\n",
-                           inst->name, inst->comment);
+                           inst->name[0], inst->comment[0]);
 
     // defining edges
     for(int i = 0; i < inst->tot_nodes; i++)
@@ -39,9 +39,17 @@ void plot(instance *inst, char const *rxstar){
                         inst->xcoord[j], inst->ycoord[j]);
 
     // define labels
-    for(int i = 0; i < inst->tot_nodes; i++)
-        fprintf(fcom, "set label '%d' at %f,%f front offset 0.2,0.2 font 'Symbol,4'\n",
-                i+1, inst->xcoord[i], inst->ycoord[i]);
+    for(int i = 0; i < inst->tot_nodes; i++) {
+        fprintf(fcom, "set label '%d' at %f,%f front offset 0.2,0.2 font ',4'\n",
+                i + 1, inst->xcoord[i], inst->ycoord[i]);
+        if(inst->opt_tour != NULL) {
+                int curr = inst->opt_tour[i] - 1;
+                int next = inst->opt_tour[(i + 1 == inst->tot_nodes) ? 0 : i + 1] - 1;
+                fprintf(fcom, "set arrow from %f,%f to %f,%f nohead lc rgb 'green' dt '-'\n",
+                    inst->xcoord[curr], inst->ycoord[curr],
+                    inst->xcoord[next], inst->ycoord[next]);
+            }
+    }
 
     // find max and min for border
     double xmax = inst->xcoord[0];
@@ -73,5 +81,7 @@ void plot(instance *inst, char const *rxstar){
         exit(1);
     }
     if(inst->verbose) printf(BOLDGREEN "[INFO] Tour drawn in " FILESVG "\n" RESET);
-    if(inst->verbose >=1) system("eog " FILESVG);
+    if(inst->verbose >=1)
+        if(system("eog " FILESVG))
+            printf(BOLDRED "[WARN] Sorry, Eye Of Gnome not found.\n" RESET);
 }
