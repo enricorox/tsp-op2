@@ -13,7 +13,8 @@ link_directories(${CPLEX_LIBS_STATIC})
 
 add_executable(tsp
         src/main.c
-        src/tsp.c
-        src/tsp.h src/plot.c src/plot.h)
+        src/tsp.c src/tsp.h
+        src/plot.c src/plot.h
+        src/utils.c src/utils.h)
 
 target_link_libraries(tsp cplex m pthread dl)

@@ -1,36 +1,5 @@
 #include "tsp.h"
 
-void free_instance(instance *inst){
-    free(inst->input_tsp_file_name);
-    free(inst->input_opt_file_name);
-    free(inst->name[0]);
-    free(inst->name[1]);
-    free(inst->comment[0]);
-    free(inst->comment[1]);
-
-    free(inst->xcoord);
-    free(inst->ycoord);
-    free(inst->opt_tour);
-}
-
-void init_instance(instance *inst){
-    // from cli
-    inst->input_tsp_file_name = NULL;
-    inst->input_opt_file_name = NULL;
-    inst->time_limit = -1;
-    inst->verbose = 1;
-
-    // from file
-    inst->name[0] = inst->name[1] = NULL;
-    inst->comment[0] = inst->comment[1] = NULL;
-    inst->tot_nodes = -1;
-    inst->xcoord = inst->ycoord = NULL;
-    inst->opt_tour = NULL;
-
-    // other parameters
-    inst->integer_costs = 0;
-}
-
 // return CPLEX column position given the coordinates of a cell in adjacency matrix
 int xpos(int i, int j, instance *inst) {
     if((i == j) || (j < 0) || (i < 0) || (j >= inst->tot_nodes) || (i >= inst->tot_nodes)){

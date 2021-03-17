@@ -3,7 +3,6 @@
 //
 
 #include "plot.h"
-#include "tsp.h"
 
 void plot(instance *inst, char const *rxstar){
     // write points to file
