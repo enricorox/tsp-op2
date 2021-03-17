@@ -28,7 +28,7 @@ void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
 
     // allocate array for variable's name with trick
     //char **cname = (char **) calloc(1, sizeof(char *)); // don't need to dynamically allocate 1 element
-    char *cname[1]; // string array required by cplex
+    char *cname[1]; // string array required by cplex for batch insertions
     cname[0] = (char *) calloc(128, sizeof(char));
 
     // add binary vars x(i,j) for i < j
@@ -60,30 +60,37 @@ void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
         double rhs = 2.0;
         // define the type of constraint (array) ('E' for equality)
         char sense = 'E';
-        // define constraint name (array)
+        // define constraint name
         sprintf(cname[0], "degree(%d)", h+1);
-        if ( (err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
+        if ((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
             printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
             exit(1);
         }
-        int lastrow = CPXgetnumrows(env,lp) - 1;
+        int lastrow_idx = CPXgetnumrows(env, lp) - 1; // row index starts from 0
         // change last row coefficients from 0 to 1
         for ( int i = 0; i < inst->tot_nodes; i++ ){
             if ( i == h ) continue; // skip auto-loops
-            if ( (err = CPXchgcoef(env, lp, lastrow, xpos(i,h, inst), 1.0)) ) {
+            if ( (err = CPXchgcoef(env, lp, lastrow_idx, xpos(i, h, inst), 1.0)) ) {
                 printf(BOLDRED "[ERROR] Cannot change coefficient: error code %d", err);
             }
         }
     }
 
-    if (inst->verbose >= 0) CPXwriteprob(env, lp, "model.lp", NULL);
+    // write model to file
+    char file_name[strlen(inst->name[0])];
+    sprintf(file_name, "%s-model.lp", inst->name[0]);
+    CPXwriteprob(env, lp, file_name, NULL);
 
     free(cname[0]);
 
-    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Model built.\n" RESET);
+    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Model saved to %s\n" RESET, file_name);
 }
 
 char * TSPOpt(instance *inst){
+    // performance check
+    struct timeval start, stop;
+    gettimeofday(&start, NULL);
+
     // open CPLEX model
     int err;
     CPXENVptr env = CPXopenCPLEX(&err);
@@ -105,7 +112,6 @@ char * TSPOpt(instance *inst){
         printf(BOLDRED "[ERROR] CPXmipopt(env, lp): error code %d\n" RESET, err);
         exit(1);
     }
-    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization finished!\n" RESET);
 
     // get solution
     int tot_cols = CPXgetnumcols(env, lp);
@@ -114,6 +120,10 @@ char * TSPOpt(instance *inst){
         printf(BOLDRED "[ERROR] CPXgetx(env, lp, xstar, 0, tot_cols-1): error code %d\n" RESET, err);
         exit(1);
     }
+
+    gettimeofday(&stop, NULL);
+    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization finished in %ld seconds!\n" RESET,
+                                 stop.tv_sec-start.tv_sec);
 
     // scan adjacency matrix and print values
     if(inst->verbose >=2) printf("Solution found:\n");

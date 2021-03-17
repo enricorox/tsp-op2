@@ -34,7 +34,7 @@ void free_instance(instance *inst){
     free(inst->opt_tour);
 }
 
-void parse_command_line(int argc, char **argv, instance *inst){
+void parse_cli(int argc, char **argv, instance *inst){
     // parse cli
     char help = (argc >= 2) ? 0 : 1;
     for(int i = 1; i < argc; i++){
@@ -62,9 +62,12 @@ void parse_command_line(int argc, char **argv, instance *inst){
 
     // print arguments
     if(inst->verbose >= 2){
-        if(inst->verbose >= 3){ printf(USAGE);}
+        if(inst->verbose >= 3)
+            printf(USAGE);
+
         printf("Command line arguments found (include defaults):\n");
         printf("--file          %s\n", inst->input_tsp_file_name);
+        printf("--opt-tour      %s\n", inst->input_opt_file_name);
         printf("--time-limit    %f\n", inst->time_limit);
         printf("--verbose       %d\n", inst->verbose);
     }
@@ -80,9 +83,18 @@ void parse_command_line(int argc, char **argv, instance *inst){
     }
 }
 
-void parse_tsp_file(instance *inst, char opt){
+void parse_file(instance *inst, char *file_name){
+    // reading optimal tour file?
+    char opt;
+    if(file_name == inst->input_tsp_file_name)
+        opt = 0;
+    else if(file_name == inst->input_opt_file_name)
+        opt = 1;
+    else{
+        printf(BOLDRED "[ERROR] parse_file(): Illegal argument" RESET);
+        exit(1);
+    }
     // open file
-    char *file_name = opt ? inst->input_opt_file_name : inst->input_tsp_file_name;
     FILE *fin = fopen(file_name, "r");
     if (fin == NULL ){
         printf(BOLDRED "[ERROR] input file %s not found!\n" RESET, inst->input_tsp_file_name);

@@ -8,11 +8,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
-// ANSI escape sequences (from stackoverflow)
+// ANSI escape sequences
 #define RESET   "\033[0m"
-#define BOLDRED     "\033[1m\033[31m"      /* Bold Red */
-#define BOLDGREEN   "\033[1m\033[32m"      /* Bold Green */
+#define BOLDRED     "\033[1m\033[31m"
+#define BOLDGREEN   "\033[1m\033[32m"
 
 
 #define BUFLEN 256
@@ -22,6 +23,7 @@
                 "--time-limit <time>                max overall time in seconds\n" \
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
+
 
 // define a general instance of the problem
 typedef struct{
@@ -42,9 +44,9 @@ typedef struct{
     char integer_costs;
 } instance;
 
-void parse_command_line(int argc, char **argv, instance *inst);
+void parse_cli(int argc, char **argv, instance *inst);
 
-void parse_tsp_file(instance *inst, char opt);
+void parse_file(instance *inst, char *file_name);
 
 void init_instance(instance * inst);
 
