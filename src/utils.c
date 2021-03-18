@@ -9,6 +9,8 @@ void init_instance(instance *inst){
     inst->input_tsp_file_name = NULL;
     inst->input_opt_file_name = NULL;
     inst->time_limit = -1;
+    inst->gui = true;
+    inst->do_plot = true;
     inst->verbose = 1;
 
     // from file
@@ -36,7 +38,7 @@ void free_instance(instance *inst){
 
 void parse_cli(int argc, char **argv, instance *inst){
     // parse cli
-    char help = (argc >= 2) ? 0 : 1;
+    bool help = (argc >= 2) ? false : true;
     for(int i = 1; i < argc; i++){
         if(strcmp(argv[i],"--file") == 0){
             i++;
@@ -51,6 +53,8 @@ void parse_cli(int argc, char **argv, instance *inst){
             continue;
         }
         if(strcmp(argv[i],"--time-limit") == 0){ inst->time_limit = atof(argv[++i]); continue;}
+        if(strcmp(argv[i],"--no-gui") == 0){ inst->gui = false; continue;}
+        if(strcmp(argv[i],"--no-plot") == 0){ inst->do_plot = false; continue;}
         if(strcmp(argv[i], "--verbose") == 0){ inst->verbose = atoi(argv[++i]); continue;}
         if (strcmp(argv[i],"--help") == 0) { help = 1; continue; }
 
@@ -85,11 +89,11 @@ void parse_cli(int argc, char **argv, instance *inst){
 
 void parse_file(instance *inst, char *file_name){
     // reading optimal tour file?
-    char opt;
+    bool opt;
     if(file_name == inst->input_tsp_file_name)
-        opt = 0;
+        opt = false;
     else if(file_name == inst->input_opt_file_name)
-        opt = 1;
+        opt = true;
     else{
         printf(BOLDRED "[ERROR] parse_file(): Illegal argument" RESET);
         exit(1);
@@ -111,7 +115,7 @@ void parse_file(instance *inst, char *file_name){
         }
 
         // debug output
-        if(inst->verbose >= 3) printf("Reading line: %s", line);
+        if(inst->verbose >= 3) printf("[DEBUG] Reading line: %s", line);
 
         // tokenize line
         param_name = strtok(line, ": \n");
@@ -165,7 +169,7 @@ void parse_file(instance *inst, char *file_name){
         }
 
         if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){
-            inst->integer_costs = 0;
+            inst->integer_costs = false;
             if(inst->verbose >=2) printf("EDGE_WEIGHT_TYPE = %s\n", param);
             if(strncmp(param, "EUC_2D", 3) != 0){
                 printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE = %s is not supported yet.\n" RESET, param);
@@ -219,7 +223,7 @@ void parse_file(instance *inst, char *file_name){
         if(strncmp(param_name, "TOUR_SECTION", 12) == 0){
             // check if tot_nodes is given
             if (inst->tot_nodes <= 0) {
-                printf("[ERROR] DIMENSION must be before TOUR_SECTION!\n");
+                printf(BOLDRED "[ERROR] DIMENSION must be before TOUR_SECTION!\n" RESET);
                 free_instance(inst);
                 exit(1);
             }
@@ -240,7 +244,7 @@ void parse_file(instance *inst, char *file_name){
                     free_instance(inst);
                     exit(1);
                 }
-                if(inst->verbose >= 3) printf("Reading line: %s", line);
+                if(inst->verbose >= 3) printf("[DEBUG] Reading line: %s", line);
                 node = atoi(line);
                 if(node <= 0){
                     printf((node == 0) ? BOLDRED "[ERROR] Too few nodes!\n" RESET:

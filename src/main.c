@@ -11,7 +11,7 @@ int main(int argc, char **argv){
 
     char *rxstar = TSPOpt(&inst);
 
-    plot(&inst, rxstar);
+    if(inst.do_plot) plot(&inst, rxstar);
 
     // release memory!
     free(rxstar);

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <stdbool.h>
 
 // ANSI escape sequences
 #define RESET   "\033[0m"
@@ -16,11 +17,15 @@
 #define BOLDGREEN   "\033[1m\033[32m"
 
 
-#define BUFLEN 256
-#define USAGE   "Usage: ./tsp --file <file-tsp> [options]\n"\
-                "Options:\n"                                  \
-                "--opt-tour <file-opt-tsp>          tsp file with optimal tour\n"\
+#define BUFLEN 1024
+#define USAGE   "TSP solver 0.x, a solver for Travelling Salesman Problem with CPLEX\n" \
+                "Author: Enrico Rossignolo - 1218951 - enrico.rossignolo@studenti.unipd.it\n\n" \
+                "Usage: ./tsp --file <file-tsp> [options]\n" \
+                "Options:\n"\
+                "--opt-tour <file-opt-tsp>          tsp file with optimal tour\n" \
                 "--time-limit <time>                max overall time in seconds\n" \
+                "--no-gui                           don't use gui\n" \
+                "--no-plot                          don't plot\n" \
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
 
@@ -31,6 +36,8 @@ typedef struct{
     char *input_tsp_file_name; // can be very large if it contains parent directories!
     char *input_opt_file_name;
     double time_limit;
+    bool gui;
+    bool do_plot;
     int verbose;
 
     // from file (2nd cell for opt tour)
@@ -41,7 +48,7 @@ typedef struct{
     int *opt_tour;
 
     // other parameters
-    char integer_costs;
+    bool integer_costs;
 } instance;
 
 void parse_cli(int argc, char **argv, instance *inst);
