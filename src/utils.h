@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <stdbool.h>
 
 // ANSI escape sequences
@@ -16,15 +15,15 @@
 #define BOLDRED     "\033[1m\033[31m"
 #define BOLDGREEN   "\033[1m\033[32m"
 
-
 #define BUFLEN 1024
+
 #define USAGE   "TSP solver 0.x, a solver for Travelling Salesman Problem with CPLEX\n" \
                 "Author: Enrico Rossignolo - 1218951 - enrico.rossignolo@studenti.unipd.it\n\n" \
                 "Usage: ./tsp --file <file-tsp> [options]\n" \
                 "Options:\n"\
                 "--opt-tour <file-opt-tsp>          tsp file with optimal tour\n" \
                 "--time-limit <time>                max overall time in seconds\n" \
-                "--no-gui                           don't use gui\n" \
+                "--no-gui                           don't use GUI\n" \
                 "--no-plot                          don't plot\n" \
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"

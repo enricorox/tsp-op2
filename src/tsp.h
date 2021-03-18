@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "plot.h"
 
+#include <sys/time.h>
 #include <cplex.h>
 
 char * TSPOpt(instance *inst);

@@ -38,41 +38,53 @@ void free_instance(instance *inst){
 
 void parse_cli(int argc, char **argv, instance *inst){
     // parse cli
-    bool help = (argc >= 2) ? false : true;
+    bool help = false;
     for(int i = 1; i < argc; i++){
         if(strcmp(argv[i],"--file") == 0){
-            i++;
-            inst->input_tsp_file_name = malloc(strlen(argv[i]) + 1);
-            strcpy(inst->input_tsp_file_name, argv[i]);
+            if(argv[++i] != NULL) {
+                inst->input_tsp_file_name = malloc(strlen(argv[i]) + 1);
+                strcpy(inst->input_tsp_file_name, argv[i]);
+            }
             continue;
         }
         if(strcmp(argv[i],"--opt-tour") == 0){
-            i++;
-            inst->input_opt_file_name = malloc(strlen(argv[i]) + 1);
-            strcpy(inst->input_opt_file_name, argv[i]);
+            if(argv[++i] != NULL) {
+                inst->input_opt_file_name = malloc(strlen(argv[i]) + 1);
+                strcpy(inst->input_opt_file_name, argv[i]);
+            }
             continue;
         }
-        if(strcmp(argv[i],"--time-limit") == 0){ inst->time_limit = atof(argv[++i]); continue;}
+        if(strcmp(argv[i],"--time-limit") == 0){
+            if(argv[++i] != NULL)
+                inst->time_limit = atof(argv[i]);
+            continue;
+        }
         if(strcmp(argv[i],"--no-gui") == 0){ inst->gui = false; continue;}
         if(strcmp(argv[i],"--no-plot") == 0){ inst->do_plot = false; continue;}
-        if(strcmp(argv[i], "--verbose") == 0){ inst->verbose = atoi(argv[++i]); continue;}
-        if (strcmp(argv[i],"--help") == 0) { help = 1; continue; }
+        if(strcmp(argv[i], "--verbose") == 0){
+            if(argv[++i] != NULL)
+                inst->verbose = atoi(argv[i]);
+            continue;
+        }
+        if(strcmp(argv[i],"--help") == 0) { help = 1; continue; }
 
         printf(BOLDRED "[ERROR] Unknown option: %s\n" RESET, argv[i]);
-        help = 1; // need to show help if came here
+        help = true; // need to show help if came here
     }
 
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Command line arguments parsed.\n" RESET);
 
     // print arguments
     if(inst->verbose >= 2){
-        if(inst->verbose >= 3)
+        if(inst->verbose >= 3 && !help)
             printf(USAGE);
 
         printf("Command line arguments found (include defaults):\n");
         printf("--file          %s\n", inst->input_tsp_file_name);
         printf("--opt-tour      %s\n", inst->input_opt_file_name);
         printf("--time-limit    %f\n", inst->time_limit);
+        printf("--no-gui        %s\n", inst->gui?"false":"true");
+        printf("--no-plot       %s\n", inst->do_plot?"false":"true");
         printf("--verbose       %d\n", inst->verbose);
     }
 
