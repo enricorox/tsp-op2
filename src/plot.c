@@ -43,14 +43,17 @@ void plot(instance *inst, char const *rxstar){
                            inst->name[0], inst->comment[0], image_name);
 
     // defining edges
-    for(int i = 0; i < inst->tot_nodes; i++)
-        for(int j = 0; j < inst->tot_nodes; j++)// TODO fix j = i+1
-            if(rxstar[xpos_compact(i, j, inst)]) // TODO fix
+    for(int i = 0; i < inst->tot_nodes; i++) {
+        int s = inst->directed?0:i+1;
+        for (int j = s; j < inst->tot_nodes; j++) {
+            int idx = inst->directed?xpos_compact(i, j, inst):xpos(i, j, inst);
+            if (rxstar[idx])
                 fprintf(fcom, "set arrow arrowstyle %d from %f,%f to %f,%f\n", // TODO fix nohead
                         inst->directed?1:2,
                         inst->xcoord[i], inst->ycoord[i],
                         inst->xcoord[j], inst->ycoord[j]);
-
+        }
+    }
     // define labels
     for(int i = 0; i < inst->tot_nodes; i++) {
         fprintf(fcom, "set label '%d' at %f,%f front offset 0.2,0.2 font ',4'\n",
@@ -65,7 +68,7 @@ void plot(instance *inst, char const *rxstar){
             }
     }
 
-    // find max and min for border
+    // find max and min for nice margin
     double xmax = inst->xcoord[0];
     double xmin = inst->xcoord[0];
     double ymax = inst->ycoord[0];
@@ -101,6 +104,8 @@ void plot(instance *inst, char const *rxstar){
         exit(1);
     }
     if(inst->verbose) printf(BOLDGREEN "[INFO] Tour drawn in %s\n" RESET, image_name);
+
+    // show image
     if(inst->verbose >=1 && inst->gui) {
         sprintf(command, "/usr/bin/eog %s", image_name);
         if (system(command))

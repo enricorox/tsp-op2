@@ -22,6 +22,7 @@
                 "Usage: ./tsp --file <file-tsp> [options]\n" \
                 "Options:\n"\
                 "--opt-tour <file-opt-tsp>          tsp file with optimal tour\n" \
+                "--formulation <form>               standard, MTZ or GG" \
                 "--time-limit <time>                max overall time in seconds\n" \
                 "--no-gui                           don't use GUI\n" \
                 "--no-plot                          don't plot\n" \
@@ -29,7 +30,7 @@
                 "--help                             show this help\n\n"
 
 enum formulation_t {STANDARD, MTZ, GG};
-char *formulation_names[3];
+const char *formulation_names[3];
 
 // define a general instance of the problem
 typedef struct{
@@ -52,6 +53,11 @@ typedef struct{
     // other parameters
     bool integer_costs;
     bool directed;
+
+    // results
+    long time;
+    double *xstar;
+    int err;
 } instance;
 
 void parse_cli(int argc, char **argv, instance *inst);

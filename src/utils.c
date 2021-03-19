@@ -6,7 +6,7 @@
 #include <cplex.h>
 #include "utils.h"
 
-char *formulation_names[] = {"standard", "MTZ", "GG"};
+const char *formulation_names[] = {"standard", "MTZ", "GG"};
 
 void init_instance(instance *inst){
     // from cli
@@ -26,8 +26,13 @@ void init_instance(instance *inst){
     inst->opt_tour = NULL;
 
     // other parameters
-    inst->integer_costs = 0;
-    inst->directed = 0;
+    inst->integer_costs = false;
+    inst->directed = false;
+
+    // results
+    inst->time = -1;
+    inst->xstar = NULL;
+    inst->err = 0;
 }
 void free_instance(instance *inst){
     free(inst->input_tsp_file_name); free(inst->input_opt_file_name);
@@ -39,6 +44,8 @@ void free_instance(instance *inst){
     free(inst->xcoord); free(inst->ycoord);
 
     free(inst->opt_tour);
+
+    free(inst->xstar);
 }
 
 void parse_cli(int argc, char **argv, instance *inst){
@@ -61,13 +68,15 @@ void parse_cli(int argc, char **argv, instance *inst){
         }
         if(strcmp(argv[i],"--formulation") == 0){
             if(argv[++i] != NULL) {
-                if(strcasecmp(argv[i], formulation_names[STANDARD]) == 0)
+                bool found = false;
+                for(int k = 0; k < sizeof(enum formulation_t); k++)
+                    if(strcasecmp(argv[i], formulation_names[k]) == 0) {
+                        inst->formulation = k;
+                        found = true;
+                        break;
+                    }
+                if(!found){
                     inst->formulation = STANDARD;
-                else if(strcasecmp(argv[i], formulation_names[MTZ]) == 0)
-                    inst->formulation = MTZ;
-                else if(strcasecmp(argv[i], formulation_names[GG]) == 0)
-                    inst->formulation = GG;
-                else{
                     printf(BOLDRED "[WARN] Unknown formulation: using STANDARD\n" RESET);
                 }
             }
