@@ -63,18 +63,12 @@ void parse_cli(int argc, char **argv, instance *inst){
             if(argv[++i] != NULL) {
                 if(strcasecmp(argv[i], formulation_names[STANDARD]) == 0)
                     inst->formulation = STANDARD;
-                else if(strcasecmp(argv[i], formulation_names[MTZ]) == 0) {
+                else if(strcasecmp(argv[i], formulation_names[MTZ]) == 0)
                     inst->formulation = MTZ;
-                    inst->directed = true;
-                }
-                else if(strcasecmp(argv[i], formulation_names[GG]) == 0) {
+                else if(strcasecmp(argv[i], formulation_names[GG]) == 0)
                     inst->formulation = GG;
-                    inst->directed = true;
-                }
                 else{
-                    printf(BOLDRED "[ERROR] Unknown formulation!\n" RESET);
-                    free_instance(inst);
-                    exit(1);
+                    printf(BOLDRED "[WARN] Unknown formulation: using STANDARD\n" RESET);
                 }
             }
             continue;
@@ -210,7 +204,7 @@ void parse_file(instance *inst, char *file_name){
             inst->integer_costs = false;
             if(inst->verbose >=2) printf("EDGE_WEIGHT_TYPE = %s\n", param);
             if(strncmp(param, "EUC_2D", 3) != 0){
-                printf(BOLDRED "[WARN] EDGE_WEIGHT_TYPE = %s is not supported yet. Using EUC_2D instead.\n" RESET, param);
+                printf(BOLDRED "[WARN] EDGE_WEIGHT_TYPE = %s is not supported yet: using EUC_2D instead.\n" RESET, param);
             }
             continue;
         }
@@ -317,7 +311,7 @@ void parse_file(instance *inst, char *file_name){
         }
 
         // default case
-        printf(BOLDRED "[WARN] param_name = %s is unknown\n" RESET, param_name);
+        printf(BOLDRED "[WARN] param_name = %s is unknown: ignored.\n" RESET, param_name);
     }
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] File %s parsed.\n" RESET, file_name);
     fclose(fin);

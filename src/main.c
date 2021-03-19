@@ -17,9 +17,5 @@ int main(int argc, char **argv){
     // release memory!
     free(rxstar);
     free_instance(&inst);
-
-    int block = 0;
-    for(int i = 0; i < argc; i++) block += strlen(argv[i]);
-    printf("Still reachable: %d\n", block);
     return 0;
 }

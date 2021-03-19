@@ -1,22 +1,16 @@
 #ifndef TSP_H_ // begin ifndef
 #define TSP_H_ // block multiple tsp.h includes
 
-#include "utils.h"
-#include "plot.h"
-
 #include <sys/time.h>
 #include <cplex.h>
 
+#include "utils.h"
+#include "plot.h"
+#include "standard_formulation.h"
+#include "MTZ_formulation.h"
+
 char * TSPOpt(instance *inst);
 
-double dist(int i, int j, instance *inst);
-
-int xpos(int i, int j, instance *inst);
-
-int xpos_compact(int i, int j, instance *inst);
-
-void build_model(instance *inst, CPXENVptr env, CPXLPptr lp);
-
-void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
+void save_model(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 #endif // end ifndef
