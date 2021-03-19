@@ -5,11 +5,9 @@
 #ifndef TSP_OP2_STANDARD_FORMULATION_H
 #define TSP_OP2_STANDARD_FORMULATION_H
 
-#include "tsp.h"
+#include <cplex.h>
 
-int xpos(int i, int j, instance *inst);
-
-double dist(int i, int j, instance *inst);
+#include "tsp_functions.h"
 
 void build_model(instance *inst, CPXENVptr env, CPXLPptr lp);
 

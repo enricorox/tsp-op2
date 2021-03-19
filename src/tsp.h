@@ -9,7 +9,7 @@
 #include "standard_formulation.h"
 #include "MTZ_formulation.h"
 
-char * TSPOpt(instance *inst);
+void TSPOpt(instance *inst);
 
 void save_model(instance *inst, CPXENVptr env, CPXLPptr lp);
 

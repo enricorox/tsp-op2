@@ -1,6 +1,6 @@
 #include "tsp.h"
 
-char * TSPOpt(instance *inst){
+void TSPOpt(instance *inst){
     // performance check
     struct timeval start, stop;
     gettimeofday(&start, NULL);
@@ -49,6 +49,8 @@ char * TSPOpt(instance *inst){
     double *xstar = (double *) calloc(tot_cols, sizeof(double));
     if((err = CPXgetx(env, lp, xstar, 0, tot_cols-1))){
         printf(BOLDRED "[ERROR] CPXgetx(env, lp, xstar, 0, tot_cols-1): error code %d\n" RESET, err);
+        free(xstar);
+        free_instance(inst);
         exit(1);
     }
 
@@ -59,9 +61,10 @@ char * TSPOpt(instance *inst){
     // scan adjacency matrix and print values
     if(inst->verbose >=2) printf("Solution found:\n");
     // rounded solution
-    char *rxstar = (char *) calloc(tot_cols, sizeof(char));
+    double *rxstar = (double *) calloc(tot_cols, sizeof(double));
     for(int i = 0; i < inst->tot_nodes; i++){
         for ( int j = 0; j < inst->tot_nodes; j++ ){ // TODO j = i+1
+            //printf("x(%d,%d) = %f\n", i, j, xstar[xpos_compact(i,j,inst)]);
             if (xstar[xpos_compact(i,j,inst)] > 0.5) { // deal with numeric errors TODO fix
                 if(inst->verbose >= 2) printf("x(%3d,%3d) = 1\n", i + 1, j + 1);
                 rxstar[xpos_compact(i, j, inst)] = 1; // TODO fix
@@ -69,12 +72,12 @@ char * TSPOpt(instance *inst){
         }
     }
 
+    inst->xstar = rxstar;
     free(xstar);
 
     // free and close cplex model
     CPXfreeprob(env, &lp);
     CPXcloseCPLEX(&env);
-    return rxstar;
 }
 
 // write model to file

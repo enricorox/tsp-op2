@@ -3,7 +3,7 @@
 //
 #include "plot.h"
 
-void plot(instance *inst, char const *rxstar){
+void plot(instance *inst, double const *rxstar){
     // write points to file
     char data_file[BUFLEN];
     sprintf(data_file, "%s-gnuplot-data.dat",inst->name[0]);
@@ -16,13 +16,17 @@ void plot(instance *inst, char const *rxstar){
     if(inst->verbose >= 1) printf(BOLDGREEN "[INFO] Points written to file %s\n" RESET, data_file);
 
     // write gnuplot script
-    char commands_file[BUFLEN];
-    sprintf(commands_file, "%s-gnuplot-commands-model-%s.plt", inst->name[0],
+    char *script_template = "%s.%s-gnuplot-script.plt";
+    char script_name[strlen(script_template) + strlen(inst->name[0]) +
+            + strlen(formulation_names[inst->formulation]) + 1];
+    sprintf(script_name, script_template, inst->name[0],
             formulation_names[inst->formulation]);
-    FILE *fcom = fopen(commands_file,"w");
+    FILE *fcom = fopen(script_name, "w");
 
-    char image_name[BUFLEN];
-    sprintf(image_name,"%s-graph-model-%s.svg", inst->name[0],
+    char *image_template = "%s.%s-graph.svg";
+    char image_name[strlen(image_template) + strlen(inst->name[0]) +
+            + strlen(formulation_names[inst->formulation]) + 1];
+    sprintf(image_name, image_template, inst->name[0],
             formulation_names[inst->formulation]);
 
     // write graph properties
@@ -48,8 +52,8 @@ void plot(instance *inst, char const *rxstar){
         for (int j = s; j < inst->tot_nodes; j++) {
             int idx = inst->directed?xpos_compact(i, j, inst):xpos(i, j, inst);
             if (rxstar[idx])
-                fprintf(fcom, "set arrow arrowstyle %d from %f,%f to %f,%f\n", // TODO fix nohead
-                        inst->directed?1:2,
+                fprintf(fcom, "set arrow arrowstyle %d from %f,%f to %f,%f\n",
+                        inst->directed?1:2, // choose right arrow style
                         inst->xcoord[i], inst->ycoord[i],
                         inst->xcoord[j], inst->ycoord[j]);
         }
@@ -62,7 +66,7 @@ void plot(instance *inst, char const *rxstar){
                 int curr = inst->opt_tour[i] - 1;
                 int next = inst->opt_tour[(i + 1 == inst->tot_nodes) ? 0 : i + 1] - 1;
                 fprintf(fcom, "set arrow arrowstyle %d from %f,%f to %f,%f\n",
-                        inst->directed?3:4,
+                        inst->directed?3:4, // choose right arrow style
                         inst->xcoord[curr], inst->ycoord[curr],
                         inst->xcoord[next], inst->ycoord[next]);
             }
@@ -93,11 +97,11 @@ void plot(instance *inst, char const *rxstar){
 
     fclose(fcom);
 
-    if(inst->verbose >= 1) printf(BOLDGREEN "[INFO] Gnuplot script written to file %s\n" RESET, commands_file);
+    if(inst->verbose >= 1) printf(BOLDGREEN "[INFO] Gnuplot script written to file %s\n" RESET, script_name);
 
     // run gnuplot
     char command[BUFLEN];
-    sprintf(command, "/usr/bin/gnuplot -c %s", commands_file);
+    sprintf(command, "/usr/bin/gnuplot -c %s", script_name);
     if(system(command)) {
         printf(BOLDRED "[ERROR] Please install gnuplot!\n" RESET);
         free_instance(inst);

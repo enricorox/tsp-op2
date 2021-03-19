@@ -7,6 +7,6 @@
 #include "utils.h"
 #include "tsp.h"
 
-void plot(instance *inst, char const *rxstar);
+void plot(instance *inst, double const *rxstar);
 
 #endif //TSP_OP2_PLOT_H

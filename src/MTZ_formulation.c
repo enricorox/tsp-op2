@@ -4,25 +4,6 @@
 
 #include "MTZ_formulation.h"
 
-int xpos_compact(int i, int j, instance *inst){
-    if((j < 0) || (i < 0) || (j >= inst->tot_nodes) || (i >= inst->tot_nodes)){
-        printf(BOLDRED"[ERROR] xpos_compact(): unexpected i = %d, j = %d\n" RESET, i, j);
-        free_instance(inst);
-        exit(1);
-    }
-    int pos = i * inst->tot_nodes + j;
-    return pos;
-}
-
-int upos(int i, instance *inst){
-    if(i < 0 || i >= inst->tot_nodes){
-        printf(BOLDRED"[ERROR] xpos(): unexpected i = %d\n" RESET, i);
-        exit(1);
-    }
-    int upos = inst->tot_nodes * inst->tot_nodes + i;
-    return upos;
-}
-
 void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
     char binary = 'B';
     char integer = 'I';

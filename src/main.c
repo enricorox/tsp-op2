@@ -10,12 +10,11 @@ int main(int argc, char **argv){
     parse_file(&inst, inst.input_tsp_file_name);
     if(inst.input_opt_file_name != NULL) parse_file(&inst, inst.input_opt_file_name);
 
-    char *rxstar = TSPOpt(&inst);
+    TSPOpt(&inst);
 
-    if(inst.do_plot) plot(&inst, rxstar);
+    if(inst.do_plot && !inst.err) plot(&inst, inst.xstar);
 
     // release memory!
-    free(rxstar);
     free_instance(&inst);
     return 0;
 }

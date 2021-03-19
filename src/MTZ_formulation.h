@@ -5,11 +5,10 @@
 #ifndef TSP_OP2_MTZ_FORMULATION_H
 #define TSP_OP2_MTZ_FORMULATION_H
 
-#include "tsp.h"
+#include <cplex.h>
 
-int xpos_compact(int i, int j, instance *inst);
-
-int upos(int i, instance *inst);
+#include "utils.h"
+#include "tsp_functions.h"
 
 void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
 

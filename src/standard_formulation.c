@@ -4,30 +4,6 @@
 
 #include "standard_formulation.h"
 
-double dist(int i, int j, instance *inst) {
-    double dx = inst->xcoord[i] - inst->xcoord[j];
-    double dy = inst->ycoord[i] - inst->ycoord[j];
-    if ( !inst->integer_costs ) return sqrt(dx*dx+dy*dy);
-    int dis = (int) (sqrt(dx*dx+dy*dy) + 0.499999999); // nearest integer
-    return dis+0.0;
-}
-
-// return CPLEX column position given the coordinates of a cell in adjacency matrix
-int xpos(int i, int j, instance *inst) {
-    if((i == j) || (j < 0) || (i < 0) || (j >= inst->tot_nodes) || (i >= inst->tot_nodes)){
-        printf(BOLDRED"[ERROR] xpos(): unexpected i = %d, j = %d\n" RESET, i, j);
-        free_instance(inst);
-        exit(1);
-    }
-    // Check if it's a cell above diagonal
-    if(i > j) return xpos(j, i, inst);
-
-    // Below formula derives from
-    // pos = j - 1 + i*n - sum_1^i(k+1)
-    int pos = i * inst->tot_nodes + j - (( i + 1 ) * ( i + 2 )) / 2;
-    return pos;
-}
-
 void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
     char binary = 'B';
     int err;
