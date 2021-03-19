@@ -13,6 +13,10 @@ double dist(int i, int j, instance *inst);
 
 int xpos(int i, int j, instance *inst);
 
+int xpos_compact(int i, int j, instance *inst);
+
 void build_model(instance *inst, CPXENVptr env, CPXLPptr lp);
+
+void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 #endif // end ifndef

@@ -3,12 +3,17 @@
 //
 
 #include <stdlib.h>
+#include <cplex.h>
 #include "utils.h"
+
+char *formulation_names[] = {"standard", "MTZ", "GG"};
+
 void init_instance(instance *inst){
     // from cli
     inst->input_tsp_file_name = NULL;
     inst->input_opt_file_name = NULL;
-    inst->time_limit = -1;
+    inst->formulation = STANDARD;
+    inst->time_limit = CPX_INFBOUND;
     inst->gui = true;
     inst->do_plot = true;
     inst->verbose = 1;
@@ -22,17 +27,17 @@ void init_instance(instance *inst){
 
     // other parameters
     inst->integer_costs = 0;
+    inst->directed = 0;
 }
 void free_instance(instance *inst){
-    free(inst->input_tsp_file_name);
-    free(inst->input_opt_file_name);
-    free(inst->name[0]);
-    free(inst->name[1]);
-    free(inst->comment[0]);
-    free(inst->comment[1]);
+    free(inst->input_tsp_file_name); free(inst->input_opt_file_name);
 
-    free(inst->xcoord);
-    free(inst->ycoord);
+    free(inst->name[0]); free(inst->name[1]);
+
+    free(inst->comment[0]); free(inst->comment[1]);
+
+    free(inst->xcoord); free(inst->ycoord);
+
     free(inst->opt_tour);
 }
 
@@ -51,6 +56,26 @@ void parse_cli(int argc, char **argv, instance *inst){
             if(argv[++i] != NULL) {
                 inst->input_opt_file_name = malloc(strlen(argv[i]) + 1);
                 strcpy(inst->input_opt_file_name, argv[i]);
+            }
+            continue;
+        }
+        if(strcmp(argv[i],"--formulation") == 0){
+            if(argv[++i] != NULL) {
+                if(strcasecmp(argv[i], formulation_names[STANDARD]) == 0)
+                    inst->formulation = STANDARD;
+                else if(strcasecmp(argv[i], formulation_names[MTZ]) == 0) {
+                    inst->formulation = MTZ;
+                    inst->directed = true;
+                }
+                else if(strcasecmp(argv[i], formulation_names[GG]) == 0) {
+                    inst->formulation = GG;
+                    inst->directed = true;
+                }
+                else{
+                    printf(BOLDRED "[ERROR] Unknown formulation!\n" RESET);
+                    free_instance(inst);
+                    exit(1);
+                }
             }
             continue;
         }
@@ -82,6 +107,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("Command line arguments found (include defaults):\n");
         printf("--file          %s\n", inst->input_tsp_file_name);
         printf("--opt-tour      %s\n", inst->input_opt_file_name);
+        printf("--formulation   %s\n", formulation_names[inst->formulation]);
         printf("--time-limit    %f\n", inst->time_limit);
         printf("--no-gui        %s\n", inst->gui?"false":"true");
         printf("--no-plot       %s\n", inst->do_plot?"false":"true");
@@ -130,14 +156,14 @@ void parse_file(instance *inst, char *file_name){
         if(inst->verbose >= 3) printf("[DEBUG] Reading line: %s", line);
 
         // tokenize line
-        param_name = strtok(line, ": \n");
-        param = strtok(NULL, ": \n");
+        param_name = strtok(line, ": \n\r");
+        param = strtok(NULL, ": \n\r");
 
         // --------- compare strings --------- //
         if(strcmp(param_name, "") == 0) continue; // ignore empty lines
 
         if(strncmp(param_name, "NAME", 4) == 0) {
-            inst->name[opt?1:0] = malloc(strlen(param)+1);
+            inst->name[opt?1:0] = malloc(BUFLEN);
             strcpy(inst->name[opt?1:0], param);
             if(inst->verbose >=2) printf("NAME = %s\n", inst->name[opt?1:0]);
             continue;
@@ -154,7 +180,7 @@ void parse_file(instance *inst, char *file_name){
         }
 
         if(strncmp(param_name, "COMMENT", 7) == 0) {
-            inst->comment[opt?1:0] = malloc(sizeof(line)+1);
+            inst->comment[opt?1:0] = malloc(BUFLEN);
             // revert tokenization!
             if(strtok(NULL,"\n") != NULL) param[strlen(param)] = ' ';
             strcpy(inst->comment[opt?1:0], param);
@@ -184,9 +210,7 @@ void parse_file(instance *inst, char *file_name){
             inst->integer_costs = false;
             if(inst->verbose >=2) printf("EDGE_WEIGHT_TYPE = %s\n", param);
             if(strncmp(param, "EUC_2D", 3) != 0){
-                printf(BOLDRED "[ERROR] EDGE_WEIGHT_TYPE = %s is not supported yet.\n" RESET, param);
-                free_instance(inst);
-                exit(1);
+                printf(BOLDRED "[WARN] EDGE_WEIGHT_TYPE = %s is not supported yet. Using EUC_2D instead.\n" RESET, param);
             }
             continue;
         }
@@ -293,8 +317,7 @@ void parse_file(instance *inst, char *file_name){
         }
 
         // default case
-        printf(BOLDRED "[ERROR] param_name = %s is unknown\n" RESET, param_name);
-        exit(1);
+        printf(BOLDRED "[WARN] param_name = %s is unknown\n" RESET, param_name);
     }
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] File %s parsed.\n" RESET, file_name);
     fclose(fin);

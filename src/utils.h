@@ -28,26 +28,30 @@
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
 
+enum formulation_t {STANDARD, MTZ, GG};
+char *formulation_names[3];
 
 // define a general instance of the problem
 typedef struct{
     // from cli
     char *input_tsp_file_name; // can be very large if it contains parent directories!
     char *input_opt_file_name;
+    enum formulation_t formulation;
     double time_limit;
     bool gui;
     bool do_plot;
     int verbose;
 
     // from file (2nd cell for opt tour)
-    char * name[2];
-    char * comment[2];
+    char *name[2];
+    char *comment[2];
     int tot_nodes;
     double *xcoord, *ycoord;
     int *opt_tour;
 
     // other parameters
     bool integer_costs;
+    bool directed;
 } instance;
 
 void parse_cli(int argc, char **argv, instance *inst);
