@@ -2,8 +2,8 @@
 // Created by enrico on 19/03/21.
 //
 
-#ifndef TSP_OP2_TSP_FUNCTIONS_H
-#define TSP_OP2_TSP_FUNCTIONS_H
+#ifndef TSP_OP2_TSP_COMMONS_H
+#define TSP_OP2_TSP_COMMONS_H
 
 #include <math.h>
 #include "utils.h"
@@ -16,4 +16,4 @@ int xpos_compact(int i, int j, instance *inst);
 
 int upos(int i, instance *inst);
 
-#endif //TSP_OP2_TSP_FUNCTIONS_H
+#endif //TSP_OP2_TSP_COMMONS_H

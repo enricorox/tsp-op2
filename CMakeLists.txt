@@ -15,6 +15,6 @@ add_executable(tsp
         src/main.c
         src/tsp.c src/tsp.h
         src/plot.c src/plot.h
-        src/utils.c src/utils.h src/standard_formulation.c src/standard_formulation.h src/MTZ_formulation.c src/MTZ_formulation.h src/tsp_functions.c src/tsp_functions.h)
+        src/utils.c src/utils.h src/standard_formulation.c src/standard_formulation.h src/MTZ_formulation.c src/MTZ_formulation.h src/tsp_commons.c src/tsp_commons.h)
 
 target_link_libraries(tsp cplex m pthread dl)

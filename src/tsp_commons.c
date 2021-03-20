@@ -2,7 +2,7 @@
 // Created by enrico on 19/03/21.
 //
 
-#include "tsp_functions.h"
+#include "tsp_commons.h"
 
 double dist(int i, int j, instance *inst) {
     double dx = inst->xcoord[i] - inst->xcoord[j];

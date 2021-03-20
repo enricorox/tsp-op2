@@ -7,7 +7,7 @@
 
 #include <cplex.h>
 
-#include "tsp_functions.h"
+#include "tsp_commons.h"
 
 void build_model(instance *inst, CPXENVptr env, CPXLPptr lp);
 

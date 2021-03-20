@@ -31,49 +31,35 @@ void TSPOpt(instance *inst){
             build_model(inst, env, lp);
     }
 
+    // save model to file
     save_model(inst, env, lp);
 
-    // Set CPLEX parameters
+    // set CPLEX parameters
     CPXsetdblparam(env, CPX_PARAM_TILIM, inst->time_limit);
 
     // optimize!
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization started! Wait please...\n" RESET);
     if((err = CPXmipopt(env, lp))){
-        printf(BOLDRED "[ERROR] CPXmipopt(env, lp): error code %d\n" RESET, err);
+        printf(BOLDRED "[ERROR] CPXmipopt(): error code %d\n" RESET, err);
         free_instance(inst);
         exit(1);
     }
 
-    // get solution
-    int tot_cols = CPXgetnumcols(env, lp);
-    double *xstar = (double *) calloc(tot_cols, sizeof(double));
-    if((err = CPXgetx(env, lp, xstar, 0, tot_cols-1))){
-        printf(BOLDRED "[ERROR] CPXgetx(env, lp, xstar, 0, tot_cols-1): error code %d\n" RESET, err);
-        free(xstar);
+    // get solution status
+    inst->status = CPXgetstat(env, lp);
+    if(inst->status == CPX_STAT_INForUNBD){
+        printf(BOLDRED "[ERROR] TSP cannot be unfeasible or unbounded!\n" RESET);
         free_instance(inst);
         exit(1);
     }
 
     gettimeofday(&stop, NULL);
+    inst->time = stop.tv_sec-start.tv_sec;
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization finished in %ld seconds!\n" RESET,
-                                 stop.tv_sec-start.tv_sec);
+                                 inst->time);
 
-    // scan adjacency matrix and print values
-    if(inst->verbose >=2) printf("Solution found:\n");
-    // rounded solution
-    double *rxstar = (double *) calloc(tot_cols, sizeof(double));
-    for(int i = 0; i < inst->tot_nodes; i++){
-        for ( int j = 0; j < inst->tot_nodes; j++ ){ // TODO j = i+1
-            //printf("x(%d,%d) = %f\n", i, j, xstar[xpos_compact(i,j,inst)]);
-            if (xstar[xpos_compact(i,j,inst)] > 0.5) { // deal with numeric errors TODO fix
-                if(inst->verbose >= 2) printf("x(%3d,%3d) = 1\n", i + 1, j + 1);
-                rxstar[xpos_compact(i, j, inst)] = 1; // TODO fix
-            }
-        }
-    }
-
-    inst->xstar = rxstar;
-    free(xstar);
+    // get solution
+    get_solution(inst, env, lp);
 
     // free and close cplex model
     CPXfreeprob(env, &lp);
@@ -82,8 +68,10 @@ void TSPOpt(instance *inst){
 
 // write model to file
 void save_model(instance *inst, CPXENVptr env, CPXLPptr lp){
-    char file_name[BUFLEN];
-    sprintf(file_name, "%s-model-%s.lp", inst->name[0], formulation_names[inst->formulation]);
+    char *file_template = "%s.%s-model.lp";
+    char file_name[strlen(file_template) + strlen(inst->name[0]) +
+            + strlen(formulation_names[inst->formulation]) + 1];
+    sprintf(file_name, file_template, inst->name[0], formulation_names[inst->formulation]);
     CPXwriteprob(env, lp, file_name, "lp");
 
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Model saved to %s\n" RESET, file_name);

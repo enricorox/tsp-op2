@@ -57,7 +57,7 @@ typedef struct{
     // results
     long time;
     double *xstar;
-    int err;
+    int status;
 } instance;
 
 void parse_cli(int argc, char **argv, instance *inst);

@@ -32,7 +32,7 @@ void init_instance(instance *inst){
     // results
     inst->time = -1;
     inst->xstar = NULL;
-    inst->err = 0;
+    inst->status = -1; // to be set to 0 by CPLEX
 }
 void free_instance(instance *inst){
     free(inst->input_tsp_file_name); free(inst->input_opt_file_name);
@@ -85,6 +85,8 @@ void parse_cli(int argc, char **argv, instance *inst){
         if(strcmp(argv[i],"--time-limit") == 0){
             if(argv[++i] != NULL)
                 inst->time_limit = atof(argv[i]);
+            if(inst->time_limit < 2)
+                printf(BOLDRED "[WARN] Time limit may be too low!\n" RESET);
             continue;
         }
         if(strcmp(argv[i],"--no-gui") == 0){ inst->gui = false; continue;}
@@ -136,7 +138,8 @@ void parse_file(instance *inst, char *file_name){
     else if(file_name == inst->input_opt_file_name)
         opt = true;
     else{
-        printf(BOLDRED "[ERROR] parse_file(): Illegal argument" RESET);
+        printf(BOLDRED "[ERROR] parse_file(): Illegal argument\n" RESET);
+        free_instance(inst);
         exit(1);
     }
     // open file
@@ -183,11 +186,12 @@ void parse_file(instance *inst, char *file_name){
         }
 
         if(strncmp(param_name, "COMMENT", 7) == 0) {
-            inst->comment[opt?1:0] = malloc(BUFLEN);
+            int idx = opt?1:0;
+            inst->comment[idx] = malloc(BUFLEN);
             // revert tokenization!
             if(strtok(NULL,"\n") != NULL) param[strlen(param)] = ' ';
-            strcpy(inst->comment[opt?1:0], param);
-            if(inst->verbose >=2) printf("COMMENT = %s\n", inst->comment[opt?1:0]);
+            strcpy(inst->comment[idx], param);
+            if(inst->verbose >=2) printf("COMMENT = %s\n", inst->comment[idx]);
             continue;
         }
 

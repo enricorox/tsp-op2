@@ -12,7 +12,7 @@ int main(int argc, char **argv){
 
     TSPOpt(&inst);
 
-    if(inst.do_plot && !inst.err) plot(&inst, inst.xstar);
+    if(inst.do_plot && inst.xstar != NULL) plot(&inst, inst.xstar);
 
     // release memory!
     free_instance(&inst);
