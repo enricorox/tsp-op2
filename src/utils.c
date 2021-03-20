@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <cplex.h>
+#include <unistd.h>
 #include "utils.h"
 
 const char *formulation_names[] = {"standard", "MTZ", "GG"};
@@ -35,13 +36,18 @@ void init_instance(instance *inst){
     inst->status = -1; // to be set to 0 by CPLEX
 }
 void free_instance(instance *inst){
-    free(inst->input_tsp_file_name); free(inst->input_opt_file_name);
+    free(inst->input_tsp_file_name);
+    //printf("Freeing input_opt_filename %p...\n", inst->input_opt_file_name);
+    free(inst->input_opt_file_name);
 
-    free(inst->name[0]); free(inst->name[1]);
+    free(inst->name[0]);
+    free(inst->name[1]);
 
-    free(inst->comment[0]); free(inst->comment[1]);
+    free(inst->comment[0]);
+    free(inst->comment[1]);
 
-    free(inst->xcoord); free(inst->ycoord);
+    free(inst->xcoord);
+    free(inst->ycoord);
 
     free(inst->opt_tour);
 
@@ -53,16 +59,14 @@ void parse_cli(int argc, char **argv, instance *inst){
     bool help = false;
     for(int i = 1; i < argc; i++){
         if(strcmp(argv[i],"--file") == 0){
-            if(argv[++i] != NULL) {
-                inst->input_tsp_file_name = malloc(strlen(argv[i]) + 1);
-                strcpy(inst->input_tsp_file_name, argv[i]);
-            }
+            if(argv[++i] != NULL)
+                inst->input_tsp_file_name = strdup(argv[i]) ;
             continue;
         }
         if(strcmp(argv[i],"--opt-tour") == 0){
             if(argv[++i] != NULL) {
-                inst->input_opt_file_name = malloc(strlen(argv[i]) + 1);
-                strcpy(inst->input_opt_file_name, argv[i]);
+                inst->input_opt_file_name = strdup(argv[i]);
+                //printf("input_opt_file_name allocated at %p!\n", inst->input_opt_file_name);
             }
             continue;
         }
@@ -126,6 +130,7 @@ void parse_cli(int argc, char **argv, instance *inst){
 
     if(inst->input_tsp_file_name == NULL){
         printf(BOLDRED "[ERROR] Check mandatory arguments!\n" RESET);
+        free_instance(inst);
         exit(1);
     }
 }
@@ -145,9 +150,10 @@ void parse_file(instance *inst, char *file_name){
     // open file
     FILE *fin = fopen(file_name, "r");
     if (fin == NULL ){
-        printf(BOLDRED "[ERROR] input file %s not found!\n" RESET, inst->input_tsp_file_name);
+        printf(BOLDRED "[ERROR] input file %s not found!\n" RESET, opt?inst->input_opt_file_name:inst->input_tsp_file_name);
         free_instance(inst);
-        exit(1);}
+        exit(1);
+    }
 
     // parse file
     char line[BUFLEN];
@@ -156,6 +162,7 @@ void parse_file(instance *inst, char *file_name){
         // check for error & read line
         if(fgets(line, sizeof(line), fin) == NULL){
             printf(BOLDRED "[WARN] EOF not found!\n" RESET);
+            break;
         }
 
         // debug output
@@ -169,9 +176,9 @@ void parse_file(instance *inst, char *file_name){
         if(strcmp(param_name, "") == 0) continue; // ignore empty lines
 
         if(strncmp(param_name, "NAME", 4) == 0) {
-            inst->name[opt?1:0] = malloc(BUFLEN);
-            strcpy(inst->name[opt?1:0], param);
-            if(inst->verbose >=2) printf("NAME = %s\n", inst->name[opt?1:0]);
+            int idx = opt?1:0;
+            inst->name[idx] = strdup(param);
+            if(inst->verbose >=2) printf("NAME = %s\n", inst->name[idx]);
             continue;
         }
 
@@ -187,10 +194,9 @@ void parse_file(instance *inst, char *file_name){
 
         if(strncmp(param_name, "COMMENT", 7) == 0) {
             int idx = opt?1:0;
-            inst->comment[idx] = malloc(BUFLEN);
             // revert tokenization!
             if(strtok(NULL,"\n") != NULL) param[strlen(param)] = ' ';
-            strcpy(inst->comment[idx], param);
+            inst->comment[idx] = strdup(param);
             if(inst->verbose >=2) printf("COMMENT = %s\n", inst->comment[idx]);
             continue;
         }
@@ -273,7 +279,7 @@ void parse_file(instance *inst, char *file_name){
             if (inst->verbose >= 2) printf("TOUR_SECTION:\n");
             // allocate arrays
             inst->opt_tour = (int *) calloc(inst->tot_nodes, sizeof(double));
-            char *duplicates = (char *) calloc(inst->tot_nodes, sizeof(char));
+            bool *duplicates = (bool *) calloc(inst->tot_nodes, sizeof(bool));
             if (inst->xcoord == NULL || inst->ycoord == NULL){
                 printf(BOLDRED "[ERROR] Can't allocate memory: too many nodes (tot_nodes = %d)!\n" RESET, inst->tot_nodes);
                 free_instance(inst);
@@ -302,13 +308,13 @@ void parse_file(instance *inst, char *file_name){
                     free_instance(inst);
                     exit(1);
                 }
-                if(duplicates[node-1] != 0){
+                if(duplicates[node-1]){
                     printf(BOLDRED "[ERROR] That's not a tour: node %d is not unique!\n" RESET, node);
                     free(duplicates);
                     free_instance(inst);
                     exit(1);
                 }
-                duplicates[node-1]++;
+                duplicates[node-1] = true;
                 inst->opt_tour[n] = node;
 
                 // show node

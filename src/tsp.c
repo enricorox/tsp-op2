@@ -8,13 +8,10 @@ void TSPOpt(instance *inst){
     // open CPLEX model
     int err;
     CPXENVptr env = CPXopenCPLEX(&err);
-    if(err){
-        printf(BOLDRED "[ERROR] CPLEX error code: %d" RESET, err);
-        exit(1);
-    }
     CPXLPptr lp = CPXcreateprob(env, &err, "TSP");
     if(err){
-        printf(BOLDRED "[ERROR] CPLEX error code: %d\n" RESET, err);
+        printf(BOLDRED "[ERROR] Cannot create problem: error code %d\n" RESET, err);
+        free_instance(inst);
         exit(1);
     }
 
@@ -72,6 +69,7 @@ void save_model(instance *inst, CPXENVptr env, CPXLPptr lp){
     char file_name[strlen(file_template) + strlen(inst->name[0]) +
             + strlen(formulation_names[inst->formulation]) + 1];
     sprintf(file_name, file_template, inst->name[0], formulation_names[inst->formulation]);
+
     CPXwriteprob(env, lp, file_name, "lp");
 
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Model saved to %s\n" RESET, file_name);
