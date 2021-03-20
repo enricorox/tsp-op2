@@ -6,8 +6,11 @@
 
 #include "utils.h"
 #include "plot.h"
+
+// formulations
 #include "standard_formulation.h"
 #include "MTZ_formulation.h"
+#include "GG_formulation.h"
 
 void TSPOpt(instance *inst);
 

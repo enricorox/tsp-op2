@@ -5,40 +5,13 @@
 #include "MTZ_formulation.h"
 
 void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
-    char binary = 'B';
+    build_model_base_directed(env, lp, inst);
+
+    char *cname[1];
+    cname[0] = calloc(BUFLEN, sizeof(char));
+
     char integer = 'I';
     int err;
-
-    // allocate array for variable's name with trick
-    //char **cname = (char **) calloc(1, sizeof(char *)); // don't need to dynamically allocate 1 element
-    char *cname[1]; // string array required by cplex for batch insertions
-    cname[0] = (char *) calloc(BUFLEN, sizeof(char));
-
-    // add binary vars x(i,j) for i != j
-    // one for each edge without auto-loops
-    for ( int i = 0; i < inst->tot_nodes; i++ ){
-        for ( int j = 0; j < inst->tot_nodes; j++ ){
-            // define variable name
-            sprintf(cname[0], "x(%d,%d)", i+1,j+1);
-            // define its cost
-            double obj = dist(i,j,inst); // cost == distance
-            // define its lower bound
-            double lb = 0.0;
-            // define its upper bound
-            double ub = 1.0;
-            if((err = CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname))) {
-                printf(BOLDRED "[ERROR] CPXnewcols(): error code %d\n" RESET, err);
-                exit(1);
-            }
-            // check xpos on the fly (can be removed if I'm sure it's ok)
-            if (CPXgetnumcols(env,lp)-1 != xpos_compact(i,j, inst)) {
-                printf(BOLDRED "[ERROR] xpos_compact() got a bad index!\n" RESET);
-                free(cname[0]);
-                free_instance(inst);
-                exit(1);
-            }
-        }
-    }
 
     // add integer vars u(i) for each node i
     for(int i = 0; i < inst->tot_nodes; i++){
@@ -59,28 +32,6 @@ void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
         }
     }
 
-    // add the 1 degree in and out constraints
-    for(char out = 0; out < 2; out++)
-        for(int h = 0; h < inst->tot_nodes; h++){
-            // define right hand side
-            double rhs = 1.0;
-            // define the type of constraint (array) ('E' for equality)
-            char sense = 'E';
-            // define constraint name
-            sprintf(cname[0], "degree_%s(%d)", out?"out":"in", h+1);
-            if ((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
-                printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
-                exit(1);
-            }
-            int lastrow_idx = CPXgetnumrows(env, lp) - 1; // constraint index starts from 0
-            // change last row coefficients from 0 to 1
-            for(int i = 0; i < inst->tot_nodes; i++){
-                if(i == h) continue;
-                if ((err = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(out?h:i, out?i:h, inst), 1.0))) {
-                    printf(BOLDRED "[ERROR] Cannot change coefficient: error code %d", err);
-                }
-            }
-        }
 
     // position big M constraints
     int big_M = inst->tot_nodes - 1; // use big M trick
@@ -88,8 +39,8 @@ void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
         for(int j = 1; j < inst->tot_nodes; j++){
             double rhs = big_M - 1;
             char sense = 'L';
-            sprintf(cname[0], "position(%d,%d)", i + 1, j + 1);
-            if ((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
+            sprintf(cname[0], "u_consistency(%d,%d)", i + 1, j + 1);
+            if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);
             }
@@ -97,7 +48,7 @@ void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
 
             int err1, err2, err3;
             // change last row coefficients
-            err3 = err2 = err1 = 0;
+            err2 = err1 = 0;
             if(i != j) {
                 err1 = CPXchgcoef(env, lp, lastrow_idx, upos(i, inst), 1.0);
                 err2 = CPXchgcoef(env, lp, lastrow_idx, upos(j, inst), -1.0);
@@ -111,7 +62,7 @@ void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
     free(cname[0]);
 }
 
-void get_solution(instance *inst, CPXENVptr env, CPXLPptr lp){
+void get_solution_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp){
     // get solution from CPLEX
     int tot_cols = CPXgetnumcols(env, lp);
     double *xstar = (double *) calloc(tot_cols, sizeof(double));
@@ -124,18 +75,25 @@ void get_solution(instance *inst, CPXENVptr env, CPXLPptr lp){
 
     // scan adjacency matrix induced by xstar and print values
     if(inst->verbose >=2) printf("Solution found:\n");
-    // rounded solution
+    // deal with numeric errors
     double *rxstar = (double *) calloc(tot_cols, sizeof(double));
     for(int i = 0; i < inst->tot_nodes; i++){
-        for ( int j = 0; j < inst->tot_nodes; j++ ){ // TODO j = i+1
+        for ( int j = 0; j < inst->tot_nodes; j++ ){
             int idx = xpos_compact(i,j,inst);
-            if (xstar[idx] > 0.5) { // deal with numeric errors TODO fix
+            if (xstar[idx] > 0.5) {
                 if(inst->verbose >= 2) printf("x(%3d,%3d) = 1\n", i + 1, j + 1);
-                rxstar[idx] = 1; // TODO fix
+                rxstar[idx] = 1;
             }
         }
     }
 
     inst->xstar = rxstar;
+
+    for(int i = 0; i < inst->tot_nodes; i++){
+        int idx = upos(i, inst);
+        if(xstar[idx] > 0.001 && inst->verbose >= 2)
+            printf("u(%3d) = %d\n", i+1, (int) round(xstar[idx]));
+    }
+
     free(xstar);
 }

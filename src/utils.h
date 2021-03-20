@@ -22,7 +22,8 @@
                 "Usage: ./tsp --file <file-tsp> [options]\n" \
                 "Options:\n"\
                 "--opt-tour <file-opt-tsp>          tsp file with optimal tour\n" \
-                "--formulation <form>               standard, MTZ or GG" \
+                "--formulation <form>               standard, MTZ or GG\n" \
+                "--lazy                             use lazy constraints\n"\
                 "--time-limit <time>                max overall time in seconds\n" \
                 "--no-gui                           don't use GUI\n" \
                 "--no-plot                          don't plot\n" \
@@ -38,6 +39,7 @@ typedef struct{
     char *input_tsp_file_name; // can be very large if it contains parent directories!
     char *input_opt_file_name;
     enum formulation_t formulation;
+    bool lazy;
     double time_limit;
     bool gui;
     bool do_plot;

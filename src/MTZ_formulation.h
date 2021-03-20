@@ -12,7 +12,7 @@
 
 void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
 
-void get_solution(instance *inst, CPXENVptr env, CPXLPptr lp);
+void get_solution_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 
 #endif //TSP_OP2_MTZ_FORMULATION_H

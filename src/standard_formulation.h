@@ -11,4 +11,6 @@
 
 void build_model(instance *inst, CPXENVptr env, CPXLPptr lp);
 
+void get_solution(instance *inst, CPXENVptr env, CPXLPptr lp);
+
 #endif //TSP_OP2_STANDARD_FORMULATION_H

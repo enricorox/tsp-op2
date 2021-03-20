@@ -23,6 +23,7 @@ void TSPOpt(instance *inst){
             break;
         case GG:
             inst->directed = true;
+            build_model_GG(inst, env, lp);
             break;
         default:
             build_model(inst, env, lp);
@@ -44,19 +45,51 @@ void TSPOpt(instance *inst){
 
     // get solution status
     inst->status = CPXgetstat(env, lp);
-    if(inst->status == CPX_STAT_INForUNBD){
-        printf(BOLDRED "[ERROR] TSP cannot be unfeasible or unbounded!\n" RESET);
+    char *status;
+    switch (inst->status) {
+        case CPXMIP_OPTIMAL:
+            status = "optimal";
+            break;
+        case CPXMIP_INFEASIBLE:
+            status = BOLDRED "infeasible";
+            break;
+        case CPXMIP_UNBOUNDED:
+            status = BOLDRED "unbounded";
+            break;
+        case CPXMIP_OPTIMAL_TOL:
+            status = "optimal (numerical difficulties)";
+            break;
+        case CPXMIP_TIME_LIM_FEAS:
+            status = "feasible (time limit reached)";
+            break;
+        default:
+            status = "unknown";
+    }
+    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Solution status: %s (%d)\n" RESET, status, inst->status);
+
+    if((inst->status == CPXMIP_INFEASIBLE) || (inst->status == CPXMIP_UNBOUNDED)){
+        printf(BOLDRED "[ERROR] Solution is %s!\n" RESET,
+               (inst->status == CPXMIP_INFEASIBLE)?"infeasible":"unbounded");
         free_instance(inst);
         exit(1);
     }
 
     gettimeofday(&stop, NULL);
     inst->time = stop.tv_sec-start.tv_sec;
-    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization finished in %ld seconds!\n" RESET,
-                                 inst->time);
+    if(inst->verbose >=1)
+        printf(BOLDGREEN "[INFO] Optimization finished in %ld seconds!\n" RESET, inst->time);
 
     // get solution
-    get_solution(inst, env, lp);
+    switch(inst->formulation){
+        case MTZ:
+            get_solution_MTZ(inst, env, lp);
+            break;
+        case GG:
+            get_solution_GG(inst, env, lp);
+            break;
+        default:
+            get_solution(inst, env, lp);
+    }
 
     // free and close cplex model
     CPXfreeprob(env, &lp);

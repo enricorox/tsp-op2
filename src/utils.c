@@ -14,6 +14,7 @@ void init_instance(instance *inst){
     inst->input_tsp_file_name = NULL;
     inst->input_opt_file_name = NULL;
     inst->formulation = STANDARD;
+    inst->lazy = false;
     inst->time_limit = CPX_INFBOUND;
     inst->gui = true;
     inst->do_plot = true;
@@ -86,6 +87,7 @@ void parse_cli(int argc, char **argv, instance *inst){
             }
             continue;
         }
+        if(strcmp(argv[i],"--lazy")  == 0){ inst->lazy = true; continue;}
         if(strcmp(argv[i],"--time-limit") == 0){
             if(argv[++i] != NULL)
                 inst->time_limit = atof(argv[i]);
@@ -117,6 +119,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--file          %s\n", inst->input_tsp_file_name);
         printf("--opt-tour      %s\n", inst->input_opt_file_name);
         printf("--formulation   %s\n", formulation_names[inst->formulation]);
+        printf("--lazy          %s\n", inst->lazy?"true":"false");
         printf("--time-limit    %f\n", inst->time_limit);
         printf("--no-gui        %s\n", inst->gui?"false":"true");
         printf("--no-plot       %s\n", inst->do_plot?"false":"true");
