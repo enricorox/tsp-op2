@@ -1,8 +1,17 @@
 //
-// Created by enrico on 19/03/21.
+// Miller-Tucker-Zemlin compact formulation of TSP
 //
 
 #include "MTZ_formulation.h"
+
+int upos(int i, instance *inst){
+    if(i < 0 || i >= inst->tot_nodes){
+        printf(BOLDRED"[ERROR] xpos(): unexpected i = %d\n" RESET, i);
+        exit(1);
+    }
+    int upos = inst->tot_nodes * inst->tot_nodes + i;
+    return upos;
+}
 
 void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
     char *cname[1];

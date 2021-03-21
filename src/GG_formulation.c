@@ -1,5 +1,5 @@
 //
-// Created by enrico on 20/03/21.
+// Gravish and Graves compact formulation of TSP
 //
 
 #include "GG_formulation.h"
@@ -98,73 +98,64 @@ void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     free(cname[0]);
 }
 
-/*
 void add_flow_constraints_lazy(instance *inst, CPXENVptr env, CPXLPptr lp){
-    int err;
-    char *cname[1];
-    cname[0] = (char *) calloc(BUFLEN, sizeof(char));
+    char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};
 
-    int izero = 0;
-    int index[3];
-    double value[3];
-    int nnz = 3;
+    // add flow constraints in(h) = out(h) +1 for h!=1
+    int nnz = 2 * inst->tot_nodes;
+    int index[nnz];
+    double value[nnz];
     double rhs = 1;
     char sense = 'E';
+    int izero = 0;
     for(int h = 1; h < inst->tot_nodes; h++){
-
-        sprintf(cname[0], "flow(%d)", h + 1);
-
-        index[0];
-
-        int err1, err2;
-        // change last row coefficients
+        sprintf(rname[0], "flow(%d)", h + 1);
+        // build index value array
+        int idx = 0;
         for(int i = 0; i < inst->tot_nodes; i++) {
-            if(h == i) continue; // coefficients remains 0
-            err1 = CPXchgcoef(env, lp, lastrow_idx, ypos(i, h, inst), 1.0);
-            err2 = CPXchgcoef(env, lp, lastrow_idx, ypos(h, i, inst), -1.0);
+            index[idx] = ypos(i, h, inst);
+            value[idx] = (h!=i)?1:0;
+            index[inst->tot_nodes + idx] = ypos(h, i, inst);
+            value[inst->tot_nodes + idx] = (h!=i)?-1:0;
+            idx++;
         }
-        if (err1 || err2) {
-            printf(BOLDRED "[ERROR] Cannot change coefficient\n");
+        if(CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
+            printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error!\n");
+            free_instance(inst);
+            exit(1);
         }
     }
 
     // flow for 1: y_1j = (n-1)x_1j
+    rhs = 0;
+    sense = 'E';
+    nnz = 2; // can reuse previous arrays!
     for(int j = 1; j < inst->tot_nodes; j++){
-        double rhs = 0;
-        char sense = 'E';
-        sprintf(cname[0], "flow_one(%d)", j + 1);
-        if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
-            printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
+        sprintf(rname[0], "flow_one(%d)", j + 1);
+        index[0] = ypos(0, j, inst);
+        value[0] = 1;
+        index[1] = xpos_compact(0, j, inst);
+        value[1] = -inst->tot_nodes + 1;
+        if(CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)){
+            printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error!\n" RESET);
             exit(1);
-        }
-        int lastrow_idx = CPXgetnumrows(env, lp) - 1; // constraint index starts from 0
-
-        int err1, err2;
-        // change last row coefficients
-        err1 = CPXchgcoef(env, lp, lastrow_idx, ypos(0, j, inst), 1.0);
-        err2 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(0, j, inst), -inst->tot_nodes + 1);
-
-        if (err1 || err2) {
-            printf(BOLDRED "[ERROR] Cannot change coefficient\n");
         }
     }
 
-    free(cname[0]);
+    free(rname[0]);
 }
-*/
 
 void add_link_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     int err;
-    char *cname[1];
-    cname[0] = (char *) calloc(BUFLEN, sizeof(char));
+    char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};
 
     // linking constraints: y_ij <= (n-2)x_ij, i!=1!=j
     for(int i = 1; i < inst->tot_nodes; i++){
         for(int j = 1; j < inst->tot_nodes; j++){
             double rhs = 0;
             char sense = 'L';
-            sprintf(cname[0], "link(%d,%d)", i + 1, j + 1);
-            if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
+            sprintf(rname[0], "link(%d,%d)", i + 1, j + 1);
+            if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname)) ){
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);
             }
@@ -181,49 +172,47 @@ void add_link_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
         }
     }
 
-    free(cname[0]);
+    free(rname[0]);
 }
 
-/*
+
 void add_link_constraints_lazy(instance *inst, CPXENVptr env, CPXLPptr lp){
     int err;
-    char *cname[1];
-    cname[0] = (char *) calloc(BUFLEN, sizeof(char));
+    char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};
 
+    int nnz = 2;
+    int index[nnz];
+    double value[nnz];
+    double rhs = 0;
+    char sense = 'L';
+    int izero = 0;
     // linking constraints: y_ij <= (n-2)x_ij, i!=1!=j
     for(int i = 1; i < inst->tot_nodes; i++){
         for(int j = 1; j < inst->tot_nodes; j++){
-            double rhs = 0;
-            char sense = 'L';
-            sprintf(cname[0], "link(%d,%d)", i + 1, j + 1);
-            if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
+            index[0] = ypos(i, j, inst);
+            value[0] = 1;
+            index[1] = xpos_compact(i, j, inst);
+            value[1] = -inst->tot_nodes + 2;
+            sprintf(rname[0], "link(%d,%d)", i + 1, j + 1);
+
+            if((err = CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) ){
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);
-            }
-            int lastrow_idx = CPXgetnumrows(env, lp) - 1; // constraint index starts from 0
-
-            int err1, err2;
-            // change last row coefficients
-            err1 = CPXchgcoef(env, lp, lastrow_idx, ypos(i, j, inst), 1.0);
-            err2 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(i, j, inst), -inst->tot_nodes + 2);
-
-            if (err1 || err2) {
-                printf(BOLDRED "[ERROR] Cannot change coefficient\n");
             }
         }
     }
 
-    free(cname[0]);
+    free(rname[0]);
 }
-*/
+
 void build_model_GG(instance *inst, CPXENVptr env, CPXLPptr lp) {
     build_model_base_directed(env, lp, inst);
 
     add_flow_vars(inst, env, lp);
 
     if (inst->lazy) {
-        //add_link_constraints_lazy(inst, env, lp);
-        //add_flow_constraints_lazy(inst, env, lp);
+        add_flow_constraints_lazy(inst, env, lp);
+        add_link_constraints_lazy(inst, env, lp);
     } else{
         add_link_constraints(inst, env, lp);
         add_flow_constraints(inst, env, lp);

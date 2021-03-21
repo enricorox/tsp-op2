@@ -1,5 +1,5 @@
 //
-// Created by enrico on 19/03/21.
+// TSP shared functions among formulations
 //
 
 #include "tsp_commons.h"
@@ -12,7 +12,7 @@ double dist(int i, int j, instance *inst) {
     return dis+0.0;
 }
 
-// return CPLEX column position given the coordinates of a cell in adjacency matrix
+// return CPLEX column position given an arc (i,j)
 int xpos(int i, int j, instance *inst) {
     if((i == j) || (j < 0) || (i < 0) || (j >= inst->tot_nodes) || (i >= inst->tot_nodes)){
         printf(BOLDRED"[ERROR] xpos(): unexpected i = %d, j = %d\n" RESET, i, j);
@@ -36,15 +36,6 @@ int xpos_compact(int i, int j, instance *inst){
     }
     int pos = i * inst->tot_nodes + j;
     return pos;
-}
-
-int upos(int i, instance *inst){
-    if(i < 0 || i >= inst->tot_nodes){
-        printf(BOLDRED"[ERROR] xpos(): unexpected i = %d\n" RESET, i);
-        exit(1);
-    }
-    int upos = inst->tot_nodes * inst->tot_nodes + i;
-    return upos;
 }
 
 void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
@@ -106,7 +97,7 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
         }
 
     int err1, err2;
-    // add in or out constraints
+    // add "in or out" constraints
     for(int i = 0; i < inst->tot_nodes; i++) {
         for (int j = 0; j < inst->tot_nodes; j++) {
             if (j == i) continue;
@@ -115,7 +106,7 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             // define the type of constraint (array) ('E' for equality)
             char sense = 'L';
             // define constraint name
-            sprintf(rname[0], "in_or_out(%d)", i + 1);
+            sprintf(rname[0], "in_or_out(%d,%d)", i + 1, j + 1);
             if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname))) {
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);
@@ -123,7 +114,7 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             int lastrow_idx = CPXgetnumrows(env, lp) - 1; // constraint index starts from 0
             // change last row coefficients from 0 to 1 or -1
             err1 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(i, j, inst), 1.0);
-            err2 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(j, i, inst), -1.0);
+            err2 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(j, i, inst), 1.0);
             if (err1 || err2) {
                 printf(BOLDRED "[ERROR] Cannot change coefficient: error code %d", err);
             }

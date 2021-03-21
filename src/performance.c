@@ -2,13 +2,7 @@
 // Created by enrico on 21/03/21.
 //
 
-#include <stdlib.h>
-
 #include "performance.h"
-#include "tsp.h"
-
-#define STOP 8
-#define STEP 8
 
 double *** generate_points(int stop, int step){
     double ***points;

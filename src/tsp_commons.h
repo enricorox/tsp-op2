@@ -16,8 +16,6 @@ int xpos(int i, int j, instance *inst);
 
 int xpos_compact(int i, int j, instance *inst);
 
-int upos(int i, instance *inst);
-
 void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst);
 
 #endif //TSP_OP2_TSP_COMMONS_H
