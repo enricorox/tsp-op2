@@ -4,9 +4,7 @@
 
 #include "MTZ_formulation.h"
 
-void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
-    build_model_base_directed(env, lp, inst);
-
+void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
     char *cname[1];
     cname[0] = calloc(BUFLEN, sizeof(char));
 
@@ -31,7 +29,13 @@ void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
             exit(1);
         }
     }
+    free(cname[0]);
+}
 
+void add_uconsistency_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
+    int err;
+    char *rname[1];
+    rname[0] = calloc(BUFLEN, sizeof(char));
 
     // position big M constraints
     int big_M = inst->tot_nodes - 1; // use big M trick
@@ -39,8 +43,8 @@ void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
         for(int j = 1; j < inst->tot_nodes; j++){
             double rhs = big_M - 1;
             char sense = 'L';
-            sprintf(cname[0], "u_consistency(%d,%d)", i + 1, j + 1);
-            if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
+            sprintf(rname[0], "u_consistency(%d,%d)", i + 1, j + 1);
+            if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname)) ){
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);
             }
@@ -59,7 +63,50 @@ void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
             }
         }
 
-    free(cname[0]);
+    free(rname[0]);
+}
+
+void add_uconsistency_constraints_lazy(instance *inst, CPXENVptr env, CPXLPptr lp){
+    int err;
+    char *rname[1];
+    rname[0] = calloc(BUFLEN, sizeof(char));
+    int index[3];
+    double value[3];
+    int izero = 0;
+
+    int big_M = inst->tot_nodes - 1; // use big M trick
+    double rhs = big_M - 1;
+    char sense = 'L';
+    int nnz = 3;
+    for(int i = 1; i < inst->tot_nodes; i++)
+        for(int j = 1; j < inst->tot_nodes; j++){
+            if(i == j) continue;
+            sprintf(rname[0], "u_consistency(%d,%d)", i + 1, j + 1);
+            index[0] = upos(i, inst);
+            value[0] = 1;
+            index[1] = upos(j, inst);
+            value[1] = -1;
+            index[2] = xpos_compact(i, j, inst);
+            value[2] = big_M;
+
+            if((err = CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) ){
+                printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error code %d\n" RESET, err);
+                exit(1);
+            }
+        }
+
+    free(rname[0]);
+}
+
+void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
+    build_model_base_directed(env, lp, inst);
+
+    add_uconsistency_vars(inst, env, lp);
+
+    if(inst->lazy)
+        add_uconsistency_constraints(inst, env, lp);
+    else
+        add_uconsistency_constraints_lazy(inst, env, lp);
 }
 
 void get_solution_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp){

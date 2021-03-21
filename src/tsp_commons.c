@@ -52,13 +52,11 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     int err;
 
     // allocate array for variable's name with trick
-    //char **cname = (char **) calloc(1, sizeof(char *)); // don't need to dynamically allocate 1 element
-    char *cname[1]; // string array required by cplex for batch insertions
-    cname[0] = (char *) calloc(BUFLEN, sizeof(char));
+    char *cname[] = { (char *) calloc(BUFLEN, sizeof(char))};
 
     // add binary vars x(i,j) for i != j
     // one for each edge without auto-loops
-    for ( int i = 0; i < inst->tot_nodes; i++ ){
+    for( int i = 0; i < inst->tot_nodes; i++ ){
         for ( int j = 0; j < inst->tot_nodes; j++ ){
             // define variable name
             sprintf(cname[0], "x(%d,%d)", i+1,j+1);
@@ -81,6 +79,8 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             }
         }
     }
+    free(cname[0]);
+    char *rname[] = { (char *) calloc(BUFLEN, sizeof(char))};
 
     // add the 1 degree in and out constraints
     for(char out = 0; out < 2; out++)
@@ -90,8 +90,8 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             // define the type of constraint (array) ('E' for equality)
             char sense = 'E';
             // define constraint name
-            sprintf(cname[0], "degree_%s(%d)", out?"out":"in", h+1);
-            if ((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) ){
+            sprintf(rname[0], "degree_%s(%d)", out?"out":"in", h+1);
+            if ((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname)) ){
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);
             }
@@ -105,5 +105,30 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             }
         }
 
-    free(cname[0]);
+    int err1, err2;
+    // add in or out constraints
+    for(int i = 0; i < inst->tot_nodes; i++) {
+        for (int j = 0; j < inst->tot_nodes; j++) {
+            if (j == i) continue;
+            // define right hand side
+            double rhs = 1.0;
+            // define the type of constraint (array) ('E' for equality)
+            char sense = 'L';
+            // define constraint name
+            sprintf(rname[0], "in_or_out(%d)", i + 1);
+            if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname))) {
+                printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
+                exit(1);
+            }
+            int lastrow_idx = CPXgetnumrows(env, lp) - 1; // constraint index starts from 0
+            // change last row coefficients from 0 to 1 or -1
+            err1 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(i, j, inst), 1.0);
+            err2 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(j, i, inst), -1.0);
+            if (err1 || err2) {
+                printf(BOLDRED "[ERROR] Cannot change coefficient: error code %d", err);
+            }
+        }
+    }
+
+    free(rname[0]);
 }

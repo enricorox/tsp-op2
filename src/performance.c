@@ -7,7 +7,7 @@
 #include "performance.h"
 #include "tsp.h"
 
-#define STOP 24
+#define STOP 8
 #define STEP 8
 
 double *** generate_points(int stop, int step){
@@ -59,6 +59,7 @@ void set_instance_options(instance *inst, enum formulation_t form, bool lazy){
 
     inst->verbose = 0;
     inst->gui = false;
+    inst->time_limit = 3600; // 1h time limit!
 }
 
 void set_instance_points(instance *inst, double ***points, int stop, int step, int set){
@@ -79,23 +80,26 @@ void start_perf_test(){
 
     int stop = STOP;
     int step = STEP;
+    int sets = stop / step;
 
     double ***points = generate_points(stop, step);
     //print_points(points, stop, step);
 
+    int runs = sets * 2 * (FLAST - 1);
     char iname[BUFLEN];
     char cname[BUFLEN];
-    for(int set = 0; set < stop/step; set++) {
+    for(int set = 0; set < sets; set++) {
         set_instance_points(&inst, points, stop, step, set);
         sprintf(iname, "inst%d", inst.tot_nodes);
         sprintf(cname, "perf test");
         inst.name[0] = iname;
         inst.comment[0] = cname;
-        for (enum formulation_t form = STANDARD+1; form < FDUMMY; form++) {
+        for (enum formulation_t form = STANDARD+1; form < FLAST; form++) {
             for (char lazy = 0; lazy < 1; lazy++) { // 2 for lazy
                 set_instance_options(&inst, form, lazy);
                 TSPOpt(&inst);
                 plot(&inst, inst.xstar);
+                free(inst.xstar);
                 printf(BOLDGREEN "[INFO] %s %s with %d points finished in %ld seconds\n",
                        formulation_names[form], lazy?"lazy":"", inst.tot_nodes, inst.time);
             }
