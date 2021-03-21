@@ -175,7 +175,6 @@ void add_link_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     free(rname[0]);
 }
 
-
 void add_link_constraints_lazy(instance *inst, CPXENVptr env, CPXLPptr lp){
     int err;
     char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};

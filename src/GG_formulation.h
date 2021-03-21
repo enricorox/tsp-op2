@@ -12,6 +12,16 @@
 
 int ypos(int i, int j, instance *inst);
 
+void add_flow_vars(instance *inst, CPXENVptr env, CPXLPptr lp);
+
+void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp);
+
+void add_flow_constraints_lazy(instance *inst, CPXENVptr env, CPXLPptr lp);
+
+void add_link_constraints(instance *inst, CPXENVptr env, CPXLPptr lp);
+
+void add_link_constraints_lazy(instance *inst, CPXENVptr env, CPXLPptr lp);
+
 void build_model_GG(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 void get_solution_GG(instance *inst, CPXENVptr env, CPXLPptr lp);

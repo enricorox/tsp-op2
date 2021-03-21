@@ -38,7 +38,7 @@ int xpos_compact(int i, int j, instance *inst){
     return pos;
 }
 
-void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
+void add_x_vars_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     char binary = 'B';
     int err;
 
@@ -71,7 +71,11 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
         }
     }
     free(cname[0]);
+}
+
+void add_degree_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     char *rname[] = { (char *) calloc(BUFLEN, sizeof(char))};
+    int err;
 
     // add the 1 degree in and out constraints
     for(char out = 0; out < 2; out++)
@@ -95,8 +99,13 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
                 }
             }
         }
+    free(rname[0]);
+}
 
-    int err1, err2;
+void add_inorout_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
+    char *rname[] = { (char *) calloc(BUFLEN, sizeof(char))};
+
+    int err, err1, err2;
     // add "in or out" constraints
     for(int i = 0; i < inst->tot_nodes; i++) {
         for (int j = 0; j < inst->tot_nodes; j++) {
@@ -122,4 +131,12 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     }
 
     free(rname[0]);
+}
+
+void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
+    add_x_vars_directed(env, lp, inst);
+
+    add_degree_constraints_directed(env, lp, inst);
+
+    add_inorout_constraints_directed(env, lp, inst);
 }

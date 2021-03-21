@@ -10,8 +10,8 @@
 #include "utils.h"
 #include "tsp.h"
 
-#define STOP 32
-#define STEP 8
+#define STOP 24
+#define STEP 4
 
 void start_perf_test();
 

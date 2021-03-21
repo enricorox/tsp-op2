@@ -79,19 +79,27 @@ void start_perf_test(){
     double ***points = generate_points(stop, step);
     //print_points(points, stop, step);
 
-    int runs = sets * 2 * (FLAST - 1);
+    // open comma separated value file for storing values!
+    FILE *values = fopen("times.csv","w");
+    fprintf(values, "size,");
+    for(int i = MTZ; i < FLAST; i++)
+        for(char lazy = 0; lazy < 2; lazy++)
+            fprintf(values, "%s %s,", formulation_names[i], lazy?"lazy":"");
+
     char iname[BUFLEN];
     char cname[BUFLEN];
-    for(int set = 0; set < sets; set++) {
+    for(int set = 0; set < sets; set++) { // change set
         set_instance_points(&inst, points, stop, step, set);
         sprintf(iname, "inst%d", inst.tot_nodes);
         sprintf(cname, "perf test");
         inst.name[0] = iname;
         inst.comment[0] = cname;
-        for (enum formulation_t form = STANDARD+1; form < FLAST; form++) {
-            for (char lazy = 0; lazy < 1; lazy++) { // 2 for lazy
+        fprintf(values, "\n%d,", inst.tot_nodes);
+        for (enum formulation_t form = STANDARD+1; form < FLAST; form++) { // change formulation
+            for (char lazy = 0; lazy < 2; lazy++) { // add lazy constraints
                 set_instance_options(&inst, form, lazy);
                 TSPOpt(&inst);
+                fprintf(values,"%ld,", inst.time);
                 plot(&inst, inst.xstar);
                 free(inst.xstar);
                 printf(BOLDGREEN "[INFO] %s %s with %d points finished in %ld seconds\n",
@@ -100,6 +108,7 @@ void start_perf_test(){
         }
     }
 
+    fclose(values);
     // freeing memory
     free_points(points, stop, step);
 }
