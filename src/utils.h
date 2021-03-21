@@ -31,7 +31,7 @@
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
 
-enum formulation_t {STANDARD, MTZ, GG};
+enum formulation_t {STANDARD, MTZ, GG, FDUMMY};
 const char *formulation_names[3];
 
 // define a general instance of the problem

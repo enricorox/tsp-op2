@@ -75,12 +75,14 @@ void parse_cli(int argc, char **argv, instance *inst){
         if(strcmp(argv[i],"--formulation") == 0){
             if(argv[++i] != NULL) {
                 bool found = false;
-                for(int k = 0; k < sizeof(enum formulation_t); k++)
-                    if(strcasecmp(argv[i], formulation_names[k]) == 0) {
+                for(int k = 0; k < FDUMMY; k++) {
+                    printf("%s?\n", formulation_names[k]);
+                    if (strcasecmp(argv[i], formulation_names[k]) == 0) {
                         inst->formulation = k;
                         found = true;
                         break;
                     }
+                }
                 if(!found){
                     inst->formulation = STANDARD;
                     printf(BOLDRED "[WARN] Unknown formulation: using STANDARD\n" RESET);
