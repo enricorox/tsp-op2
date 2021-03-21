@@ -18,6 +18,7 @@ void init_instance(instance *inst){
     inst->time_limit = CPX_INFBOUND;
     inst->gui = true;
     inst->do_plot = true;
+    inst->perf = false;
     inst->verbose = 1;
 
     // from file
@@ -102,6 +103,7 @@ void parse_cli(int argc, char **argv, instance *inst){
                 inst->verbose = atoi(argv[i]);
             continue;
         }
+        if(strcmp(argv[i],"--perf") == 0){ inst->perf = true; continue;}
         if(strcmp(argv[i],"--help") == 0) { help = 1; continue; }
 
         printf(BOLDRED "[ERROR] Unknown option: %s\n" RESET, argv[i]);
@@ -123,6 +125,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--time-limit    %f\n", inst->time_limit);
         printf("--no-gui        %s\n", inst->gui?"false":"true");
         printf("--no-plot       %s\n", inst->do_plot?"false":"true");
+        printf("--perf          %s\n", inst->perf?"true":"false");
         printf("--verbose       %d\n", inst->verbose);
     }
 
@@ -131,8 +134,8 @@ void parse_cli(int argc, char **argv, instance *inst){
         exit(1);
     }
 
-    if(inst->input_tsp_file_name == NULL){
-        printf(BOLDRED "[ERROR] Check mandatory arguments!\n" RESET);
+    if(inst->input_tsp_file_name == NULL && !inst->perf){
+        printf(BOLDRED "[ERROR] Check mandatory arguments: ./tsp --help\n" RESET);
         free_instance(inst);
         exit(1);
     }
@@ -336,5 +339,6 @@ void parse_file(instance *inst, char *file_name){
         printf(BOLDRED "[WARN] param_name = %s is unknown: ignored.\n" RESET, param_name);
     }
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] File %s parsed.\n" RESET, file_name);
+
     fclose(fin);
 }

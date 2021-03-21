@@ -19,7 +19,7 @@
 
 #define USAGE   "TSP solver 0.x, a solver for Travelling Salesman Problem with CPLEX\n" \
                 "Author: Enrico Rossignolo - 1218951 - enrico.rossignolo@studenti.unipd.it\n\n" \
-                "Usage: ./tsp --file <file-tsp> [options]\n" \
+                "Usage: ./tsp (--file <file-tsp> | --perf) [options]\n" \
                 "Options:\n"\
                 "--opt-tour <file-opt-tsp>          tsp file with optimal tour\n" \
                 "--formulation <form>               standard, MTZ or GG\n" \
@@ -27,6 +27,7 @@
                 "--time-limit <time>                max overall time in seconds\n" \
                 "--no-gui                           don't use GUI\n" \
                 "--no-plot                          don't plot\n" \
+                "--perf                             do performance test\n"\
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
 
@@ -43,6 +44,7 @@ typedef struct{
     double time_limit;
     bool gui;
     bool do_plot;
+    bool perf;
     int verbose;
 
     // from file (2nd cell for opt tour)

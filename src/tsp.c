@@ -68,7 +68,7 @@ void TSPOpt(instance *inst){
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Solution status: %s (%d)\n" RESET, status, inst->status);
 
     if((inst->status == CPXMIP_INFEASIBLE) || (inst->status == CPXMIP_UNBOUNDED)){
-        printf(BOLDRED "[ERROR] Solution is %s!\n" RESET,
+        printf(BOLDRED "[ERROR] Solution cannot be %s!\n" RESET,
                (inst->status == CPXMIP_INFEASIBLE)?"infeasible":"unbounded");
         free_instance(inst);
         exit(1);
