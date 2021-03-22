@@ -103,7 +103,11 @@ void parse_cli(int argc, char **argv, instance *inst){
                 inst->verbose = atoi(argv[i]);
             continue;
         }
-        if(strcmp(argv[i],"--perf") == 0){ inst->perf = true; continue;}
+        if(strcmp(argv[i],"--perf") == 0){
+            if(argv[++i] != NULL)
+                inst->perf = atoi(argv[i]);
+            continue;
+        }
         if(strcmp(argv[i],"--help") == 0) { help = 1; continue; }
 
         printf(BOLDRED "[ERROR] Unknown option: %s\n" RESET, argv[i]);
@@ -125,7 +129,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--time-limit    %f\n", inst->time_limit);
         printf("--no-gui        %s\n", inst->gui?"false":"true");
         printf("--no-plot       %s\n", inst->do_plot?"false":"true");
-        printf("--perf          %s\n", inst->perf?"true":"false");
+        printf("--perf          %d\n", inst->perf);
         printf("--verbose       %d\n", inst->verbose);
     }
 
@@ -341,4 +345,20 @@ void parse_file(instance *inst, char *file_name){
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] File %s parsed.\n" RESET, file_name);
 
     fclose(fin);
+}
+
+void save_to_tsp_file(instance *inst){
+    char name[BUFLEN];
+    sprintf(name,"%s.save.tsp", inst->name[0]);
+    FILE *fout = fopen(name, "w");
+    fprintf(fout,"NAME : %s\n", inst->name[0]);
+    fprintf(fout,"COMMENT : %s\n", inst->comment[0]);
+    fprintf(fout,"TYPE : TSP\n");
+    fprintf(fout,"DIMENSION : %d\n", inst->tot_nodes);
+    fprintf(fout,"EDGE_WEIGHT_TYPE : %s\n", "EUC_2D"); // can be changed
+    fprintf(fout,"NODE_COORD_SECTION\n");
+    for(int i = 0; i < inst->tot_nodes; i++)
+        fprintf(fout, "%d %f %f\n", i + 1, inst->xcoord[i], inst->ycoord[i]);
+    fprintf(fout, "EOF\n");
+    fclose(fout);
 }

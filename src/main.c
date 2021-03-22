@@ -12,7 +12,7 @@ int main(int argc, char **argv){
     parse_cli(argc, argv, &inst);
 
     if(inst.perf)
-        start_perf_test(); // start formulations performance test
+        start_perf_test(inst.perf); // start formulations performance test
     else {
         // parse .tsp file
         parse_file(&inst, inst.input_tsp_file_name);

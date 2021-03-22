@@ -27,7 +27,7 @@
                 "--time-limit <time>                max overall time in seconds\n" \
                 "--no-gui                           don't use GUI\n" \
                 "--no-plot                          don't plot\n" \
-                "--perf                             do performance test\n"\
+                "--perf <max>                       do performance test with max size\n"\
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
 
@@ -44,7 +44,7 @@ typedef struct{
     double time_limit;
     bool gui;
     bool do_plot;
-    bool perf;
+    int perf;
     int verbose;
 
     // from file (2nd cell for opt tour)
@@ -71,6 +71,8 @@ void parse_file(instance *inst, char *file_name);
 void init_instance(instance * inst);
 
 void free_instance(instance *inst);
+
+void save_to_tsp_file(instance *inst);
 
 #endif //TSP_OP2_UTILS_H
 
