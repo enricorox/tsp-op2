@@ -10,7 +10,6 @@
 #include "utils.h"
 #include "tsp.h"
 
-#define STOP 12//88 // maximum for memory reason (otherwise it will be killed!)
 #define STEP 4
 
 void start_perf_test(int max);

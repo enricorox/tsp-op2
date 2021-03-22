@@ -6,6 +6,7 @@
 #include "performance.h"
 
 double *** generate_points(int stop, int step){
+    srand(1); // assure reproducibility
     int num_p = 2 * (1 + stop / step) * stop / step;
     printf(BOLDGREEN "[INFO] Generating %d random points...\n" RESET, num_p);
     double ***points;
@@ -85,6 +86,10 @@ void start_perf_test(int max){
         return;
     }
     if(max > 88){
+        if(max > 10000){
+            printf(BOLDRED "[ERROR] Too much nodes!\n" RESET);
+            return;
+        }
         printf(BOLDRED "[WARN] %d points may be too much for your computer!\n", max);
         printf(BOLDRED "[WARN] Press CTR+C or wait 10s...\n" RESET);
         sleep(10); // script-friendly timer

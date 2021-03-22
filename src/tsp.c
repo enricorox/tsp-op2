@@ -57,7 +57,7 @@ void TSPOpt(instance *inst){
             status = BOLDRED "unbounded";
             break;
         case CPXMIP_OPTIMAL_TOL:
-            status = "optimal (numerical difficulties)";
+            status = "optimal (within tolerance)";
             break;
         case CPXMIP_TIME_LIM_FEAS:
             status = "feasible (time limit reached)";
