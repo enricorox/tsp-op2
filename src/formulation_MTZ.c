@@ -2,7 +2,7 @@
 // Miller-Tucker-Zemlin compact formulation of TSP
 //
 
-#include "MTZ_formulation.h"
+#include "formulation_MTZ.h"
 
 int upos(int i, instance *inst){
     if(i < 0 || i >= inst->tot_nodes){

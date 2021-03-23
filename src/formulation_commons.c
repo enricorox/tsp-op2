@@ -2,15 +2,7 @@
 // TSP shared functions among formulations
 //
 
-#include "tsp_commons.h"
-
-double dist(int i, int j, instance *inst) {
-    double dx = inst->xcoord[i] - inst->xcoord[j];
-    double dy = inst->ycoord[i] - inst->ycoord[j];
-    if ( !inst->integer_costs ) return sqrt(dx*dx+dy*dy);
-    int dis = (int) (sqrt(dx*dx+dy*dy) + 0.499999999); // nearest integer
-    return dis+0.0;
-}
+#include "formulation_commons.h"
 
 // return CPLEX column position given an arc (i,j)
 int xpos(int i, int j, instance *inst) {
@@ -52,7 +44,7 @@ void add_x_vars_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             // define variable name
             sprintf(cname[0], "x(%d,%d)", i+1,j+1);
             // define its cost
-            double obj = dist(i,j,inst); // cost == distance
+            double obj = cost(i, j, inst); // cost == distance
             // define its lower bound
             double lb = 0.0;
             // define its upper bound

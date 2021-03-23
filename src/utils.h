@@ -32,6 +32,7 @@
                 "--help                             show this help\n\n"
 
 enum formulation_t {STANDARD, MTZ, GG, FLAST};
+enum distance_t {EUC_2D, ATT, GEO};
 const char *formulation_names[3];
 
 // define a general instance of the problem
@@ -51,6 +52,7 @@ typedef struct{
     char *name[2];
     char *comment[2];
     int tot_nodes;
+    enum distance_t dist;
     double *xcoord, *ycoord;
     int *opt_tour;
 

@@ -1,14 +1,19 @@
 #include "tsp.h"
 
-double cost(instance *inst){
-    double cost = 0;
+double get_zstar_opt(instance *inst){
+    if(inst->opt_tour == NULL){
+        printf(BOLDRED "[ERROR] get_zstar_opt(): optimal tour needed!\n");
+        free_instance(inst);
+        exit(1);
+    }
+    double z = 0;
     //save_to_tsp_file(inst);
     for(int i = 0; i < inst->tot_nodes; i++){
         int curr = inst->opt_tour[i] - 1; // nodes indexes start from 1!
         int next = inst->opt_tour[(i < inst->tot_nodes - 1) ? i + 1 : 0] - 1;
-        cost += dist(curr, next, inst);
+        z += cost(curr, next, inst);
     }
-    return cost;
+    return z;
 }
 
 void TSPOpt(instance *inst){
@@ -108,7 +113,7 @@ void TSPOpt(instance *inst){
     if(inst->verbose >= 1) {
         printf(BOLDGREEN "[INFO] Found z* = %f\n", obj);
         if(inst->opt_tour != NULL )
-            printf(BOLDGREEN "[INFO] Known solution z* = %f\n", cost(inst));
+            printf(BOLDGREEN "[INFO] Known solution z* = %f\n", get_zstar_opt(inst));
     }
 
     // free and close cplex model

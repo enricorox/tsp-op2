@@ -25,11 +25,12 @@ void init_instance(instance *inst){
     inst->name[0] = inst->name[1] = NULL;
     inst->comment[0] = inst->comment[1] = NULL;
     inst->tot_nodes = -1;
+    inst->dist = EUC_2D;
     inst->xcoord = inst->ycoord = NULL;
     inst->opt_tour = NULL;
 
     // other parameters
-    inst->integer_costs = false;
+    inst->integer_costs = true;
     inst->directed = false;
 
     // results
@@ -92,9 +93,10 @@ void parse_cli(int argc, char **argv, instance *inst){
         if(strcmp(argv[i],"--time-limit") == 0){
             if(argv[++i] != NULL)
                 inst->time_limit = atof(argv[i]);
-            if(inst->time_limit < 10)
+            if(inst->time_limit < 10) {
                 printf(BOLDRED "[WARN] Time limit may be too low!\n" RESET);
-            sleep(5);
+                sleep(5);
+            }
             continue;
         }
         if(strcmp(argv[i],"--no-gui") == 0){ inst->gui = false; continue;}
@@ -231,11 +233,15 @@ void parse_file(instance *inst, char *file_name){
         }
 
         if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){ // Assuming it is EUC_2D
-            inst->integer_costs = true; // see specs
             if(inst->verbose >=2) printf("EDGE_WEIGHT_TYPE = %s\n", param);
-            if(strncmp(param, "EUC_2D", 3) != 0){
-                printf(BOLDRED "[WARN] EDGE_WEIGHT_TYPE = %s is not supported yet: using EUC_2D instead.\n" RESET, param);
-            }
+
+            if(strncmp(param, "EUC_2D", 6) == 0){ inst->dist = EUC_2D; continue; }
+
+            if(strncmp(param, "ATT", 3) == 0) { inst->dist = ATT; continue; }
+
+            if(strncmp(param, "GEO", 3) == 0) { inst->dist = GEO; continue; }
+
+            printf(BOLDRED "[WARN] EDGE_WEIGHT_TYPE = %s is not supported yet: using default.\n" RESET, param);
             continue;
         }
 

@@ -5,12 +5,15 @@
 #include <cplex.h>
 
 #include "utils.h"
+#include "formulation_commons.h"
 #include "plot.h"
 
 // formulations
-#include "standard_formulation.h"
-#include "MTZ_formulation.h"
-#include "GG_formulation.h"
+#include "formulation_standard.h"
+#include "formulation_MTZ.h"
+#include "formulation_GG.h"
+
+double cost(int i, int j, instance *inst);
 
 void TSPOpt(instance *inst);
 

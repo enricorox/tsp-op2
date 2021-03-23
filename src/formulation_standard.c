@@ -2,7 +2,7 @@
 // Created by enrico on 19/03/21.
 //
 
-#include "standard_formulation.h"
+#include "formulation_standard.h"
 
 void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
     char binary = 'B';
@@ -20,7 +20,7 @@ void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
             // define variable name
             sprintf(cname[0], "x(%d,%d)", i+1,j+1);
             // define its cost
-            double obj = dist(i,j,inst); // cost == distance
+            double obj = cost(i, j, inst); // cost == distance
             // define its lower bound
             double lb = 0.0;
             // define its upper bound

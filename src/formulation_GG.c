@@ -2,7 +2,7 @@
 // Gravish and Graves compact formulation of TSP
 //
 
-#include "GG_formulation.h"
+#include "formulation_GG.h"
 
 int ypos(int i, int j, instance *inst){
     if((j < 0) || (i < 0) || (j >= inst->tot_nodes) || (i >= inst->tot_nodes)){
