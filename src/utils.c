@@ -92,8 +92,9 @@ void parse_cli(int argc, char **argv, instance *inst){
         if(strcmp(argv[i],"--time-limit") == 0){
             if(argv[++i] != NULL)
                 inst->time_limit = atof(argv[i]);
-            if(inst->time_limit < 2)
+            if(inst->time_limit < 10)
                 printf(BOLDRED "[WARN] Time limit may be too low!\n" RESET);
+            sleep(5);
             continue;
         }
         if(strcmp(argv[i],"--no-gui") == 0){ inst->gui = false; continue;}
@@ -229,8 +230,8 @@ void parse_file(instance *inst, char *file_name){
             continue;
         }
 
-        if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){
-            inst->integer_costs = false;
+        if(strncmp(param_name, "EDGE_WEIGHT_TYPE", 16) == 0){ // Assuming it is EUC_2D
+            inst->integer_costs = true; // see specs
             if(inst->verbose >=2) printf("EDGE_WEIGHT_TYPE = %s\n", param);
             if(strncmp(param, "EUC_2D", 3) != 0){
                 printf(BOLDRED "[WARN] EDGE_WEIGHT_TYPE = %s is not supported yet: using EUC_2D instead.\n" RESET, param);

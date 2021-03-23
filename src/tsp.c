@@ -1,5 +1,16 @@
 #include "tsp.h"
 
+double cost(instance *inst){
+    double cost = 0;
+    //save_to_tsp_file(inst);
+    for(int i = 0; i < inst->tot_nodes; i++){
+        int curr = inst->opt_tour[i] - 1; // nodes indexes start from 1!
+        int next = inst->opt_tour[(i < inst->tot_nodes - 1) ? i + 1 : 0] - 1;
+        cost += dist(curr, next, inst);
+    }
+    return cost;
+}
+
 void TSPOpt(instance *inst){
     // performance check
     struct timeval start, stop;
@@ -38,7 +49,7 @@ void TSPOpt(instance *inst){
     // optimize!
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization started! Wait please...\n" RESET);
     if((err = CPXmipopt(env, lp))){
-        printf(BOLDRED "[ERROR] CPXmipopt(): error code %d\n" RESET, err);
+        printf(BOLDRED "[ERROR] CPXmipopt(): error code %d %s\n" RESET, err, (err == 1217)?"infeasible!":"");
         free_instance(inst);
         exit(1);
     }
@@ -89,6 +100,15 @@ void TSPOpt(instance *inst){
             break;
         default:
             get_solution(inst, env, lp);
+    }
+
+    // show cost
+    double obj;
+    CPXgetobjval(env, lp, &obj); // A solution must exist here!
+    if(inst->verbose >= 1) {
+        printf(BOLDGREEN "[INFO] Found z* = %f\n", obj);
+        if(inst->opt_tour != NULL )
+            printf(BOLDGREEN "[INFO] Known solution z* = %f\n", cost(inst));
     }
 
     // free and close cplex model
