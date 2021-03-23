@@ -25,22 +25,28 @@ double dist_att(int i, int j, instance *inst){
     return (tij < rij) ? tij + 1 : tij;
 }
 
-double dist_geo(int i, int j, instance *inst){
+void real_to_geo_coords(int i, double *lat, double *lon, instance *inst){
     // convert to latitude in radians
-    int deg = nint( inst->xcoord[i] );
+    double deg = nint( inst->xcoord[i] );
     double min = inst->xcoord[i] - deg;
-    double latitude = PI * (deg + 5.0 * min / 3.0 ) / 180.0;
+    *lat = PI * (deg + 5.0 * min / 3.0 ) / 180.0;
 
     // convert to longitude in radians
     deg = nint( inst->ycoord[i] );
     min = inst->ycoord[i] - deg;
-    double longitude = PI * (deg + 5.0 * min / 3.0 ) / 180.0;
+    *lon = PI * (deg + 5.0 * min / 3.0 ) / 180.0;
+}
 
+double dist_geo(int i, int j, instance *inst){
+    double lat_i, lon_i, lat_j, lon_j;
+    real_to_geo_coords(i, &lat_i, &lon_i, inst);
+    real_to_geo_coords(j, &lat_j, &lon_j, inst);
     // convert to km
-    double q1 = cos( longitude - longitude );
-    double q2 = cos( latitude - latitude );
-    double q3 = cos( latitude + latitude );
+    double q1 = cos( lon_i - lon_j );
+    double q2 = cos( lat_i - lat_j );
+    double q3 = cos( lat_i + lat_j );
     int dij = (int) ( RRR * acos( 0.5*((1.0+q1)*q2 - (1.0-q1)*q3) ) + 1.0);
+    printf("d(%2d,%2d) = %d\n", i + 1, j + 1, dij);
     return dij;
 }
 

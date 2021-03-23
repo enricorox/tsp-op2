@@ -111,9 +111,9 @@ void TSPOpt(instance *inst){
     double obj;
     CPXgetobjval(env, lp, &obj); // A solution must exist here!
     if(inst->verbose >= 1) {
-        printf(BOLDGREEN "[INFO] Found z* = %f\n", obj);
+        printf(BOLDGREEN "[INFO] Found z* = %f\n" RESET, obj);
         if(inst->opt_tour != NULL )
-            printf(BOLDGREEN "[INFO] Known solution z* = %f\n", get_zstar_opt(inst));
+            printf(BOLDGREEN "[INFO] Known solution z* = %f\n" RESET, get_zstar_opt(inst));
     }
 
     // free and close cplex model
