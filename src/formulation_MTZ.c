@@ -14,8 +14,7 @@ int upos(int i, instance *inst){
 }
 
 void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
-    char *cname[1];
-    cname[0] = calloc(BUFLEN, sizeof(char));
+    char *cname[] = {calloc(BUFLEN, sizeof(char))};
 
     char integer = 'I';
     int err;
@@ -43,16 +42,16 @@ void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
 
 void add_uconsistency_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     int err;
-    char *rname[1];
-    rname[0] = calloc(BUFLEN, sizeof(char));
-    int index[3];
-    double value[3];
+    char *rname[] = {calloc(BUFLEN, sizeof(char))};
+
+    int nnz = 3;
+    int index[nnz];
+    double value[nnz];
     int izero = 0;
 
     int big_M = inst->tot_nodes - 1; // use big M trick
     double rhs = big_M - 1;
     char sense = 'L';
-    int nnz = 3;
     for(int i = 1; i < inst->tot_nodes; i++)
         for(int j = 1; j < inst->tot_nodes; j++){
             if(i == j) continue;

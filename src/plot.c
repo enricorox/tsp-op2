@@ -113,7 +113,7 @@ void plot(instance *inst, double const *rxstar){
 
     // show image
     if(inst->verbose >=1 && inst->gui) {
-        sprintf(command, "/usr/bin/eog %s", image_name);
+        sprintf(command, "/usr/bin/eog %s&", image_name);
         if (system(command))
             printf(BOLDRED "[WARN] Sorry, Eye Of Gnome not found: can't show graph\n" RESET);
     }
