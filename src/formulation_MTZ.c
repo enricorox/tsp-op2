@@ -45,40 +45,6 @@ void add_uconsistency_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     int err;
     char *rname[1];
     rname[0] = calloc(BUFLEN, sizeof(char));
-
-    // position big M constraints
-    int big_M = inst->tot_nodes - 1; // use big M trick
-    for(int i = 1; i < inst->tot_nodes; i++)
-        for(int j = 1; j < inst->tot_nodes; j++){
-            double rhs = big_M - 1;
-            char sense = 'L';
-            sprintf(rname[0], "u_consistency(%d,%d)", i + 1, j + 1);
-            if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname)) ){
-                printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
-                exit(1);
-            }
-            int lastrow_idx = CPXgetnumrows(env, lp) - 1; // constraint index starts from 0
-
-            int err1, err2, err3;
-            // change last row coefficients
-            err2 = err1 = 0;
-            if(i != j) {
-                err1 = CPXchgcoef(env, lp, lastrow_idx, upos(i, inst), 1.0);
-                err2 = CPXchgcoef(env, lp, lastrow_idx, upos(j, inst), -1.0);
-            }
-            err3 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(i, j, inst), big_M);
-            if (err1 || err2 || err3) {
-                printf(BOLDRED "[ERROR] Cannot change coefficient\n");
-            }
-        }
-
-    free(rname[0]);
-}
-
-void add_uconsistency_constraints_lazy(instance *inst, CPXENVptr env, CPXLPptr lp){
-    int err;
-    char *rname[1];
-    rname[0] = calloc(BUFLEN, sizeof(char));
     int index[3];
     double value[3];
     int izero = 0;
@@ -97,11 +63,16 @@ void add_uconsistency_constraints_lazy(instance *inst, CPXENVptr env, CPXLPptr l
             value[1] = -1;
             index[2] = xpos_compact(i, j, inst);
             value[2] = big_M;
-
-            if((err = CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) ){
-                printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error code %d\n" RESET, err);
-                exit(1);
-            }
+            if(inst->lazy) {
+                if ((err = CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname))) {
+                    printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error code %d\n" RESET, err);
+                    exit(1);
+                }
+            }else
+                if ((err = CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname))) {
+                    printf(BOLDRED "[ERROR] CPXaddrows() error code %d\n" RESET, err);
+                    exit(1);
+                }
         }
 
     free(rname[0]);
@@ -112,10 +83,7 @@ void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
 
     add_uconsistency_vars(inst, env, lp);
 
-    if(inst->lazy)
-        add_uconsistency_constraints(inst, env, lp);
-    else
-        add_uconsistency_constraints_lazy(inst, env, lp);
+    add_uconsistency_constraints(inst, env, lp);
 }
 
 void get_solution_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp){

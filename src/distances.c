@@ -6,8 +6,9 @@
 
 // nearest integer
 int nint(double x){
-    //return  (int) (x + 0.499999999);
-    return (int) x; // see http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/TSPFAQ.html
+    return  (int) (x + 0.499999999);
+    //return (int) x; // see http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/TSPFAQ.html
+                    // problem whit berlin52
 }
 
 double dist_euc2d(int i, int j, instance *inst){
@@ -28,17 +29,18 @@ double dist_att(int i, int j, instance *inst){
 
 void real_to_geo_coords(int i, double *lat, double *lon, const instance *inst){
     // convert to latitude in radians
-    double deg = nint( inst->xcoord[i] );
+    double deg = (int) inst->xcoord[i];
     double min = inst->xcoord[i] - deg;
     *lat = PI * (deg + 5.0 * min / 3.0 ) / 180.0;
 
     // convert to longitude in radians
-    deg = nint( inst->ycoord[i] );
+    deg = (int) inst->ycoord[i];
     min = inst->ycoord[i] - deg;
     *lon = PI * (deg + 5.0 * min / 3.0 ) / 180.0;
 }
 
 double dist_geo(int i, int j, const instance *inst){
+    // see http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/TSPFAQ.html
     double lat_i, lon_i, lat_j, lon_j;
     real_to_geo_coords(i, &lat_i, &lon_i, inst);
     real_to_geo_coords(j, &lat_j, &lon_j, inst);

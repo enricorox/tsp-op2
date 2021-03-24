@@ -19,7 +19,7 @@ void add_x_vars_directed(CPXENVptr env, CPXLPptr lp, instance *inst);
 
 void add_degree_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst);
 
-void add_inorout_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst);
+void add_SEC_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst);
 
 
 

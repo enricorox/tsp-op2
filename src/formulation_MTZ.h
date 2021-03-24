@@ -16,8 +16,6 @@ void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 void add_uconsistency_constraints(instance *inst, CPXENVptr env, CPXLPptr lp);
 
-void add_uconsistency_constraints_lazy(instance *inst, CPXENVptr env, CPXLPptr lp);
-
 void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
