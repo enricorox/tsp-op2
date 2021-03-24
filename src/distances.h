@@ -10,7 +10,7 @@
 #include "utils.h"
 
 #define PI 3.141592
-#define RRR 6378.388 // Earth radius in km
+#define REARTH 6378.388 // Earth radius in km
 
 double cost(int i, int j, instance *inst);
 

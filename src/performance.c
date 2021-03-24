@@ -125,7 +125,7 @@ void start_perf_test(instance *user_inst){
         for (enum formulation_t form = STANDARD+1; form < FLAST; form++) { // change formulation
             for (char lazy = 0; lazy < 2; lazy++) { // add lazy constraints
                 set_instance_formulation(&inst, form, lazy);
-                save_to_tsp_file(&inst);
+                save_instance_to_tsp_file(&inst);
                 TSPOpt(&inst);
                 fprintf(values,"%ld,", inst.time);
                 //plot(&inst, inst.xstar);

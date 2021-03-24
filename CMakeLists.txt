@@ -15,6 +15,6 @@ add_executable(tsp
         src/main.c
         src/tsp.c src/tsp.h
         src/plot.c src/plot.h
-        src/utils.c src/utils.h src/formulation_standard.c src/formulation_standard.h src/formulation_MTZ.c src/formulation_MTZ.h src/formulation_commons.c src/formulation_commons.h src/formulation_GG.c src/formulation_GG.h src/performance.c src/performance.h src/distances.c src/distances.h)
+        src/utils.c src/utils.h src/formulation_standard.c src/formulation_standard.h src/formulation_MTZ.c src/formulation_MTZ.h src/formulation_commons.c src/formulation_commons.h src/formulation_GG.c src/formulation_GG.h src/performance.c src/performance.h src/distances.c src/distances.h src/parsers.c src/parsers.h)
 
 target_link_libraries(tsp cplex m pthread dl)

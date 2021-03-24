@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "tsp.h"
 #include "performance.h"
+#include "parsers.h"
 
 int main(int argc, char **argv){
     // define and initialize general instance
