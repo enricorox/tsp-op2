@@ -26,11 +26,13 @@ typedef struct{
     // from cli
     char *input_tsp_file_name; // can be very large if it contains parent directories!
     char *input_opt_file_name;
+    bool integer_costs;
     enum formulation_t formulation;
     bool lazy;
     double time_limit;
     bool gui;
     bool do_plot;
+    bool no_opt;
     int perf;
     int verbose;
 
@@ -43,7 +45,6 @@ typedef struct{
     int *opt_tour;
 
     // other parameters
-    bool integer_costs;
     bool directed;
 
     // results

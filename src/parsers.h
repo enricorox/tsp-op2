@@ -29,4 +29,6 @@ void parse_cli(int argc, char **argv, instance *inst);
 
 void parse_file(instance *inst, char *file_name);
 
+char * find_opt_file(instance *inst);
+
 #endif //TSP_OP2_PARSERS_H

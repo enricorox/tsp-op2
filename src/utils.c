@@ -18,6 +18,7 @@ void init_instance(instance *inst){
     inst->time_limit = CPX_INFBOUND;
     inst->gui = true;
     inst->do_plot = true;
+    inst->no_opt = false;
     inst->perf = false;
     inst->verbose = 1;
 

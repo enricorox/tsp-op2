@@ -302,3 +302,38 @@ void parse_file(instance *inst, char *file_name){
 
     fclose(fin);
 }
+
+char * find_opt_file(instance *inst){
+    // respect user choice
+    if(inst->input_opt_file_name != NULL) return inst->input_opt_file_name;
+
+    char *tsp_filename = strdup(inst->input_tsp_file_name);
+    if(strlen(tsp_filename) < 4) return NULL; // ".tsp" cannot appear
+
+    // allocate memory for new name
+    char *opt_filename = (char *) malloc(strlen(tsp_filename) + 10);
+
+    // find prefix
+    for(int i = 0; tsp_filename[i] != '\0'; i++){
+        if(tsp_filename[i] == '.' && tsp_filename[i + 1] == 't' &&
+           tsp_filename[i + 2] == 's' && tsp_filename[i + 3] == 'p'){
+                tsp_filename[i] = '\0';
+                break;
+        }
+    }
+
+    // build name
+    sprintf(opt_filename, "%s.opt.tour", tsp_filename);
+
+    // free memory
+    free(tsp_filename);
+    FILE * opt_file = fopen(opt_filename, "r");
+    if(opt_file == NULL){
+        if(inst->verbose >=3) printf(BOLDRED "[WARN] %s file not found!\n", opt_filename);
+        free(opt_filename);
+        opt_filename = NULL;
+    }else
+        fclose(opt_file);
+    inst->input_opt_file_name = opt_filename;
+    return opt_filename;
+}
