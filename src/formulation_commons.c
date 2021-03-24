@@ -98,7 +98,7 @@ void add_SEC_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     char *rname[] = { (char *) calloc(BUFLEN, sizeof(char))};
 
     int err, err1, err2;
-    // add "in or out" constraints
+    // add Subtour Elimination Constraints
     for(int i = 0; i < inst->tot_nodes; i++) {
         for (int j = 0; j < inst->tot_nodes; j++) {
             if (j == i) continue;

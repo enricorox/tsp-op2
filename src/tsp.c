@@ -33,6 +33,7 @@ void TSPOpt(instance *inst){
 
     // choose formulation
     switch(inst->formulation) {
+        // ============== directed graphs ==============
         case MTZ:
             inst->directed = true;
             build_model_MTZ(inst, env, lp);
@@ -41,6 +42,7 @@ void TSPOpt(instance *inst){
             inst->directed = true;
             build_model_GG(inst, env, lp);
             break;
+        // ============== undirected graphs ==============
         default:
             build_model(inst, env, lp);
     }
@@ -97,12 +99,14 @@ void TSPOpt(instance *inst){
 
     // get solution
     switch(inst->formulation){
+        // ============== directed graphs ==============
         case MTZ:
             get_solution_MTZ(inst, env, lp);
             break;
         case GG:
             get_solution_GG(inst, env, lp);
             break;
+        // ============== undirected graphs ==============
         default:
             get_solution(inst, env, lp);
     }

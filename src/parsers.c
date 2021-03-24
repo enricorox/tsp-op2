@@ -303,6 +303,11 @@ void parse_file(instance *inst, char *file_name){
     fclose(fin);
 }
 
+/**
+ * Don't trust name field, compute from filename
+ * @param inst
+ * @return inst->input_opt_file_name or NULL if fail
+ */
 char * find_opt_file(instance *inst){
     // respect user choice
     if(inst->input_opt_file_name != NULL) return inst->input_opt_file_name;
@@ -329,7 +334,7 @@ char * find_opt_file(instance *inst){
     free(tsp_filename);
     FILE * opt_file = fopen(opt_filename, "r");
     if(opt_file == NULL){
-        if(inst->verbose >=3) printf(BOLDRED "[WARN] %s file not found!\n", opt_filename);
+        if(inst->verbose >=2) printf(BOLDRED "[WARN] %s file not found!\n", opt_filename);
         free(opt_filename);
         opt_filename = NULL;
     }else
