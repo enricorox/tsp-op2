@@ -77,8 +77,10 @@ void set_instance(instance *user_inst, instance *inst, double ***points, int sto
 
     inst->verbose = 0;
     inst->gui = false;
+    // set time-limit if not set
     inst->time_limit = (user_inst->time_limit < CPX_INFBOUND) ? user_inst->time_limit : 3600; // 1h time limit!
     inst->do_plot = user_inst->do_plot;
+    inst->integer_costs = user_inst->integer_costs;
 }
 
 void start_perf_test(instance *user_inst){
