@@ -14,13 +14,11 @@ void parse_cli(int argc, char **argv, instance *inst){
             continue;
         }
         if(strcmp(argv[i],"--opt-tour") == 0){
-            if(argv[++i] != NULL) {
+            if(argv[++i] != NULL)
                 inst->input_opt_file_name = strdup(argv[i]);
-                //printf("input_opt_file_name allocated at %p!\n", inst->input_opt_file_name);
-            }
             continue;
         }
-        if(strcmp(argv[i],"--formulation") == 0){
+        if(strncmp(argv[i],"--formulation", 6) == 0){
             if(argv[++i] != NULL) {
                 bool found = false;
                 for(int k = 0; k < FLAST; k++)
@@ -54,12 +52,17 @@ void parse_cli(int argc, char **argv, instance *inst){
                 inst->verbose = atoi(argv[i]);
             continue;
         }
-        if(strcmp(argv[i],"--perf") == 0){
+        if(strcmp(argv[i],"--perfr") == 0){
             if(argv[++i] != NULL)
-                inst->perf = atoi(argv[i]);
+                inst->perfr = atoi(argv[i]);
             continue;
         }
-        if(strcmp(argv[i],"--help") == 0) { help = 1; continue; }
+        if(strcmp(argv[i],"--perfl") == 0){
+            if(argv[++i] != NULL)
+                inst->perfl = strdup(argv[i]);
+            continue;
+        }
+        if(strcmp(argv[i],"--help") == 0) { help = 1; break; }
 
         printf(BOLDRED "[ERROR] Unknown option: %s\n" RESET, argv[i]);
         help = true; // need to show help if came here
@@ -81,7 +84,8 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--no-gui        %s\n", inst->gui?"false":"true");
         printf("--no-plot       %s\n", inst->do_plot?"false":"true");
         printf("--no-int-costs  %s\n", inst->integer_costs?"false":"true");
-        printf("--perf          %d\n", inst->perf);
+        printf("--perfr         %d\n", inst->perfr);
+        printf("--perfl         %s\n", inst->perfl);
         printf("--verbose       %d\n", inst->verbose);
     }
 
@@ -90,7 +94,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         exit(1);
     }
 
-    if(inst->input_tsp_file_name == NULL && !inst->perf){
+    if(inst->input_tsp_file_name == NULL && !inst->perfr && inst->perfl == NULL){
         printf(BOLDRED "[ERROR] Check mandatory arguments: ./tsp --help\n" RESET);
         free_instance(inst);
         exit(1);

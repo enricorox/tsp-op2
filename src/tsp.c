@@ -48,7 +48,8 @@ void TSPOpt(instance *inst){
     }
 
     // save model to file
-    save_model(inst, env, lp);
+    if(inst->verbose > 0)
+        save_model(inst, env, lp);
 
     // set CPLEX parameters
     CPXsetdblparam(env, CPX_PARAM_TILIM, inst->time_limit);
@@ -93,9 +94,9 @@ void TSPOpt(instance *inst){
     }
 
     gettimeofday(&stop, NULL);
-    inst->time = stop.tv_sec-start.tv_sec;
+    inst->runtime = stop.tv_sec - start.tv_sec;
     if(inst->verbose >=1)
-        printf(BOLDGREEN "[INFO] Optimization finished in %ld seconds!\n" RESET, inst->time);
+        printf(BOLDGREEN "[INFO] Optimization finished in %ld seconds!\n" RESET, inst->runtime);
 
     // get solution
     switch(inst->formulation){

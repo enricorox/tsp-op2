@@ -109,7 +109,7 @@ void plot(instance *inst, double const *rxstar){
         free_instance(inst);
         exit(1);
     }
-    if(inst->verbose) printf(BOLDGREEN "[INFO] Tour drawn in %s\n" RESET, image_name);
+    if(inst->verbose >= 1) printf(BOLDGREEN "[INFO] Tour drawn in %s\n" RESET, image_name);
 
     // show image
     if(inst->verbose >=1 && inst->gui) {

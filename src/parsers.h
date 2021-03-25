@@ -17,10 +17,11 @@
                 "--formulation <form>               standard, MTZ or GG\n" \
                 "--lazy                             use lazy constraints\n"\
                 "--time-limit <time>                max overall time in seconds\n" \
+                "--seed <seed>                      a random integer used in CPLEX internal operations\n" \
                 "--no-gui                           don't use GUI\n" \
                 "--no-plot                          don't plot\n" \
                 "--no-int-costs                     don't force integer costs (apply to EUC_2D)\n" \
-                "--perf <max>                       do performance test with max size\n"\
+                "--perfr <max>                       do performance test with max size\n"\
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
 

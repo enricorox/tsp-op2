@@ -10,19 +10,22 @@
 const char *formulation_names[] = {"standard", "MTZ", "GG"};
 
 void init_instance(instance *inst){
-    // from cli
+    // ===== from cli =====
     inst->input_tsp_file_name = NULL;
     inst->input_opt_file_name = NULL;
     inst->formulation = STANDARD;
     inst->lazy = false;
+    inst->integer_costs = true;
     inst->time_limit = CPX_INFBOUND;
     inst->gui = true;
     inst->do_plot = true;
     inst->no_opt = false;
-    inst->perf = false;
+    inst->perfr = 0;
+    inst->perfl = NULL;
+    inst->runs = 1;
     inst->verbose = 1;
 
-    // from file
+    // ===== from file =====
     inst->name[0] = inst->name[1] = NULL;
     inst->comment[0] = inst->comment[1] = NULL;
     inst->tot_nodes = -1;
@@ -30,19 +33,19 @@ void init_instance(instance *inst){
     inst->xcoord = inst->ycoord = NULL;
     inst->opt_tour = NULL;
 
-    // other parameters
-    inst->integer_costs = true;
+    // ===== other parameters =====
     inst->directed = false;
 
-    // results
-    inst->time = -1;
+    // ===== results =====
+    inst->runtime = -1;
     inst->xstar = NULL;
-    inst->status = -1; // to be set to 0 by CPLEX
+    inst->status = -1; // to be set to >0 by CPLEX
 }
 void free_instance(instance *inst){
     free(inst->input_tsp_file_name);
     //printf("Freeing input_opt_filename %p...\n", inst->input_opt_file_name);
     free(inst->input_opt_file_name);
+    free(inst->perfl);
 
     free(inst->name[0]);
     free(inst->name[1]);

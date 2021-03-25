@@ -8,7 +8,7 @@
 int nint(double x){
     return  (int) (x + 0.499999999);
     //return (int) x; // see http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/TSPFAQ.html
-                    // problem whit berlin52
+                    // problem whit berlin52 but still optimal
 }
 
 double dist_euc2d(int i, int j, instance *inst){
