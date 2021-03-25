@@ -21,7 +21,8 @@
                 "--no-gui                           don't use GUI\n" \
                 "--no-plot                          don't plot\n" \
                 "--no-int-costs                     don't force integer costs (apply to EUC_2D)\n" \
-                "--perfr <max>                       do performance test with max size\n"\
+                "--perfr <max>                      do performance test with max size\n"\
+                "--perfl <list-file>                execute all tsp-file in <list-file>\n" \
                 "--verbose <n>                      0=quiet, 1=default, 2=verbose, 3=debug\n" \
                 "--help                             show this help\n\n"
 
@@ -31,5 +32,9 @@ void parse_cli(int argc, char **argv, instance *inst);
 void parse_file(instance *inst, char *file_name);
 
 char * find_opt_file(instance *inst);
+
+void parse_file_list(const char *filename, char **tspfiles, int *nfiles, int **seeds, int *nseeds);
+
+bool exist(const char *file);
 
 #endif //TSP_OP2_PARSERS_H

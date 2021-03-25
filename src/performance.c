@@ -111,7 +111,8 @@ void start_perf_test(instance *user_inst){
     //print_points(points, stop, step);
 
     // open comma separated value file for storing values!
-    char *filename = "times.csv";
+    char filename[BUFLEN];
+    snprintf(filename, BUFLEN, "times%d.csv", user_inst->seed);
     FILE *values = fopen(filename,"w");
     fprintf(values, "%d,", (FLAST-1) * 2); // TODO change to include standard formulation
     for(int i = STANDARD + 1; i < FLAST; i++)

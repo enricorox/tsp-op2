@@ -70,6 +70,7 @@ void parse_cli(int argc, char **argv, instance *inst){
                 inst->perfl = strdup(argv[i]);
             continue;
         }
+
         if(strcmp(argv[i],"--help") == 0) { help = 1; break; }
 
         printf(BOLDRED "[ERROR] Unknown option: %s\n" RESET, argv[i]);
@@ -134,7 +135,7 @@ void parse_file(instance *inst, char *file_name){
     char *param_name, *param;
     while(1){
         // check for error & read line
-        if(fgets(line, sizeof(line), fin) == NULL){
+        if(fgets(line, BUFLEN, fin) == NULL){
             printf(BOLDRED "[WARN] EOF not found!\n" RESET);
             break;
         }
@@ -344,13 +345,71 @@ char * find_opt_file(instance *inst){
 
     // free memory
     free(tsp_filename);
-    FILE * opt_file = fopen(opt_filename, "r");
-    if(opt_file == NULL){
+    if(!exist(opt_filename)){
         if(inst->verbose >=2) printf(BOLDRED "[WARN] %s file not found!\n", opt_filename);
         free(opt_filename);
-        opt_filename = NULL;
-    }else
-        fclose(opt_file);
+        return NULL;
+    }
     inst->input_opt_file_name = opt_filename;
     return opt_filename;
+}
+
+/**
+ * Read a list file
+ * @param filename
+ * @param tspfiles return a list of tsp filename
+ * @param nfiles length of above array
+ * @param seeds return a list of seeds
+ * @param nseeds length of above array
+ *
+ * File template:
+ *
+ * NSEEDS=5
+ * 1
+ * 2
+ * 3
+ * 4
+ * 5
+ * NFILES=2
+ * a.tsp
+ * b.tsp
+ */
+void parse_file_list(const char *filename, char **tspfiles, int *nfiles, int **seeds, int *nseeds){
+    if(!exist(filename)){
+        printf("[ERROR] Can't open file %s\n", filename);
+        exit(1);
+    }
+
+    FILE *fin = fopen(filename, "r");
+    char line[BUFLEN];
+    char section=0; // 1=SEEDS, 2=FILES
+    while(fgets(line, BUFLEN, fin)){
+        if(strncmp(line, "NSEEDS=", 7) == 0){
+            int len = atoi(line + 7);
+            int *s = calloc(len, sizeof(int));
+            for(int i = 0; i < len; i++){
+                fgets(line, BUFLEN, fin);
+                s[i] = atoi(line);
+            }
+            *nseeds = len;
+        }
+        if(strncmp(line, "NFILES=", 7) == 0){
+            int len = atoi(line + 7);
+            char **s = malloc(len);
+            for(int i = 0; i < len; i++){
+                fgets(line, BUFLEN, fin);
+                s[i] = strdup(line);
+            }
+            *nfiles = len;
+        }
+    }
+    fclose(fin);
+}
+
+bool exist(const char *file){
+    if(file == NULL) return false;
+    FILE * f = fopen(file, "r");
+    if(f == NULL) return false;
+    fclose(f);
+    return true;
 }

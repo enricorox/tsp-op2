@@ -36,7 +36,6 @@ typedef struct{
     bool no_opt;                    // don't show known optimal solution
     int perfr;                      // run performance test on random points up to <max> size
     char *perfl;                    // run performance test on a list written to file
-    int runs;                       // decide how many runs execute on performance test
     int verbose;                    // print level
 
     // ===== from file =====
