@@ -64,7 +64,7 @@ void free_instance(instance *inst){
 
 void save_instance_to_tsp_file(instance *inst){
     char name[BUFLEN];
-    sprintf(name,"%s.save.tsp", inst->name[0]);
+    snprintf(name,BUFLEN, "%s.save.tsp", inst->name[0]);
     FILE *fout = fopen(name, "w");
     fprintf(fout,"NAME : %s\n", inst->name[0]);
     fprintf(fout,"COMMENT : %s\n", inst->comment[0]);

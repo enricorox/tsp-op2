@@ -58,7 +58,7 @@ void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     char sense = 'E';
     int izero = 0;
     for(int h = 1; h < inst->tot_nodes; h++){
-        sprintf(rname[0], "flow(%d)", h + 1);
+        snprintf(rname[0], BUFLEN, "flow(%d)", h + 1);
         // build index value array
         int idx = 0;
         for(int i = 0; i < inst->tot_nodes; i++) {
@@ -88,7 +88,7 @@ void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     sense = 'E';
     nnz = 2; // can reuse previous arrays!
     for(int j = 1; j < inst->tot_nodes; j++){
-        sprintf(rname[0], "flow_one(%d)", j + 1);
+        snprintf(rname[0], BUFLEN, "flow_one(%d)", j + 1);
         index[0] = ypos(0, j, inst);
         value[0] = 1;
         index[1] = xpos_compact(0, j, inst);

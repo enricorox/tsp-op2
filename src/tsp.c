@@ -142,9 +142,8 @@ void TSPOpt(instance *inst){
 // write model to file
 void save_model(instance *inst, CPXENVptr env, CPXLPptr lp){
     char *file_template = "%s.%s-model.lp";
-    char file_name[strlen(file_template) + strlen(inst->name[0]) +
-            + strlen(formulation_names[inst->formulation]) + 1];
-    sprintf(file_name, file_template, inst->name[0], formulation_names[inst->formulation]);
+    char file_name[BUFLEN];
+    snprintf(file_name, BUFLEN, file_template, inst->name[0], formulation_names[inst->formulation]);
 
     CPXwriteprob(env, lp, file_name, "lp");
 

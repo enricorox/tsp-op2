@@ -42,7 +42,7 @@ void add_x_vars_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     for( int i = 0; i < inst->tot_nodes; i++ ){
         for ( int j = 0; j < inst->tot_nodes; j++ ){
             // define variable name
-            sprintf(cname[0], "x(%d,%d)", i+1,j+1);
+            snprintf(cname[0], BUFLEN, "x(%d,%d)", i+1,j+1);
             // define its cost
             double obj = cost(i, j, inst); // cost == distance
             // define its lower bound
@@ -77,7 +77,7 @@ void add_degree_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst)
             // define the type of constraint (array) ('E' for equality)
             char sense = 'E';
             // define constraint name
-            sprintf(rname[0], "degree_%s(%d)", out?"out":"in", h+1);
+            snprintf(rname[0], BUFLEN, "degree_%s(%d)", out?"out":"in", h+1);
             if ((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname)) ){
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);
@@ -107,7 +107,7 @@ void add_SEC_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             // define the type of constraint (array) ('E' for equality)
             char sense = 'L';
             // define constraint name
-            sprintf(rname[0], "SEC(%d,%d)", i + 1, j + 1);
+            snprintf(rname[0], BUFLEN, "SEC(%d,%d)", i + 1, j + 1);
             if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname))) {
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);

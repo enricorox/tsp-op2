@@ -21,7 +21,7 @@ void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
 
     // add integer vars u(i) for each node i
     for(int i = 0; i < inst->tot_nodes; i++){
-        sprintf(cname[0], "u(%d)", i+1);
+        snprintf(cname[0], BUFLEN, "u(%d)", i+1);
         double obj = 0;
         double lb = 0;
         double ub = i?(inst->tot_nodes - 2):0;
@@ -55,7 +55,7 @@ void add_uconsistency_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     for(int i = 1; i < inst->tot_nodes; i++)
         for(int j = 1; j < inst->tot_nodes; j++){
             if(i == j) continue;
-            sprintf(rname[0], "u_consistency(%d,%d)", i + 1, j + 1);
+            snprintf(rname[0], BUFLEN, "u_consistency(%d,%d)", i + 1, j + 1);
             index[0] = upos(i, inst);
             value[0] = 1;
             index[1] = upos(j, inst);

@@ -66,8 +66,8 @@ void set_instance(instance *user_inst, instance *inst, double ***points, int sto
     char iname[BUFLEN];
     char cname[BUFLEN];
 
-    sprintf(iname, "inst%d", inst->tot_nodes);
-    sprintf(cname, "perf test");
+    snprintf(iname, BUFLEN, "inst%d", inst->tot_nodes);
+    snprintf(cname, BUFLEN, "perf test");
     inst->name[0] = strdup(iname);
     inst->comment[0] = strdup(cname);
 

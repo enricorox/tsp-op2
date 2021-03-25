@@ -36,7 +36,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         }
         if(strcmp(argv[i],"--seed") == 0){
             if(argv[++i] != NULL)
-                inst->seed = atof(argv[i]);
+                inst->seed = atoi(argv[i]);
             if(inst->time_limit == 0) {
                 printf(BOLDRED "[WARN] Using default cplex value!\n" RESET);
             }
@@ -328,7 +328,7 @@ char * find_opt_file(instance *inst){
     if(strlen(tsp_filename) < 4) return NULL; // ".tsp" cannot appear
 
     // allocate memory for new name
-    char *opt_filename = (char *) malloc(strlen(tsp_filename) + 10);
+    char *opt_filename = (char *) malloc(BUFLEN);
 
     // find prefix
     for(int i = 0; tsp_filename[i] != '\0'; i++){
@@ -340,7 +340,7 @@ char * find_opt_file(instance *inst){
     }
 
     // build name
-    sprintf(opt_filename, "%s.opt.tour", tsp_filename);
+    snprintf(opt_filename, BUFLEN,"%s.opt.tour", tsp_filename);
 
     // free memory
     free(tsp_filename);

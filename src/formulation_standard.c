@@ -18,7 +18,7 @@ void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
     for(int i = 0; i < inst->tot_nodes; i++){
         for(int j = i+1; j < inst->tot_nodes; j++){
             // define variable name
-            sprintf(cname[0], "x(%d,%d)", i+1,j+1);
+            snprintf(cname[0], BUFLEN, "x(%d,%d)", i+1,j+1);
             // define its cost
             double obj = cost(i, j, inst); // cost == distance
             // define its lower bound
@@ -46,7 +46,7 @@ void build_model(instance *inst, CPXENVptr env, CPXLPptr lp) {
         // define the type of constraint (array) ('E' for equality)
         char sense = 'E';
         // define constraint name
-        sprintf(cname[0], "degree(%d)", h+1);
+        snprintf(cname[0], BUFLEN, "degree(%d)", h+1);
         if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname))){
             printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
             exit(1);
