@@ -34,6 +34,14 @@ void parse_cli(int argc, char **argv, instance *inst){
             }
             continue;
         }
+        if(strcmp(argv[i],"--seed") == 0){
+            if(argv[++i] != NULL)
+                inst->seed = atof(argv[i]);
+            if(inst->time_limit == 0) {
+                printf(BOLDRED "[WARN] Using default cplex value!\n" RESET);
+            }
+            continue;
+        }
         if(strcmp(argv[i],"--lazy")  == 0){ inst->lazy = true; continue;}
         if(strcmp(argv[i],"--time-limit") == 0){
             if(argv[++i] != NULL)

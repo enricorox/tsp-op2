@@ -28,6 +28,7 @@ typedef struct{
     char *input_opt_file_name;      // input file in TSPLIB format needed only to check correctness
     enum formulation_t formulation; // formulation type
     bool lazy;                      // add formulation-specific constraints in lazy way
+    int seed;                       // cplex random seed
     bool integer_costs;             // force to use integer cost (only for EUC_2D)
     double time_limit;              // overall time limit - CPLEX parameter
     bool gui;                       // show image to the user

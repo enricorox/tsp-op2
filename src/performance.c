@@ -113,7 +113,7 @@ void start_perf_test(instance *user_inst){
     // open comma separated value file for storing values!
     char *filename = "times.csv";
     FILE *values = fopen(filename,"w");
-    fprintf(values, "%d,", FLAST - 1); // TODO change to include standard formulation
+    fprintf(values, "%d,", (FLAST-1) * 2); // TODO change to include standard formulation
     for(int i = STANDARD + 1; i < FLAST; i++)
         for(char lazy = 0; lazy < 2; lazy++)
             fprintf(values, "%s %s,", formulation_names[i], lazy?"lazy":"");

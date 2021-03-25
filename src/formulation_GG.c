@@ -24,7 +24,7 @@ void add_flow_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
     // add y flow variables
     for(int i = 0; i < inst->tot_nodes; i++){
         for(int j = 0; j < inst->tot_nodes; j++) {
-            sprintf(cname[0], "y(%d,%d)", i + 1, j + 1);
+            snprintf(cname[0], BUFLEN, "y(%d,%d)", i + 1, j + 1);
             //printf("y(%d,%d) = %s\n", i+1, j+1, cname[0]);
             double obj = 0;
             double lb = 0;
@@ -119,8 +119,8 @@ void add_link_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
             value[0] = 1;
             index[1] = xpos_compact(i, j, inst);
             value[1] = -inst->tot_nodes + 2;
-            sprintf(rname[0], "link(%d,%d)", i + 1, j + 1);
-            if (inst->lazy){
+            snprintf(rname[0], BUFLEN, "link(%d,%d)", i + 1, j + 1);
+            if(inst->lazy){
                 if ((err = CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname))) {
                     printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error code %d\n" RESET, err);
                     exit(1);

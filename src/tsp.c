@@ -21,9 +21,22 @@ void TSPOpt(instance *inst){
     struct timeval start, stop;
     gettimeofday(&start, NULL);
 
-    // open CPLEX model
     int err;
+    // define cplex envinroment
     CPXENVptr env = CPXopenCPLEX(&err);
+
+    // activate cplex log file
+    if(inst->verbose >= 2) {
+        char log_name[BUFLEN];
+        snprintf(log_name, BUFLEN, "%s.%s.%s%d.cplex.log", inst->name[0], formulation_names[inst->formulation], inst->lazy?"lazy.":".", inst->seed);
+        CPXsetlogfilename(env, log_name, "w");
+    }
+
+    // set cplex random seed
+    if(inst->seed != 0)
+        CPXsetintparam(env, CPX_PARAM_RANDOMSEED, inst->seed);
+
+    // create lp problem
     CPXLPptr lp = CPXcreateprob(env, &err, "TSP");
     if(err){
         printf(BOLDRED "[ERROR] Cannot create problem: error code %d\n" RESET, err);
