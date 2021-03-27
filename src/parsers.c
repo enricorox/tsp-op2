@@ -37,7 +37,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         if(strcmp(argv[i],"--seed") == 0){
             if(argv[++i] != NULL)
                 inst->seed = atoi(argv[i]);
-            if(inst->time_limit == 0) {
+            if(inst->seed == 0) {
                 printf(BOLDRED "[WARN] Using default cplex value!\n" RESET);
             }
             continue;
@@ -88,6 +88,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--file          %s\n", inst->input_tsp_file_name);
         printf("--opt-tour      %s\n", inst->input_opt_file_name);
         printf("--formulation   %s\n", formulation_names[inst->formulation]);
+        printf("--seed          %d\n", inst->seed);
         printf("--lazy          %s\n", inst->lazy?"true":"false");
         printf("--time-limit    %f\n", inst->time_limit);
         printf("--no-gui        %s\n", inst->gui?"false":"true");

@@ -93,10 +93,16 @@ void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
         value[0] = 1;
         index[1] = xpos_compact(0, j, inst);
         value[1] = -inst->tot_nodes + 1;
-        if(CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)){
-            printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error!\n" RESET);
-            exit(1);
-        }
+        if(inst->lazy) {
+            if (CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
+                printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error!\n" RESET);
+                exit(1);
+            }
+        }else
+            if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
+                printf(BOLDRED "[ERROR] CPXaddrows() error!\n" RESET);
+                exit(1);
+            }
     }
 
     free(rname[0]);
