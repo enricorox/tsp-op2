@@ -94,7 +94,7 @@ void add_degree_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst)
     free(rname[0]);
 }
 
-void add_SEC_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
+void add_SEC2_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     char *rname[] = { (char *) calloc(BUFLEN, sizeof(char))};
 
     int err, err1, err2;
@@ -107,7 +107,7 @@ void add_SEC_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             // define the type of constraint (array) ('E' for equality)
             char sense = 'L';
             // define constraint name
-            snprintf(rname[0], BUFLEN, "SEC(%d,%d)", i + 1, j + 1);
+            snprintf(rname[0], BUFLEN, "SEC2(%d,%d)", i + 1, j + 1);
             if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname))) {
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);
@@ -130,5 +130,5 @@ void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
 
     add_degree_constraints_directed(env, lp, inst);
 
-    add_SEC_constraints_directed(env, lp, inst);
+    add_SEC2_constraints_directed(env, lp, inst);
 }

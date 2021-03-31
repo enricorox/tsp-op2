@@ -28,7 +28,8 @@ void TSPOpt(instance *inst){
     // activate cplex log file
     if(inst->verbose >= 2) {
         char log_name[BUFLEN];
-        snprintf(log_name, BUFLEN, "%s.%s%s%d.cplex.log", inst->name[0], formulation_names[inst->formulation], inst->lazy?".lazy.":".", inst->seed);
+        snprintf(log_name, BUFLEN, "%s.%s%s%d.cplex.log",
+                 inst->name[0], formulation_names[inst->formulation], inst->lazy?".lazy.":".", inst->seed);
         CPXsetlogfilename(env, log_name, "w");
     }
 
