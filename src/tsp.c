@@ -24,6 +24,7 @@ void TSPOpt(instance *inst){
     int err;
     // define cplex envinroment
     CPXENVptr env = CPXopenCPLEX(&err);
+    if(err) printerr(inst, "Can't create CPLEX enviroment");
 
     // activate cplex log file
     if(inst->verbose >= 2) {
@@ -38,11 +39,7 @@ void TSPOpt(instance *inst){
 
     // create lp problem
     CPXLPptr lp = CPXcreateprob(env, &err, "TSP");
-    if(err){
-        printf(BOLDRED "[ERROR] Cannot create problem: error code %d\n" RESET, err);
-        free_instance(inst);
-        exit(1);
-    }
+    if(err) printerr(inst, "Can't create LP problem");
 
     // choose formulation
     switch(inst->formulation) {
@@ -57,7 +54,7 @@ void TSPOpt(instance *inst){
             break;
         // ============== undirected graphs ==============
         default:
-            build_model(inst, env, lp);
+            build_model_Benders(inst, env, lp);
     }
 
     // save model to file

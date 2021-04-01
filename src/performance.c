@@ -115,7 +115,7 @@ void start_perf_test(instance *user_inst){
     snprintf(filename, BUFLEN, "times%d.csv", user_inst->seed);
     FILE *values = fopen(filename,"w");
     fprintf(values, "%d,", (FLAST-1) * 2); // TODO change to include standard formulation
-    for(int i = STANDARD + 1; i < FLAST; i++)
+    for(int i = BENDERS + 1; i < FLAST; i++)
         for(char lazy = 0; lazy < 2; lazy++)
             fprintf(values, "%s %s,", formulation_names[i], lazy?"lazy":"");
 
@@ -125,7 +125,7 @@ void start_perf_test(instance *user_inst){
         fprintf(values, "\n%d,", inst.tot_nodes);
         fclose(values);
         values = fopen(filename, "a");
-        for (enum formulation_t form = STANDARD+1; form < FLAST; form++) { // change formulation // TODO change to include standard formulation
+        for (enum formulation_t form = BENDERS + 1; form < FLAST; form++) { // change formulation // TODO change to include standard formulation
             for (char lazy = 0; lazy < 2; lazy++) { // add lazy constraints
                 set_instance_formulation(&inst, form, lazy);
                 if(user_inst->verbose >= 2) save_instance_to_tsp_file(&inst);

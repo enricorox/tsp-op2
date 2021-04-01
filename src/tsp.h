@@ -9,7 +9,7 @@
 #include "plot.h"
 
 // formulations
-#include "formulation_standard.h"
+#include "formulation_Benders.h"
 #include "formulation_MTZ.h"
 #include "formulation_GG.h"
 

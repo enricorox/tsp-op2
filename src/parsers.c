@@ -28,7 +28,7 @@ void parse_cli(int argc, char **argv, instance *inst){
                         break;
                     }
                 if(!found){
-                    inst->formulation = STANDARD;
+                    inst->formulation = BENDERS;
                     printf(BOLDRED "[WARN] Unknown formulation: using STANDARD\n" RESET);
                 }
             }

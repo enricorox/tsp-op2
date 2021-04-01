@@ -20,7 +20,7 @@
 // NB it changes with each CPLEX release!
 #define DEFAULT_CPLEX_SEED 202009243 // from cplex> display settings all
 
-enum formulation_t {STANDARD, MTZ, GG, FLAST};
+enum formulation_t {BENDERS, MTZ, GG, FLAST}; // FLAST is enum guard
 enum distance_t {EUC_2D, ATT, GEO};
 const char *formulation_names[3];
 
@@ -63,6 +63,8 @@ void init_instance(instance * inst);
 void free_instance(instance *inst);
 
 void save_instance_to_tsp_file(instance *inst);
+
+void printerr(instance *inst, const char *err);
 
 #endif //TSP_OP2_UTILS_H
 

@@ -7,13 +7,13 @@
 #include <unistd.h>
 #include "utils.h"
 
-const char *formulation_names[] = {"standard", "MTZ", "GG"};
+const char *formulation_names[] = {"Benders", "MTZ", "GG"};
 
 void init_instance(instance *inst){
     // ===== from cli =====
     inst->input_tsp_file_name = NULL;
     inst->input_opt_file_name = NULL;
-    inst->formulation = STANDARD;
+    inst->formulation = BENDERS;
     inst->lazy = false;
     inst->seed = DEFAULT_CPLEX_SEED;
     inst->integer_costs = true;
@@ -75,4 +75,15 @@ void save_instance_to_tsp_file(instance *inst){
         fprintf(fout, "%d %f %f\n", i + 1, inst->xcoord[i], inst->ycoord[i]);
     fprintf(fout, "EOF\n");
     fclose(fout);
+}
+
+/**
+ * Print error, free memory and exit
+ * @param inst instance to free
+ * @param err explicative string
+ */
+void printerr(instance *inst, const char *err){
+    printf(BOLDRED "[ERROR] %s\n" RESET, err);
+    free_instance(inst);
+    exit(1);
 }
