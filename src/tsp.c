@@ -34,35 +34,44 @@ void TSPOpt(instance *inst){
         CPXsetlogfilename(env, log_name, "w");
     }
 
-    // set cplex random seed
-    CPXsetintparam(env, CPX_PARAM_RANDOMSEED, inst->seed);
-
+    // CPLEX parameters
+    // set random seed
+    if(CPXsetintparam(env, CPXPARAM_RandomSeed, inst->seed))
+        printf("Error setting random seed.\n");
+    // set tree memory limit
+    if(CPXsetdblparam(env, CPXPARAM_MIP_Limits_TreeMemory, inst->mem_limit))
+        printf("Error setting tree memory limit.\n");
+    // set time limit
+    if(CPXsetdblparam(env, CPXPARAM_TimeLimit, inst->time_limit))
+        printf("Error setting time limit.\n");
+    // log on screen
+    if(inst->verbose >= 3)
+        CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_ON);
     // create lp problem
     CPXLPptr lp = CPXcreateprob(env, &err, "TSP");
     if(err) printerr(inst, "Can't create LP problem");
 
     // choose formulation
     switch(inst->formulation) {
+        // ============== undirected graphs ==============
+        case BENDERS:
+            build_model_Benders(inst, env, lp);
+            break;
         // ============== directed graphs ==============
         case MTZ:
             inst->directed = true;
             build_model_MTZ(inst, env, lp);
             break;
         case GG:
+        default:
             inst->directed = true;
             build_model_GG(inst, env, lp);
             break;
-        // ============== undirected graphs ==============
-        default:
-            build_model_Benders(inst, env, lp);
     }
 
     // save model to file
     if(inst->verbose > 0)
         save_model(inst, env, lp);
-
-    // set CPLEX parameters
-    CPXsetdblparam(env, CPX_PARAM_TILIM, inst->time_limit);
 
     // optimize!
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization started! Wait please...\n" RESET);

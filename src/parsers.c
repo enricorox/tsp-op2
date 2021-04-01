@@ -27,28 +27,34 @@ void parse_cli(int argc, char **argv, instance *inst){
                         found = true;
                         break;
                     }
-                if(!found){
-                    inst->formulation = BENDERS;
-                    printf(BOLDRED "[WARN] Unknown formulation: using STANDARD\n" RESET);
-                }
+                if(!found)
+                    printf(BOLDRED "[WARN] Unknown formulation: using default\n" RESET);
+
             }
             continue;
         }
         if(strcmp(argv[i],"--seed") == 0){
             if(argv[++i] != NULL)
                 inst->seed = atoi(argv[i]);
-            if(inst->seed == 0) {
-                printf(BOLDRED "[WARN] Using default cplex value!\n" RESET);
-            }
             continue;
         }
         if(strcmp(argv[i],"--lazy")  == 0){ inst->lazy = true; continue;}
         if(strcmp(argv[i],"--time-limit") == 0){
-            if(argv[++i] != NULL)
+            if(argv[++i] != NULL){
                 inst->time_limit = atof(argv[i]);
-            if(inst->time_limit < 10) {
-                printf(BOLDRED "[WARN] Time limit may be too low!\n" RESET);
-                sleep(5);
+                if(inst->time_limit < 10) {
+                    printf(BOLDRED "[WARN] Time limit may be too low!\n" RESET);
+                    sleep(5);
+                }
+            }
+            continue;
+        }
+        if(strcmp(argv[i],"--mem-limit") == 0){
+            if(argv[++i] != NULL) {
+                inst->mem_limit = atoi(argv[i]);
+                if (inst->mem_limit <= 0) {
+                    printerr(inst, "Memory limit must be positive!");
+                }
             }
             continue;
         }
@@ -91,6 +97,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--seed          %d\n", inst->seed);
         printf("--lazy          %s\n", inst->lazy?"true":"false");
         printf("--time-limit    %f\n", inst->time_limit);
+        printf("--mem-limit     %d\n", inst->mem_limit);
         printf("--no-gui        %s\n", inst->gui?"false":"true");
         printf("--no-plot       %s\n", inst->do_plot?"false":"true");
         printf("--no-int-costs  %s\n", inst->integer_costs?"false":"true");

@@ -34,6 +34,7 @@ typedef struct{
     int seed;                       // cplex random seed
     bool integer_costs;             // force to use integer cost (only for EUC_2D)
     double time_limit;              // overall time limit - CPLEX parameter
+    double mem_limit;               // memory limit for CPLEX decision tree
     bool gui;                       // show image to the user
     bool do_plot;                   // use gnu-plot
     bool no_opt;                    // don't show known optimal solution

@@ -17,6 +17,7 @@
                 "--formulation <form>               standard, MTZ or GG\n" \
                 "--lazy                             use lazy constraints\n"\
                 "--time-limit <time>                max overall time in seconds\n" \
+                "--mem-limit <MB>                   max memory for CPLEX decision tree\n" \
                 "--seed <seed>                      a random integer used in CPLEX internal operations\n" \
                 "--no-gui                           don't use GUI\n" \
                 "--no-plot                          don't plot\n" \

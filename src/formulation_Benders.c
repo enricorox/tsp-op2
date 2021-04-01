@@ -6,6 +6,8 @@
 
 void build_model_Benders(instance *inst, CPXENVptr env, CPXLPptr lp) {
     build_model_base_undirected(env, lp, inst);
+
+    // TODO set CPX_PARAM_OBJLLIM lower bound before adding new constraints!
 }
 
 void get_solution(instance *inst, CPXENVptr env, CPXLPptr lp){
