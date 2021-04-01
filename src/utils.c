@@ -15,7 +15,7 @@ void init_instance(instance *inst){
     inst->input_opt_file_name = NULL;
     inst->formulation = STANDARD;
     inst->lazy = false;
-    inst->seed = 0;
+    inst->seed = DEFAULT_CPLEX_SEED;
     inst->integer_costs = true;
     inst->time_limit = CPX_INFBOUND;
     inst->gui = true;

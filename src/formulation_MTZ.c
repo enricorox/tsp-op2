@@ -83,6 +83,9 @@ void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
     add_uconsistency_vars(inst, env, lp);
 
     add_uconsistency_constraints(inst, env, lp);
+
+    // set strict integrality tolerance because of big M contraints
+    CPXsetdblparam(env, CPX_PARAM_EPINT, 1e-09); // default: 1e-05
 }
 
 void get_solution_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp){

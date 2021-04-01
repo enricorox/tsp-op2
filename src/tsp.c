@@ -34,8 +34,7 @@ void TSPOpt(instance *inst){
     }
 
     // set cplex random seed
-    if(inst->seed != 0)
-        CPXsetintparam(env, CPX_PARAM_RANDOMSEED, inst->seed);
+    CPXsetintparam(env, CPX_PARAM_RANDOMSEED, inst->seed);
 
     // create lp problem
     CPXLPptr lp = CPXcreateprob(env, &err, "TSP");

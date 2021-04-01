@@ -17,6 +17,9 @@
 
 #define BUFLEN 1024
 
+// NB it changes with each CPLEX release!
+#define DEFAULT_CPLEX_SEED 202009243 // from cplex> display settings all
+
 enum formulation_t {STANDARD, MTZ, GG, FLAST};
 enum distance_t {EUC_2D, ATT, GEO};
 const char *formulation_names[3];

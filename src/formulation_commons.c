@@ -98,7 +98,7 @@ void add_SEC2_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     char *rname[] = { (char *) calloc(BUFLEN, sizeof(char))};
 
     int err, err1, err2;
-    // add Subtour Elimination Constraints
+    // add Subtour Elimination Constraints for 2 nodes
     for(int i = 0; i < inst->tot_nodes; i++) {
         for (int j = 0; j < inst->tot_nodes; j++) {
             if (j == i) continue;
