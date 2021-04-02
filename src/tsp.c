@@ -47,6 +47,7 @@ void TSPOpt(instance *inst){
     // log on screen
     if(inst->verbose >= 3)
         CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_ON);
+
     // create lp problem
     CPXLPptr lp = CPXcreateprob(env, &err, "TSP");
     if(err) printerr(inst, "Can't create LP problem");
@@ -141,8 +142,10 @@ void TSPOpt(instance *inst){
     }
 
     // free and close cplex model
-    CPXfreeprob(env, &lp);
-    CPXcloseCPLEX(&env);
+    if(CPXfreeprob(env, &lp))
+        printf("Can't free problem!\n");
+    if(CPXcloseCPLEX(&env))
+        printf("Can't free enviroment!\n");
 }
 
 // write model to file

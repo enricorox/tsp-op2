@@ -97,7 +97,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--seed          %d\n", inst->seed);
         printf("--lazy          %s\n", inst->lazy?"true":"false");
         printf("--time-limit    %f\n", inst->time_limit);
-        printf("--mem-limit     %d\n", inst->mem_limit);
+        printf("--mem-limit     %f\n", inst->mem_limit);
         printf("--no-gui        %s\n", inst->gui?"false":"true");
         printf("--no-plot       %s\n", inst->do_plot?"false":"true");
         printf("--no-int-costs  %s\n", inst->integer_costs?"false":"true");

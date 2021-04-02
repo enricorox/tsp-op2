@@ -15,10 +15,8 @@ void get_solution(instance *inst, CPXENVptr env, CPXLPptr lp){
     int tot_cols = CPXgetnumcols(env, lp);
     double *xstar = (double *) calloc(tot_cols, sizeof(double));
     if (CPXgetx(env, lp, xstar, 0, tot_cols - 1)) {
-        printf(BOLDRED "[ERROR] CPXgetx(): error retrieving xstar!\n" RESET);
         free(xstar);
-        free_instance(inst);
-        exit(1);
+        printerr(inst, "CPXgetx(): error retrieving xstar!");
     }
 
     // scan adjacency matrix induced by xstar and print values

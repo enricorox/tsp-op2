@@ -65,7 +65,7 @@ void free_instance(instance *inst);
 
 void save_instance_to_tsp_file(instance *inst);
 
-void printerr(instance *inst, const char *err);
+void printerr(instance *inst, const char *err) __attribute__ ((__noreturn__));
 
 #endif //TSP_OP2_UTILS_H
 
