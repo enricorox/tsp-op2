@@ -17,10 +17,6 @@ double get_zstar_opt(instance *inst){
 }
 
 void TSPOpt(instance *inst){
-    // performance check
-    struct timeval start, stop;
-    gettimeofday(&start, NULL);
-
     int err;
     // define cplex envinroment
     CPXENVptr env = CPXopenCPLEX(&err);
@@ -56,8 +52,8 @@ void TSPOpt(instance *inst){
     switch(inst->formulation) {
         // ============== undirected graphs ==============
         case BENDERS:
-            build_model_Benders(inst, env, lp);
-            break;
+            inst->directed = false;
+            return loop_benders(inst, env, lp);
         // ============== directed graphs ==============
         case MTZ:
             inst->directed = true;
@@ -74,13 +70,19 @@ void TSPOpt(instance *inst){
     if(inst->verbose > 0)
         save_model(inst, env, lp);
 
+    // performance measure
+    struct timeval start, stop;
+    gettimeofday(&start, NULL);
+
     // optimize!
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization started! Wait please...\n" RESET);
-    if((err = CPXmipopt(env, lp))){
-        printf(BOLDRED "[ERROR] CPXmipopt(): error code %d %s\n" RESET, err, (err == 1217)?"infeasible!":"");
-        free_instance(inst);
-        exit(1);
-    }
+    if(CPXmipopt(env, lp))
+        printerr(inst, "CPXmipopt() error!");
+
+    gettimeofday(&stop, NULL);
+    inst->runtime = stop.tv_sec - start.tv_sec;
+    if(inst->verbose >=1)
+        printf(BOLDGREEN "[INFO] Optimization finished in %ld seconds!\n" RESET, inst->runtime);
 
     // get solution status
     inst->status = CPXgetstat(env, lp);
@@ -113,11 +115,6 @@ void TSPOpt(instance *inst){
         exit(1);
     }
 
-    gettimeofday(&stop, NULL);
-    inst->runtime = stop.tv_sec - start.tv_sec;
-    if(inst->verbose >=1)
-        printf(BOLDGREEN "[INFO] Optimization finished in %ld seconds!\n" RESET, inst->runtime);
-
     // get solution
     switch(inst->formulation){
         // ============== directed graphs ==============
@@ -129,7 +126,7 @@ void TSPOpt(instance *inst){
             break;
         // ============== undirected graphs ==============
         default:
-            get_solution(inst, env, lp);
+            get_solution_Benders(inst, env, lp);
     }
 
     // show cost
