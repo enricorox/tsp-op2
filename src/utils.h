@@ -20,9 +20,9 @@
 // NB it changes with each CPLEX release!
 #define DEFAULT_CPLEX_SEED 202009243 // from cplex> display settings all
 
-enum formulation_t {BENDERS, MTZ, GG, FLAST}; // FLAST is enum guard
+enum formulation_t {BENDERS, MTZ, GG, GGi, FLAST}; // FLAST is enum guard
 enum distance_t {EUC_2D, ATT, GEO};
-const char *formulation_names[3];
+const char *formulation_names[4];
 
 // define a general instance of the problem
 typedef struct{

@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include "utils.h"
 
-const char *formulation_names[] = {"Benders", "MTZ", "GG"};
+const char *formulation_names[] = {"Benders", "MTZ", "GG", "GGi"};
 
 void init_instance(instance *inst){
     // ===== from cli =====

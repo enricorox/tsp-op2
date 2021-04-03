@@ -44,26 +44,27 @@ void TSPOpt(instance *inst){
     if(inst->verbose >= 3)
         CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_ON);
 
-    // create lp problem
+    // create void lp problem
     CPXLPptr lp = CPXcreateprob(env, &err, "TSP");
     if(err) printerr(inst, "Can't create LP problem");
 
     // choose formulation
     switch(inst->formulation) {
-        // ============== undirected graphs ==============
-        case BENDERS:
-            inst->directed = false;
-            return loop_benders(inst, env, lp);
         // ============== directed graphs ==============
         case MTZ:
             inst->directed = true;
             build_model_MTZ(inst, env, lp);
             break;
         case GG:
-        default:
+        case GGi:
             inst->directed = true;
             build_model_GG(inst, env, lp);
             break;
+            // ============== undirected graphs ==============
+        case BENDERS:
+        default:
+            inst->directed = false;
+            return loop_benders(inst, env, lp);
     }
 
     // save model to file
@@ -122,9 +123,11 @@ void TSPOpt(instance *inst){
             get_solution_MTZ(inst, env, lp);
             break;
         case GG:
+        case GGi:
             get_solution_GG(inst, env, lp);
             break;
         // ============== undirected graphs ==============
+        case BENDERS:
         default:
             get_solution_Benders(inst, env, lp);
     }
@@ -140,9 +143,9 @@ void TSPOpt(instance *inst){
 
     // free and close cplex model
     if(CPXfreeprob(env, &lp))
-        printf("Can't free problem!\n");
+        printerr(inst, "Can't free problem!\n");
     if(CPXcloseCPLEX(&env))
-        printf("Can't free enviroment!\n");
+        printerr(inst, "Can't free environment!\n");
 }
 
 // write model to file

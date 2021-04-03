@@ -16,7 +16,7 @@ void add_flow_vars(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp);
 
-void add_link_constraints(instance *inst, CPXENVptr env, CPXLPptr lp);
+void add_linking_constraints(instance *inst, CPXENVptr env, CPXLPptr lp);
 
 void build_model_GG(instance *inst, CPXENVptr env, CPXLPptr lp);
 

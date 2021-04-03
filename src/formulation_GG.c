@@ -85,8 +85,9 @@ void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
 
     // flow for 1: y_1j = (n-1)x_1j
     rhs = 0;
-    sense = 'E';
-    nnz = 2; // can reuse previous arrays!
+    sense = 'L';
+    if(inst->formulation == GGi) sense = 'E';
+    nnz = 2; // we can reuse previous arrays!
     for(int j = 1; j < inst->tot_nodes; j++){
         snprintf(rname[0], BUFLEN, "flow_one(%d)", j + 1);
         index[0] = ypos(0, j, inst);
@@ -94,12 +95,12 @@ void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
         index[1] = xpos_compact(0, j, inst);
         value[1] = -inst->tot_nodes + 1;
         if(inst->lazy) {
-            if (CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
+            if(CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
                 printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error!\n" RESET);
                 exit(1);
             }
         }else
-            if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
+            if(CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
                 printf(BOLDRED "[ERROR] CPXaddrows() error!\n" RESET);
                 exit(1);
             }
@@ -108,7 +109,7 @@ void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     free(rname[0]);
 }
 
-void add_link_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
+void add_linking_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     int err;
     char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};
 
@@ -118,7 +119,7 @@ void add_link_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     double rhs = 0;
     char sense = 'L';
     int izero = 0;
-    // linking constraints: y_ij <= (n-2)x_ij, i!=1!=j
+    // linking constraints: y_ij <= (n-2) * x_ij, for each i != 1 != j
     for(int i = 1; i < inst->tot_nodes; i++){
         for(int j = 1; j < inst->tot_nodes; j++) {
             index[0] = ypos(i, j, inst);
@@ -149,7 +150,7 @@ void build_model_GG(instance *inst, CPXENVptr env, CPXLPptr lp) {
 
     add_flow_constraints(inst, env, lp);
 
-    add_link_constraints(inst, env, lp);
+    add_linking_constraints(inst, env, lp);
 }
 
 void get_solution_GG(instance *inst, CPXENVptr env, CPXLPptr lp){
