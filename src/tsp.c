@@ -19,7 +19,7 @@ double get_zstar_opt(instance *inst){
 void TSPOpt(instance *inst){
     int err;
     // define cplex envinroment
-    CPXENVptr env = CPXopenCPLEX(&err);
+    inst->CPXenv = CPXopenCPLEX(&err);
     if(err) printerr(inst, "Can't create CPLEX enviroment");
 
     // activate cplex log file
@@ -27,58 +27,60 @@ void TSPOpt(instance *inst){
         char log_name[BUFLEN];
         snprintf(log_name, BUFLEN, "%s.%s%s%d.cplex.log",
                  inst->name[0], formulation_names[inst->formulation], inst->lazy?".lazy.":".", inst->seed);
-        CPXsetlogfilename(env, log_name, "w");
+        CPXsetlogfilename(inst->CPXenv, log_name, "w");
     }
 
     // CPLEX parameters
     // set random seed
-    if(CPXsetintparam(env, CPXPARAM_RandomSeed, inst->seed))
-        printf("Error setting random seed.\n");
+    if(CPXsetintparam(inst->CPXenv, CPXPARAM_RandomSeed, inst->seed))
+        print(inst, 'W', 1, "Error setting random seed.\n");
     // set tree memory limit
-    if(CPXsetdblparam(env, CPXPARAM_MIP_Limits_TreeMemory, inst->mem_limit))
-        printf("Error setting tree memory limit.\n");
+    if(CPXsetdblparam(inst->CPXenv, CPXPARAM_MIP_Limits_TreeMemory, inst->mem_limit))
+        print(inst, 'W', 1, "Error setting tree memory limit.\n");
     // set time limit
-    if(CPXsetdblparam(env, CPXPARAM_TimeLimit, inst->time_limit))
-        printf("Error setting time limit.\n");
+    if(CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, inst->time_limit))
+        print(inst, 'W', 1, "Error setting time limit.");
     // log on screen
     if(inst->verbose >= 3)
-        CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_ON);
+        CPXsetintparam(inst->CPXenv, CPX_PARAM_SCRIND, CPX_ON);
 
     // create void lp problem
-    CPXLPptr lp = CPXcreateprob(env, &err, "TSP");
+    inst->CPXlp = CPXcreateprob(inst->CPXenv, &err, "TSP");
     if(err) printerr(inst, "Can't create LP problem");
+
+    // performance measure
+    struct timeval start, stop;
+    gettimeofday(&start, NULL);
 
     // choose formulation
     switch(inst->formulation) {
         // ============== directed graphs ==============
         case MTZ:
             inst->directed = true;
-            build_model_MTZ(inst, env, lp);
+            build_model_MTZ(inst);
             break;
         case GG:
         case GGi:
             inst->directed = true;
-            build_model_GG(inst, env, lp);
+            build_model_GG(inst);
             break;
             // ============== undirected graphs ==============
         case BENDERS:
         default:
             inst->directed = false;
-            return loop_benders(inst, env, lp);
+            loop_benders(inst);
     }
 
     // save model to file
     if(inst->verbose > 0)
-        save_model(inst, env, lp);
-
-    // performance measure
-    struct timeval start, stop;
-    gettimeofday(&start, NULL);
+        save_model(inst);
 
     // optimize!
-    if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Optimization started! Wait please...\n" RESET);
-    if(CPXmipopt(env, lp))
-        printerr(inst, "CPXmipopt() error!");
+    if(inst->xstar == NULL) {
+        if (inst->verbose >= 1) printf(BOLDGREEN "[INFO] Optimization started! Please wait...\n" RESET);
+        if (CPXmipopt(inst->CPXenv, inst->CPXlp))
+            printerr(inst, "CPXmipopt() error!");
+    }
 
     gettimeofday(&stop, NULL);
     inst->runtime = stop.tv_sec - start.tv_sec;
@@ -86,7 +88,7 @@ void TSPOpt(instance *inst){
         printf(BOLDGREEN "[INFO] Optimization finished in %ld seconds!\n" RESET, inst->runtime);
 
     // get solution status
-    inst->status = CPXgetstat(env, lp);
+    inst->status = CPXgetstat(inst->CPXenv, inst->CPXlp);
     char *status;
     switch (inst->status) {
         case CPXMIP_OPTIMAL:
@@ -120,41 +122,35 @@ void TSPOpt(instance *inst){
     switch(inst->formulation){
         // ============== directed graphs ==============
         case MTZ:
-            get_solution_MTZ(inst, env, lp);
+            get_solution_MTZ(inst);
             break;
         case GG:
         case GGi:
-            get_solution_GG(inst, env, lp);
+            get_solution_GG(inst);
             break;
         // ============== undirected graphs ==============
         case BENDERS:
         default:
-            get_solution_Benders(inst, env, lp);
+            get_solution_Benders(inst);
     }
 
     // show cost
     double obj;
-    CPXgetobjval(env, lp, &obj); // A solution must exist here!
+    CPXgetobjval(inst->CPXenv, inst->CPXlp, &obj); // A solution must exist here!
     if(inst->verbose >= 1) {
         printf(BOLDGREEN "[INFO] Found z* = %f\n" RESET, obj);
         if(inst->opt_tour != NULL )
             printf(BOLDGREEN "[INFO] Known solution z* = %f\n" RESET, get_zstar_opt(inst));
     }
-
-    // free and close cplex model
-    if(CPXfreeprob(env, &lp))
-        printerr(inst, "Can't free problem!\n");
-    if(CPXcloseCPLEX(&env))
-        printerr(inst, "Can't free environment!\n");
 }
 
 // write model to file
-void save_model(instance *inst, CPXENVptr env, CPXLPptr lp){
+void save_model(instance *inst){
     char *file_template = "%s.%s-model.lp";
     char file_name[BUFLEN];
     snprintf(file_name, BUFLEN, file_template, inst->name[0], formulation_names[inst->formulation]);
 
-    CPXwriteprob(env, lp, file_name, "lp");
+    CPXwriteprob(inst->CPXenv, inst->CPXlp, file_name, "lp");
 
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Model saved to %s\n" RESET, file_name);
 }

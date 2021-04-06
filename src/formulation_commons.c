@@ -16,7 +16,7 @@ int xpos_compact(int i, int j, instance *inst){
     return pos;
 }
 
-void add_x_vars_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
+void add_x_vars_directed(instance *inst){
     char binary = 'B';
     int err;
 
@@ -35,12 +35,12 @@ void add_x_vars_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             double lb = 0.0;
             // define its upper bound
             double ub = (i != j)?1:0;
-            if((err = CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname))) {
+            if((err = CPXnewcols(inst->CPXenv, inst->CPXlp, 1, &obj, &lb, &ub, &binary, cname))) {
                 printf(BOLDRED "[ERROR] CPXnewcols(): error code %d\n" RESET, err);
                 exit(1);
             }
             // check xpos on the fly (can be removed if I'm sure it's ok)
-            if (CPXgetnumcols(env,lp)-1 != xpos_compact(i,j, inst)) {
+            if (CPXgetnumcols(inst->CPXenv,inst->CPXlp)-1 != xpos_compact(i,j, inst)) {
                 printf(BOLDRED "[ERROR] xpos_compact() got a bad index!\n" RESET);
                 free(cname[0]);
                 free_instance(inst);
@@ -51,7 +51,7 @@ void add_x_vars_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     free(cname[0]);
 }
 
-void add_degree_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
+void add_degree_constraints_directed(instance *inst){
     char *rname[] = { (char *) calloc(BUFLEN, sizeof(char))};
     int err;
 
@@ -65,15 +65,15 @@ void add_degree_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst)
         for(int h = 0; h < inst->tot_nodes; h++){
             // define constraint name
             snprintf(rname[0], BUFLEN, "degree_%s(%d)", out?"out":"in", h+1);
-            if ((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname)) ){
+            if ((err = CPXnewrows(inst->CPXenv, inst->CPXlp, 1, &rhs, &sense, NULL, rname)) ){
                 printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
                 exit(1);
             }
-            int lastrow_idx = CPXgetnumrows(env, lp) - 1; // constraint index starts from 0
+            int lastrow_idx = CPXgetnumrows(inst->CPXenv, inst->CPXlp) - 1; // constraint index starts from 0
             // change last row coefficients from 0 to 1
             for(int i = 0; i < inst->tot_nodes; i++){
                 if(i == h) continue;
-                if ((err = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(out?h:i, out?i:h, inst), 1.0))) {
+                if ((err = CPXchgcoef(inst->CPXenv, inst->CPXlp, lastrow_idx, xpos_compact(out?h:i, out?i:h, inst), 1.0))) {
                     printf(BOLDRED "[ERROR] Cannot change coefficient: error code %d", err);
                 }
             }
@@ -81,7 +81,7 @@ void add_degree_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst)
     free(rname[0]);
 }
 
-void add_SEC2_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
+void add_SEC2_constraints_directed(instance *inst){
     char *rname[] = { (char *) calloc(BUFLEN, sizeof(char))};
 
     int err, err1, err2;
@@ -95,14 +95,13 @@ void add_SEC2_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
             char sense = 'L';
             // define constraint name
             snprintf(rname[0], BUFLEN, "SEC2(%d,%d)", i + 1, j + 1);
-            if((err = CPXnewrows(env, lp, 1, &rhs, &sense, NULL, rname))) {
-                printf(BOLDRED "[ERROR] CPXnewrows() error code %d\n" RESET, err);
-                exit(1);
+            if((err = CPXnewrows(inst->CPXenv, inst->CPXlp, 1, &rhs, &sense, NULL, rname))) {
+                printerr(inst, "[ERROR] CPXnewrows() error.");
             }
-            int lastrow_idx = CPXgetnumrows(env, lp) - 1; // constraint index starts from 0
+            int lastrow_idx = CPXgetnumrows(inst->CPXenv, inst->CPXlp) - 1; // constraint index starts from 0
             // change last row coefficients from 0 to 1 or -1
-            err1 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(i, j, inst), 1.0);
-            err2 = CPXchgcoef(env, lp, lastrow_idx, xpos_compact(j, i, inst), 1.0);
+            err1 = CPXchgcoef(inst->CPXenv, inst->CPXlp, lastrow_idx, xpos_compact(i, j, inst), 1.0);
+            err2 = CPXchgcoef(inst->CPXenv, inst->CPXlp, lastrow_idx, xpos_compact(j, i, inst), 1.0);
             if (err1 || err2) {
                 printf(BOLDRED "[ERROR] Cannot change coefficient: error code %d", err);
             }
@@ -112,12 +111,12 @@ void add_SEC2_constraints_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
     free(rname[0]);
 }
 
-void build_model_base_directed(CPXENVptr env, CPXLPptr lp, instance *inst){
-    add_x_vars_directed(env, lp, inst);
+void build_model_base_directed(instance *inst){
+    add_x_vars_directed(inst);
 
-    add_degree_constraints_directed(env, lp, inst);
+    add_degree_constraints_directed(inst);
 
-    add_SEC2_constraints_directed(env, lp, inst);
+    add_SEC2_constraints_directed(inst);
 }
 
 
@@ -139,9 +138,8 @@ int xpos(int i, int j, instance *inst) {
     return pos;
 }
 
-void add_x_vars_undirected(CPXENVptr env, CPXLPptr lp, instance *inst){
+void add_x_vars_undirected(instance *inst){
     char binary = 'B';
-    int err;
 
     // allocate array for variable's name with trick
     char *cname[] = {(char *) calloc(BUFLEN, sizeof(char))}; // string array required by cplex for batch insertions
@@ -158,12 +156,12 @@ void add_x_vars_undirected(CPXENVptr env, CPXLPptr lp, instance *inst){
             double lb = 0.0;
             // define its upper bound
             double ub = 1.0;
-            if(CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname)) {
+            if(CPXnewcols(inst->CPXenv, inst->CPXlp, 1, &obj, &lb, &ub, &binary, cname)) {
                 free(cname[0]);
                 printerr(inst, "Cannot add columns!");
             }
             // check xpos on the fly (can be removed if I'm sure it's ok?)
-            if (CPXgetnumcols(env,lp)-1 != xpos(i, j, inst)) {
+            if (CPXgetnumcols(inst->CPXenv,inst->CPXlp)-1 != xpos(i, j, inst)) {
                 free(cname[0]);
                 printerr(inst, "xpos() got a bad index!");
             }
@@ -172,7 +170,7 @@ void add_x_vars_undirected(CPXENVptr env, CPXLPptr lp, instance *inst){
     free(cname[0]);
 }
 
-void add_degree_constraints_undirected(CPXENVptr env, CPXLPptr lp, instance *inst){
+void add_degree_constraints_undirected(instance *inst){
     char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};
 
     int nnz = inst->tot_nodes - 1;
@@ -194,7 +192,7 @@ void add_degree_constraints_undirected(CPXENVptr env, CPXLPptr lp, instance *ins
             if(i != h) index[k++] = xpos(h, i, inst);
         // define constraint name
         snprintf(rname[0], BUFLEN, "degree(%d)", h+1);
-        if(CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
+        if(CPXaddrows(inst->CPXenv, inst->CPXlp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
             free(rname[0]);
             printerr(inst, "Cannot add rows!");
         }
@@ -202,8 +200,8 @@ void add_degree_constraints_undirected(CPXENVptr env, CPXLPptr lp, instance *ins
     free(rname[0]);
 }
 
-void build_model_base_undirected(CPXENVptr env, CPXLPptr lp, instance *inst){
-    add_x_vars_undirected(env, lp, inst);
+void build_model_base_undirected(instance *inst){
+    add_x_vars_undirected(inst);
 
-    add_degree_constraints_undirected(env, lp, inst);
+    add_degree_constraints_undirected(inst);
 }

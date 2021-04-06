@@ -9,8 +9,8 @@
 
 #include "formulation_commons.h"
 
-void loop_benders(instance *inst, CPXENVptr env, CPXLPptr lp);
+void loop_benders(instance *inst);
 
-void get_solution_Benders(instance *inst, CPXENVptr env, CPXLPptr lp);
+void get_solution_Benders(instance *inst);
 
 #endif //TSP_OP2_FORMULATION_BENDERS_H

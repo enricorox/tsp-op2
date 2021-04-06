@@ -12,15 +12,13 @@
 
 int upos(int i, instance *inst);
 
-void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp);
+void add_uconsistency_vars(instance *inst);
 
-void add_uconsistency_constraints(instance *inst, CPXENVptr env, CPXLPptr lp);
+void add_uconsistency_constraints(instance *inst);
 
-void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
+void build_model_MTZ(instance *inst);
 
-void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
-
-void get_solution_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp);
+void get_solution_MTZ(instance *inst);
 
 
 #endif //TSP_OP2_FORMULATION_MTZ_H

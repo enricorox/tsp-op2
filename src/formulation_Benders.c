@@ -61,14 +61,19 @@ void findccomp(instance *inst, int *ncomp, int *succ, int *comp){
  * @param comp array specifying components
  * @return a new problem with updated constraints
  */
-CPXLPptr updconstr(instance *inst, CPXENVptr env, CPXLPptr lp, int ncomp, const int *comp){
+void updconstr(instance *inst, int ncomp, const int *comp){
     if(ncomp <= 1) printerr(inst, "Illegal state: must be ncomp > 1");
-    int status;
-    CPXLPptr lp_clone = CPXcloneprob(env, lp, &status);
-    if(status) printerr(inst, "Can't copy problem!");
-    if(CPXfreeprob(env, &lp)) printerr(inst, "Can't free problem!");
 
-    int tot_cols = CPXgetnumcols(env, lp_clone);
+    // clone problem
+    int status;
+    CPXLPptr lp_clone = CPXcloneprob(inst->CPXenv, inst->CPXlp, &status);
+    if(status) printerr(inst, "Can't clone problem!");
+    // free old problem
+    if(CPXfreeprob(inst->CPXenv, &inst->CPXlp)) printerr(inst, "Can't free problem!");
+
+    inst->CPXlp = lp_clone;
+
+    int tot_cols = CPXgetnumcols(inst->CPXenv, inst->CPXlp);
     char *rname[] = {(char *) malloc(BUFLEN)};
     double *value = (double *) malloc(tot_cols * sizeof(double));
     int *index = (int *) malloc(tot_cols * sizeof(int));
@@ -95,8 +100,8 @@ CPXLPptr updconstr(instance *inst, CPXENVptr env, CPXLPptr lp, int ncomp, const 
         }
         double rhs = csize - 1;
         int nnz = nedges;
-        snprintf(rname[0], BUFLEN, "SEC(comp=%d, size=%d)", curr_comp, csize);
-        if(CPXaddrows(env, lp_clone, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname))
+        snprintf(rname[0], BUFLEN, "SEC(%d,%d)", curr_comp, csize);
+        if(CPXaddrows(inst->CPXenv, inst->CPXlp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname))
             printerr(inst, "Can't add rows!");
         if(inst->verbose >= 3)
             printf("Added constraints for component %d of size %d\n", curr_comp, csize);
@@ -104,7 +109,6 @@ CPXLPptr updconstr(instance *inst, CPXENVptr env, CPXLPptr lp, int ncomp, const 
     free(rname[0]);
     free(index);
     free(value);
-    return lp_clone;
 }
 
 /**
@@ -116,63 +120,74 @@ CPXLPptr updconstr(instance *inst, CPXENVptr env, CPXLPptr lp, int ncomp, const 
  * @param env CPLEX environment
  * @param lp CPLEX linear problem
  */
-void loop_benders(instance *inst, CPXENVptr env, CPXLPptr lp) {
-    build_model_base_undirected(env, lp, inst);
+void loop_benders(instance *inst) {
+    build_model_base_undirected(inst);
 
-    int tot_cols = CPXgetnumcols(env, lp);
+    int tot_cols = CPXgetnumcols(inst->CPXenv, inst->CPXlp);
     int ncomp = inst->tot_nodes;
     double *xstar = (double *) malloc(tot_cols * sizeof(double));
     int *succ = (int *) malloc(inst->tot_nodes * sizeof(int));
     int *comp = (int *) malloc(inst->tot_nodes * sizeof(int));
 
+    print(inst, 'I', 1, "Optimization started! Please wait...");
+
+    struct timeval start, stop;
+    long otime = 0;
     int it = 0;
     while(true) {
         if(inst->verbose >= 2) printf(BOLDGREEN "[Benders] Iteration #%d...\n" RESET, ++it);
-        CPXmipopt(env, lp);
+        CPXmipopt(inst->CPXenv, inst->CPXlp);
 
         // get xstar
-        if(CPXgetx(env, lp, xstar, 0, tot_cols - 1)) {
+        if(CPXgetx(inst->CPXenv, inst->CPXlp, xstar, 0, tot_cols - 1)) {
             printerr(inst, "CPXgetx(): error retrieving xstar!");
         }
         inst->xstar = xstar;
 
+        gettimeofday(&start, NULL);
         // find connected components
         findccomp(inst, &ncomp, succ, comp);
 
         if(inst->verbose >= 2)
             printf(BOLDGREEN "[Benders] Found %d connected components\n" RESET, ncomp);
 
-        if(inst->verbose >= 3) {
-            plot(inst, inst->xstar);
-        }
-
         if(ncomp == 1)
             break;
 
+
         // set new lower bound
         double zstar;
-        CPXgetobjval(env, lp, &zstar);
-        CPXsetdblparam(env, CPX_PARAM_OBJLLIM, zstar);
+        CPXgetobjval(inst->CPXenv, inst->CPXlp, &zstar);
+        CPXsetdblparam(inst->CPXenv, CPX_PARAM_OBJLLIM, zstar);
+
+
         // add sec for connected components
-        lp = updconstr(inst, env, lp, ncomp, comp);
+        updconstr(inst, ncomp, comp);
+        gettimeofday(&stop, NULL);
+        otime += stop.tv_sec - start.tv_sec;
     }
 
+    print(inst, 'I', 2, "Overhead finding connected components: %ld seconds", otime);
     free(succ);
     free(comp);
 }
 
-void get_solution_Benders(instance *inst, CPXENVptr env, CPXLPptr lp){
+void get_solution_Benders(instance *inst){
     // get solution from CPLEX
-    int tot_cols = CPXgetnumcols(env, lp);
-    double *xstar = (double *) calloc(tot_cols, sizeof(double));
-    if (CPXgetx(env, lp, xstar, 0, tot_cols - 1)) {
-        free(xstar);
-        printerr(inst, "CPXgetx(): error retrieving xstar!");
+    int tot_cols = CPXgetnumcols(inst->CPXenv, inst->CPXlp);
+    double *xstar;
+    if(inst->xstar == NULL) {
+        xstar = (double *) calloc(tot_cols, sizeof(double));
+        if (CPXgetx(inst->CPXenv, inst->CPXlp, xstar, 0, tot_cols - 1)) {
+            free(xstar);
+            printerr(inst, "CPXgetx(): error retrieving xstar!");
+        }
     }
+    else
+        xstar = inst->xstar;
+
 
     // scan adjacency matrix induced by xstar and print values
-    if(inst->verbose >=2) printf("Solution %s found:\n", inst->status == CPX_STAT_OPTIMAL ? "optimal":"");
-
     // deal with numeric errors
     double *rxstar = (double *) calloc(tot_cols, sizeof(double));
     for(int i = 0; i < inst->tot_nodes; i++){
@@ -184,7 +199,7 @@ void get_solution_Benders(instance *inst, CPXENVptr env, CPXLPptr lp){
             }
         }
     }
-
-    inst->xstar = rxstar;
     free(xstar);
+    inst->xstar = rxstar;
+
 }

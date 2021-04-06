@@ -13,7 +13,7 @@ int upos(int i, instance *inst){
     return upos;
 }
 
-void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
+void add_uconsistency_vars(instance *inst){
     char *cname[] = {calloc(BUFLEN, sizeof(char))};
 
     char integer = 'I';
@@ -25,13 +25,13 @@ void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
         double obj = 0;
         double lb = 0;
         double ub = i?(inst->tot_nodes - 2):0;
-        if((err = CPXnewcols(env, lp, 1, &obj, &lb, &ub, &integer, cname))) {
+        if((err = CPXnewcols(inst->CPXenv, inst->CPXlp, 1, &obj, &lb, &ub, &integer, cname))) {
             printf(BOLDRED "[ERROR] CPXnewcols(): error code %d\n" RESET, err);
             free_instance(inst); free(cname[0]);
             exit(1);
         }
         // check xpos on the fly (can be removed if I'm sure it's ok)
-        if(CPXgetnumcols(env,lp)-1 != upos(i, inst)) {
+        if(CPXgetnumcols(inst->CPXenv, inst->CPXlp)-1 != upos(i, inst)) {
             printf(BOLDRED "[ERROR] upos() got a bad index!\n" RESET);
             free_instance(inst); free(cname[0]);
             exit(1);
@@ -40,7 +40,7 @@ void add_uconsistency_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
     free(cname[0]);
 }
 
-void add_uconsistency_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
+void add_uconsistency_constraints(instance *inst){
     int err;
     char *rname[] = {calloc(BUFLEN, sizeof(char))};
 
@@ -63,12 +63,12 @@ void add_uconsistency_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
             index[2] = xpos_compact(i, j, inst);
             value[2] = big_M;
             if(inst->lazy) {
-                if ((err = CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname))) {
+                if ((err = CPXaddlazyconstraints(inst->CPXenv, inst->CPXlp, 1, nnz, &rhs, &sense, &izero, index, value, rname))) {
                     printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error code %d\n" RESET, err);
                     exit(1);
                 }
             }else
-                if ((err = CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname))) {
+                if ((err = CPXaddrows(inst->CPXenv, inst->CPXlp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname))) {
                     printf(BOLDRED "[ERROR] CPXaddrows() error code %d\n" RESET, err);
                     exit(1);
                 }
@@ -77,22 +77,22 @@ void add_uconsistency_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
     free(rname[0]);
 }
 
-void build_model_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp) {
-    build_model_base_directed(env, lp, inst);
+void build_model_MTZ(instance *inst) {
+    build_model_base_directed(inst);
 
-    add_uconsistency_vars(inst, env, lp);
+    add_uconsistency_vars(inst);
 
-    add_uconsistency_constraints(inst, env, lp);
+    add_uconsistency_constraints(inst);
 
     // set strict integrality tolerance because of big M contraints
-    CPXsetdblparam(env, CPX_PARAM_EPINT, 1e-09); // default: 1e-05
+    CPXsetdblparam(inst->CPXenv, CPX_PARAM_EPINT, 1e-09); // default: 1e-05
 }
 
-void get_solution_MTZ(instance *inst, CPXENVptr env, CPXLPptr lp){
+void get_solution_MTZ(instance *inst){
     // get solution from CPLEX
-    int tot_cols = CPXgetnumcols(env, lp);
+    int tot_cols = CPXgetnumcols(inst->CPXenv, inst->CPXlp);
     double *xstar = (double *) calloc(tot_cols, sizeof(double));
-    if (CPXgetx(env, lp, xstar, 0, tot_cols - 1)) {
+    if (CPXgetx(inst->CPXenv, inst->CPXlp, xstar, 0, tot_cols - 1)) {
         printf(BOLDRED "[ERROR] CPXgetx(): error retrieving xstar!\n" RESET);
         free(xstar);
         free_instance(inst);

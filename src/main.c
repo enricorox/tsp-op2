@@ -9,6 +9,7 @@ int main(int argc, char **argv){
     // define and initialize general instance
     instance inst;
     init_instance(&inst);
+
     // parse command line
     parse_cli(argc, argv, &inst);
 
@@ -23,6 +24,7 @@ int main(int argc, char **argv){
                 parse_file(&inst, inst.input_opt_file_name);
             }
         }
+        print(&inst, 'I', 1, "Solving %s with %s formulation", inst.name[0], formulation_names[inst.formulation]);
         // start optimization
         TSPOpt(&inst);
         // plot

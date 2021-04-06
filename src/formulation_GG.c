@@ -4,6 +4,15 @@
 
 #include "formulation_GG.h"
 
+/**
+ * y position.
+ * N.B. Need to add edge binary variable first!
+ *
+ * @param i start point
+ * @param j end point
+ * @param inst general instance
+ * @return flow variable column index on CPLEX LP
+ */
 int ypos(int i, int j, instance *inst){
     if((j < 0) || (i < 0) || (j >= inst->tot_nodes) || (i >= inst->tot_nodes)){
         printf(BOLDRED"[ERROR] ypos(): unexpected i = %d, j = %d\n" RESET, i, j);
@@ -14,12 +23,16 @@ int ypos(int i, int j, instance *inst){
     return pos;
 }
 
-void add_flow_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
-    char *cname[1];
-    cname[0] = (char *) calloc(BUFLEN, sizeof(char));
+/**
+ * Add flow variables.
+ * N.B. Need to add edge binary variables first!
+ *
+ * @param inst general instance
+ */
+void add_flow_vars(instance *inst){
+    char *cname[] = {(char *) malloc(BUFLEN)};
 
     char integer = 'I';
-    int err;
 
     // add y flow variables
     for(int i = 0; i < inst->tot_nodes; i++){
@@ -29,26 +42,27 @@ void add_flow_vars(instance *inst, CPXENVptr env, CPXLPptr lp){
             double obj = 0;
             double lb = 0;
             double ub = ((i == j) || (j == 0)) ? 0 : inst->tot_nodes - 1; // was 2
-            if ((err = CPXnewcols(env, lp, 1, &obj, &lb, &ub, &integer, cname))) {
-                printf(BOLDRED "[ERROR] CPXnewcols(): error code %d\n" RESET, err);
-                free_instance(inst);
+            if (CPXnewcols(inst->CPXenv, inst->CPXlp, 1, &obj, &lb, &ub, &integer, cname)) {
                 free(cname[0]);
-                exit(1);
+                printerr(inst, "CPXnewcols() error.");
             }
             // check ypos on the fly
-            if (CPXgetnumcols(env, lp) - 1 != ypos(i, j, inst)) {
-                printf(BOLDRED "[ERROR] ypos() got a bad index!\n" RESET);
-                free_instance(inst);
+            if (CPXgetnumcols(inst->CPXenv, inst->CPXlp) - 1 != ypos(i, j, inst)) {
                 free(cname[0]);
-                exit(1);
+                printerr(inst, "ypos() got a bad index!");
             }
         }
     }
     free(cname[0]);
 }
 
-void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
-    char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};
+/**
+ * Add flow constraints
+ *
+ * @param inst general instance
+ */
+void add_flow_constraints(instance *inst){
+    char *rname[] = {(char *) malloc(BUFLEN)};
 
     // add flow constraints in(h) = out(h) +1 for h!=1
     int nnz = 2 * inst->tot_nodes;
@@ -69,48 +83,30 @@ void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
             idx++;
         }
         if(inst->lazy) {
-            if (CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
-                printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error!\n");
-                free_instance(inst);
-                exit(1);
+            if(CPXaddlazyconstraints(inst->CPXenv, inst->CPXlp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
+                free(rname[0]);
+                printerr(inst, "CPXaddlazyconstraints() error.");
             }
         }else
-            if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
-                printf(BOLDRED "[ERROR] CPXaddrows() error!\n");
-                free_instance(inst);
-                exit(1);
+            if (CPXaddrows(inst->CPXenv, inst->CPXlp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
+                free(rname[0]);
+                printerr(inst, "CPXaddrows() error!");
             }
 
-    }
-
-    // flow for 1: y_1j = (n-1)x_1j
-    rhs = 0;
-    sense = 'L';
-    if(inst->formulation == GGi) sense = 'E';
-    nnz = 2; // we can reuse previous arrays!
-    for(int j = 1; j < inst->tot_nodes; j++){
-        snprintf(rname[0], BUFLEN, "flow_one(%d)", j + 1);
-        index[0] = ypos(0, j, inst);
-        value[0] = 1;
-        index[1] = xpos_compact(0, j, inst);
-        value[1] = -inst->tot_nodes + 1;
-        if(inst->lazy) {
-            if(CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
-                printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error!\n" RESET);
-                exit(1);
-            }
-        }else
-            if(CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
-                printf(BOLDRED "[ERROR] CPXaddrows() error!\n" RESET);
-                exit(1);
-            }
     }
 
     free(rname[0]);
 }
 
-void add_linking_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
-    int err;
+/**
+ * Add linking constraints.
+ *
+ * N.B. Need to add edge binary variables first!
+ * @param inst general instance
+ * @param env CPLEX envinronment
+ * @param lp CPLEX LP
+ */
+void add_linking_constraints(instance *inst){
     char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};
 
     int nnz = 2;
@@ -128,36 +124,71 @@ void add_linking_constraints(instance *inst, CPXENVptr env, CPXLPptr lp){
             value[1] = -inst->tot_nodes + 2;
             snprintf(rname[0], BUFLEN, "link(%d,%d)", i + 1, j + 1);
             if(inst->lazy){
-                if ((err = CPXaddlazyconstraints(env, lp, 1, nnz, &rhs, &sense, &izero, index, value, rname))) {
-                    printf(BOLDRED "[ERROR] CPXaddlazyconstraints() error code %d\n" RESET, err);
-                    exit(1);
+                if(CPXaddlazyconstraints(inst->CPXenv, inst->CPXlp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
+                    free(rname[0]);
+                    printerr(inst, "CPXaddlazyconstraints() error!");
                 }
             }else
-                if((err = CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) ){
-                printf(BOLDRED "[ERROR] CPXaddrows() error code %d\n" RESET, err);
-                exit(1);
+                if(CPXaddrows(inst->CPXenv, inst->CPXlp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)){
+                    free(rname[0]);
+                    printerr(inst, "CPXaddrows() error!");
                 }
         }
     }
 
+    // linking for 1: y_1j = (<=) (n-1)x_1j
+    rhs = 0;
+    sense = 'L';
+    if(inst->formulation == GGi) sense = 'E';
+    nnz = 2; // we can reuse previous arrays!
+    for(int j = 1; j < inst->tot_nodes; j++){
+        snprintf(rname[0], BUFLEN, "link(1, %d)", j + 1);
+        index[0] = ypos(0, j, inst);
+        value[0] = 1;
+        index[1] = xpos_compact(0, j, inst);
+        value[1] = -inst->tot_nodes + 1;
+        if(inst->lazy) {
+            if(CPXaddlazyconstraints(inst->CPXenv, inst->CPXlp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
+                free(rname[0]);
+                printerr(inst, "CPXaddlazyconstraints() error!");
+            }
+        }else
+        if(CPXaddrows(inst->CPXenv, inst->CPXlp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
+            free(rname[0]);
+            printerr(inst, "CPXaddrows() error!");
+        }
+    }
     free(rname[0]);
 }
 
-void build_model_GG(instance *inst, CPXENVptr env, CPXLPptr lp) {
-    build_model_base_directed(env, lp, inst);
+/**
+ * Build Gravish and Graves TSP (improved) model on CPLEX
+ *
+ * @param inst general instance
+ * @param env CPLEX envinroment
+ * @param lp CPLEX LP
+ */
+void build_model_GG(instance *inst) {
+    build_model_base_directed(inst);
 
-    add_flow_vars(inst, env, lp);
+    add_flow_vars(inst);
 
-    add_flow_constraints(inst, env, lp);
+    add_flow_constraints(inst);
 
-    add_linking_constraints(inst, env, lp);
+    add_linking_constraints(inst);
 }
 
-void get_solution_GG(instance *inst, CPXENVptr env, CPXLPptr lp){
+/**
+ * Get (and print) solution
+ * @param inst general instance
+ * @param env CPLEX environment
+ * @param lp CPLEX LP
+ */
+void get_solution_GG(instance *inst){
     // get solution from CPLEX
-    int tot_cols = CPXgetnumcols(env, lp);
+    int tot_cols = CPXgetnumcols(inst->CPXenv, inst->CPXlp);
     double *xstar = (double *) calloc(tot_cols, sizeof(double));
-    if (CPXgetx(env, lp, xstar, 0, tot_cols - 1)) {
+    if (CPXgetx(inst->CPXenv, inst->CPXlp, xstar, 0, tot_cols - 1)) {
         printf(BOLDRED "[ERROR] CPXgetx(): error retrieving xstar!\n" RESET);
         free(xstar);
         free_instance(inst);

@@ -10,10 +10,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <cplex.h>
 // ANSI escape sequences
 #define RESET       "\033[0m"
 #define BOLDRED     "\033[1m\033[31m"
 #define BOLDGREEN   "\033[1m\033[32m"
+#define BOLDYELLOW  "\033[1m\033[33m"
 
 #define BUFLEN 1024
 
@@ -50,6 +52,10 @@ typedef struct{
     double *xcoord, *ycoord;        // points
     int *opt_tour;                  // optimal tour from .opt.tour file
 
+    // ===== CPLEX =====
+    CPXENVptr CPXenv;
+    CPXLPptr CPXlp;
+
     // ===== other parameters =====
     bool directed;                  // use directed graph (for plot purpose)
 
@@ -65,7 +71,9 @@ void free_instance(instance *inst);
 
 void save_instance_to_tsp_file(instance *inst);
 
-void printerr(instance *inst, const char *err) __attribute__ ((__noreturn__));
+void printerr(instance *inst, const char *err, ...) __attribute__ ((__noreturn__));
+
+void print(instance *inst, char type, int lv, const char *msg, ...);
 
 #endif //TSP_OP2_UTILS_H
 

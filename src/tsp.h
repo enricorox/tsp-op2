@@ -17,6 +17,6 @@ double cost(int i, int j, instance *inst);
 
 void TSPOpt(instance *inst);
 
-void save_model(instance *inst, CPXENVptr env, CPXLPptr lp);
+void save_model(instance *inst);
 
 #endif // end ifndef

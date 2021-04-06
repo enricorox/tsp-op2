@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <cplex.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include "utils.h"
 
 const char *formulation_names[] = {"Benders", "MTZ", "GG", "GGi"};
@@ -13,7 +14,7 @@ void init_instance(instance *inst){
     // ===== from cli =====
     inst->input_tsp_file_name = NULL;
     inst->input_opt_file_name = NULL;
-    inst->formulation = GG;
+    inst->formulation = BENDERS;
     inst->lazy = false;
     inst->seed = DEFAULT_CPLEX_SEED;
     inst->integer_costs = true;
@@ -34,6 +35,10 @@ void init_instance(instance *inst){
     inst->xcoord = inst->ycoord = NULL;
     inst->opt_tour = NULL;
 
+    // ===== CPLEX =====
+    inst->CPXenv = NULL;
+    inst->CPXlp = NULL;
+
     // ===== other parameters =====
     inst->directed = false;
 
@@ -44,7 +49,6 @@ void init_instance(instance *inst){
 }
 void free_instance(instance *inst){
     free(inst->input_tsp_file_name);
-    //printf("Freeing input_opt_filename %p...\n", inst->input_opt_file_name);
     free(inst->input_opt_file_name);
     free(inst->perfl);
 
@@ -60,6 +64,9 @@ void free_instance(instance *inst){
     free(inst->opt_tour);
 
     free(inst->xstar);
+
+    CPXfreeprob(inst->CPXenv, &inst->CPXlp);
+    CPXcloseCPLEX(&inst->CPXenv);
 }
 
 void save_instance_to_tsp_file(instance *inst){
@@ -83,8 +90,41 @@ void save_instance_to_tsp_file(instance *inst){
  * @param inst instance to free
  * @param err explicative string
  */
-void printerr(instance *inst, const char *err){
-    printf(BOLDRED "[ERROR] %s\n" RESET, err);
+void printerr(instance *inst, const char *err, ...){
+    va_list args;
+    va_start(args, err);
+    char buf[BUFLEN];
+    snprintf(buf, BUFLEN, BOLDRED "[ERR] %s\n" RESET, err);
+    vprintf(buf, args);
+    va_end(args);
     free_instance(inst);
     exit(1);
+}
+
+void print(instance *inst, char type, int lv, const char *msg, ...){
+    if(inst->verbose < lv) return;
+
+    va_list args;
+    va_start(args, msg);
+    char buf[BUFLEN];
+    switch(type){
+    case 'E':
+        snprintf(buf, BUFLEN, BOLDRED "[ERR] %s\n" RESET, msg);
+        vprintf(buf, args);
+        break;
+    case 'W':
+        snprintf(buf, BUFLEN, BOLDYELLOW "[WARN] %s\n" RESET, msg);
+        vprintf(buf, args);
+        break;
+    case 'D':
+        snprintf(buf, BUFLEN, "[DEBUG] %s\n", msg);
+        vprintf(buf, args);
+        break;
+    case 'I':
+    default:
+        snprintf(buf, BUFLEN, BOLDGREEN "[INFO] %s\n" RESET, msg);
+        vprintf(buf, args);
+        break;
+    }
+    va_end(args);
 }

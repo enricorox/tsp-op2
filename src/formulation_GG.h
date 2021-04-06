@@ -12,14 +12,14 @@
 
 int ypos(int i, int j, instance *inst);
 
-void add_flow_vars(instance *inst, CPXENVptr env, CPXLPptr lp);
+void add_flow_vars(instance *inst);
 
-void add_flow_constraints(instance *inst, CPXENVptr env, CPXLPptr lp);
+void add_flow_constraints(instance *inst);
 
-void add_linking_constraints(instance *inst, CPXENVptr env, CPXLPptr lp);
+void add_linking_constraints(instance *inst);
 
-void build_model_GG(instance *inst, CPXENVptr env, CPXLPptr lp);
+void build_model_GG(instance *inst);
 
-void get_solution_GG(instance *inst, CPXENVptr env, CPXLPptr lp);
+void get_solution_GG(instance *inst);
 
 #endif //TSP_OP2_FORMULATION_GG_H
