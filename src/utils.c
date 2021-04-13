@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include "utils.h"
 
-const char *formulation_names[] = {"Benders", "MTZ", "GG", "GGi"};
+const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi"};
 
 void init_instance(instance *inst){
     // ===== from cli =====
@@ -30,7 +30,7 @@ void init_instance(instance *inst){
     // ===== from file =====
     inst->name[0] = inst->name[1] = NULL;
     inst->comment[0] = inst->comment[1] = NULL;
-    inst->tot_nodes = -1;
+    inst->nnodes = -1;
     inst->dist = EUC_2D;
     inst->xcoord = inst->ycoord = NULL;
     inst->opt_tour = NULL;
@@ -38,9 +38,11 @@ void init_instance(instance *inst){
     // ===== CPLEX =====
     inst->CPXenv = NULL;
     inst->CPXlp = NULL;
+    inst->ncols = 0;
 
     // ===== other parameters =====
     inst->directed = false;
+    inst->tstart.tv_sec = inst->tstart.tv_usec = 0;
 
     // ===== results =====
     inst->runtime = -1;
@@ -76,10 +78,10 @@ void save_instance_to_tsp_file(instance *inst){
     fprintf(fout,"NAME : %s\n", inst->name[0]);
     fprintf(fout,"COMMENT : %s\n", inst->comment[0]);
     fprintf(fout,"TYPE : TSP\n");
-    fprintf(fout,"DIMENSION : %d\n", inst->tot_nodes);
+    fprintf(fout,"DIMENSION : %d\n", inst->nnodes);
     fprintf(fout,"EDGE_WEIGHT_TYPE : %s\n", "EUC_2D"); // can be changed
     fprintf(fout,"NODE_COORD_SECTION\n");
-    for(int i = 0; i < inst->tot_nodes; i++)
+    for(int i = 0; i < inst->nnodes; i++)
         fprintf(fout, "%d %f %f\n", i + 1, inst->xcoord[i], inst->ycoord[i]);
     fprintf(fout, "EOF\n");
     fclose(fout);

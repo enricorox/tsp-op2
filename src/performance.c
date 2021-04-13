@@ -6,7 +6,7 @@
 #include "performance.h"
 
 double *** generate_points(int stop, int step){
-    srand(1); // assure reproducibility
+    srand(16); // assure reproducibility
     int num_p = 2 * (1 + stop / step) * stop / step;
     printf(BOLDGREEN "[INFO] Generating %d random points...\n" RESET, num_p);
     double ***points;
@@ -66,12 +66,12 @@ void set_instance(instance *user_inst, instance *inst, double ***points, int sto
     char iname[BUFLEN];
     char cname[BUFLEN];
 
-    snprintf(iname, BUFLEN, "inst%d", inst->tot_nodes);
+    snprintf(iname, BUFLEN, "inst%d", inst->nnodes);
     snprintf(cname, BUFLEN, "perf test");
     inst->name[0] = strdup(iname);
     inst->comment[0] = strdup(cname);
 
-    inst->tot_nodes = start + step * set;
+    inst->nnodes = start + step * set;
     inst->xcoord = points[set][0];
     inst->ycoord = points[set][1];
 
@@ -122,19 +122,24 @@ void start_perf_test(instance *user_inst){
     for(int set = 0; set < sets; set++) { // change set
         printf(BOLDGREEN "[INFO] ==== Entering set %d/%d of size %d ====\n" RESET, set + 1, sets, (set + 1) * step);
         set_instance(user_inst, &inst, points, max, step, set);
-        fprintf(values, "\n%d,", inst.tot_nodes);
+        save_instance_to_tsp_file(&inst);
+        fprintf(values, "\n%d,", inst.nnodes);
         fclose(values);
         values = fopen(filename, "a");
-        for (enum formulation_t form = BENDERS + 1; form < FLAST; form++) { // change formulation // TODO change to include standard formulation
-            for (char lazy = 0; lazy < 2; lazy++) { // add lazy constraints
+        for (enum formulation_t form = 0; form < FLAST; form++) { // change formulation // TODO change to include standard formulation
+            bool compact = false;
+            if(form == MTZ || form == GG)
+                compact = true;
+            for (int lazy = 0; lazy < (compact?2:1); lazy++) { // add lazy constraints
                 set_instance_formulation(&inst, form, lazy);
                 if(user_inst->verbose >= 2) save_instance_to_tsp_file(&inst);
                 TSPOpt(&inst);
                 fprintf(values,"%ld,", inst.runtime);
                 //plot(&inst, inst.xstar);
-                printf(BOLDGREEN "[INFO] %3s %4s: %ld seconds\n",
+                printf(BOLDGREEN "[INFO] %7s %4s: %ld seconds\n",
                        formulation_names[form], lazy?"lazy":"", inst.runtime);
                 free(inst.xstar);
+                inst.xstar = NULL;
             }
         }
         free(inst.name[0]);

@@ -5,11 +5,11 @@
 #include "formulation_MTZ.h"
 
 int upos(int i, instance *inst){
-    if(i < 0 || i >= inst->tot_nodes){
+    if(i < 0 || i >= inst->nnodes){
         printf(BOLDRED"[ERROR] xpos(): unexpected i = %d\n" RESET, i);
         exit(1);
     }
-    int upos = inst->tot_nodes * inst->tot_nodes + i;
+    int upos = inst->nnodes * inst->nnodes + i;
     return upos;
 }
 
@@ -20,11 +20,11 @@ void add_uconsistency_vars(instance *inst){
     int err;
 
     // add integer vars u(i) for each node i
-    for(int i = 0; i < inst->tot_nodes; i++){
+    for(int i = 0; i < inst->nnodes; i++){
         snprintf(cname[0], BUFLEN, "u(%d)", i+1);
         double obj = 0;
         double lb = 0;
-        double ub = i?(inst->tot_nodes - 2):0;
+        double ub = i ? (inst->nnodes - 2) : 0;
         if((err = CPXnewcols(inst->CPXenv, inst->CPXlp, 1, &obj, &lb, &ub, &integer, cname))) {
             printf(BOLDRED "[ERROR] CPXnewcols(): error code %d\n" RESET, err);
             free_instance(inst); free(cname[0]);
@@ -49,11 +49,11 @@ void add_uconsistency_constraints(instance *inst){
     double value[nnz];
     int izero = 0;
 
-    int big_M = inst->tot_nodes - 1; // use big M trick
+    int big_M = inst->nnodes - 1; // use big M trick
     double rhs = big_M - 1;
     char sense = 'L';
-    for(int i = 1; i < inst->tot_nodes; i++)
-        for(int j = 1; j < inst->tot_nodes; j++){
+    for(int i = 1; i < inst->nnodes; i++)
+        for(int j = 1; j < inst->nnodes; j++){
             if(i == j) continue;
             snprintf(rname[0], BUFLEN, "u_consistency(%d,%d)", i + 1, j + 1);
             index[0] = upos(i, inst);
@@ -103,8 +103,8 @@ void get_solution_MTZ(instance *inst){
     if(inst->verbose >=2) printf("Solution found:\n");
     // deal with numeric errors
     double *rxstar = (double *) calloc(tot_cols, sizeof(double));
-    for(int i = 0; i < inst->tot_nodes; i++){
-        for ( int j = 0; j < inst->tot_nodes; j++ ){
+    for(int i = 0; i < inst->nnodes; i++){
+        for (int j = 0; j < inst->nnodes; j++ ){
             int idx = xpos_compact(i,j,inst);
             if (xstar[idx] > 0.5) {
                 if(inst->verbose >= 2) printf("x(%3d,%3d) = 1\n", i + 1, j + 1);
@@ -115,7 +115,7 @@ void get_solution_MTZ(instance *inst){
 
     inst->xstar = rxstar;
 
-    for(int i = 0; i < inst->tot_nodes; i++){
+    for(int i = 0; i < inst->nnodes; i++){
         int idx = upos(i, inst);
         if(xstar[idx] > 0.001 && inst->verbose >= 2)
             printf("u(%3d) = %d\n", i+1, (int) round(xstar[idx]));

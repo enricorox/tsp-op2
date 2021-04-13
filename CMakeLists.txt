@@ -22,6 +22,6 @@ add_executable(tsp
         src/formulation_GG.c src/formulation_GG.h
         src/performance.c src/performance.h
         src/distances.c src/distances.h
-        src/parsers.c src/parsers.h)
+        src/parsers.c src/parsers.h src/formulation_cuts.c src/formulation_cuts.h)
 
 target_link_libraries(tsp cplex m pthread dl)

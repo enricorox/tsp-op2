@@ -27,4 +27,7 @@ int xpos(int i, int j, instance *inst);
 
 void build_model_base_undirected(instance *inst);
 
+void get_solution_base_undirected(instance *inst);
+
+void findccomp(instance *inst, const double *xstar, int *ncomp, int *succ, int *comp);
 #endif //TSP_OP2_FORMULATION_COMMONS_H

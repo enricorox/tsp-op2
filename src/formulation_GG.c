@@ -14,12 +14,12 @@
  * @return flow variable column index on CPLEX LP
  */
 int ypos(int i, int j, instance *inst){
-    if((j < 0) || (i < 0) || (j >= inst->tot_nodes) || (i >= inst->tot_nodes)){
+    if((j < 0) || (i < 0) || (j >= inst->nnodes) || (i >= inst->nnodes)){
         printf(BOLDRED"[ERROR] ypos(): unexpected i = %d, j = %d\n" RESET, i, j);
         free_instance(inst);
         exit(1);
     }
-    int pos = inst->tot_nodes * inst->tot_nodes + i * inst->tot_nodes + j;
+    int pos = inst->nnodes * inst->nnodes + i * inst->nnodes + j;
     return pos;
 }
 
@@ -35,13 +35,13 @@ void add_flow_vars(instance *inst){
     char integer = 'I';
 
     // add y flow variables
-    for(int i = 0; i < inst->tot_nodes; i++){
-        for(int j = 0; j < inst->tot_nodes; j++) {
+    for(int i = 0; i < inst->nnodes; i++){
+        for(int j = 0; j < inst->nnodes; j++) {
             snprintf(cname[0], BUFLEN, "y(%d,%d)", i + 1, j + 1);
             //printf("y(%d,%d) = %s\n", i+1, j+1, cname[0]);
             double obj = 0;
             double lb = 0;
-            double ub = ((i == j) || (j == 0)) ? 0 : inst->tot_nodes - 1; // was 2
+            double ub = ((i == j) || (j == 0)) ? 0 : inst->nnodes - 1; // was 2
             if (CPXnewcols(inst->CPXenv, inst->CPXlp, 1, &obj, &lb, &ub, &integer, cname)) {
                 free(cname[0]);
                 printerr(inst, "CPXnewcols() error.");
@@ -65,21 +65,21 @@ void add_flow_constraints(instance *inst){
     char *rname[] = {(char *) malloc(BUFLEN)};
 
     // add flow constraints in(h) = out(h) +1 for h!=1
-    int nnz = 2 * inst->tot_nodes;
+    int nnz = 2 * inst->nnodes;
     int index[nnz];
     double value[nnz];
     double rhs = 1;
     char sense = 'E';
     int izero = 0;
-    for(int h = 1; h < inst->tot_nodes; h++){
+    for(int h = 1; h < inst->nnodes; h++){
         snprintf(rname[0], BUFLEN, "flow(%d)", h + 1);
         // build index value array
         int idx = 0;
-        for(int i = 0; i < inst->tot_nodes; i++) {
+        for(int i = 0; i < inst->nnodes; i++) {
             index[idx] = ypos(i, h, inst);
             value[idx] = (h!=i)?1:0;
-            index[inst->tot_nodes + idx] = ypos(h, i, inst);
-            value[inst->tot_nodes + idx] = (h!=i)?-1:0;
+            index[inst->nnodes + idx] = ypos(h, i, inst);
+            value[inst->nnodes + idx] = (h != i) ? -1 : 0;
             idx++;
         }
         if(inst->lazy) {
@@ -116,12 +116,12 @@ void add_linking_constraints(instance *inst){
     char sense = 'L';
     int izero = 0;
     // linking constraints: y_ij <= (n-2) * x_ij, for each i != 1 != j
-    for(int i = 1; i < inst->tot_nodes; i++){
-        for(int j = 1; j < inst->tot_nodes; j++) {
+    for(int i = 1; i < inst->nnodes; i++){
+        for(int j = 1; j < inst->nnodes; j++) {
             index[0] = ypos(i, j, inst);
             value[0] = 1;
             index[1] = xpos_compact(i, j, inst);
-            value[1] = -inst->tot_nodes + 2;
+            value[1] = -inst->nnodes + 2;
             snprintf(rname[0], BUFLEN, "link(%d,%d)", i + 1, j + 1);
             if(inst->lazy){
                 if(CPXaddlazyconstraints(inst->CPXenv, inst->CPXlp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
@@ -141,12 +141,12 @@ void add_linking_constraints(instance *inst){
     sense = 'L';
     if(inst->formulation == GGi) sense = 'E';
     nnz = 2; // we can reuse previous arrays!
-    for(int j = 1; j < inst->tot_nodes; j++){
+    for(int j = 1; j < inst->nnodes; j++){
         snprintf(rname[0], BUFLEN, "link(1, %d)", j + 1);
         index[0] = ypos(0, j, inst);
         value[0] = 1;
         index[1] = xpos_compact(0, j, inst);
-        value[1] = -inst->tot_nodes + 1;
+        value[1] = -inst->nnodes + 1;
         if(inst->lazy) {
             if(CPXaddlazyconstraints(inst->CPXenv, inst->CPXlp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
                 free(rname[0]);
@@ -199,8 +199,8 @@ void get_solution_GG(instance *inst){
     if(inst->verbose >=2) printf("Solution found:\n");
     // deal with numeric errors
     double *rxstar = (double *) calloc(tot_cols, sizeof(double));
-    for(int i = 0; i < inst->tot_nodes; i++){
-        for ( int j = 0; j < inst->tot_nodes; j++ ){
+    for(int i = 0; i < inst->nnodes; i++){
+        for (int j = 0; j < inst->nnodes; j++ ){
             int idx = xpos_compact(i,j,inst);
             if(xstar[idx] > 0.5) {
                 if(inst->verbose >= 2) printf("x(%3d,%3d) = 1\n", i + 1, j + 1);
@@ -211,8 +211,8 @@ void get_solution_GG(instance *inst){
 
     inst->xstar = rxstar;
 
-    for(int i = 0; i < inst->tot_nodes; i++){
-        for(int j = 0; j < inst->tot_nodes; j++) {
+    for(int i = 0; i < inst->nnodes; i++){
+        for(int j = 0; j < inst->nnodes; j++) {
             int idx = ypos(i, j, inst);
             if(xstar[idx] > 0.001 && inst->verbose >= 2)
                 printf("y(%3d,%3d) = %d\n", i+1, j+1, (int) round(xstar[idx]));

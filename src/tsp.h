@@ -10,6 +10,7 @@
 
 // formulations
 #include "formulation_Benders.h"
+#include "formulation_cuts.h"
 #include "formulation_MTZ.h"
 #include "formulation_GG.h"
 

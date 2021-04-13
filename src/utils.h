@@ -22,9 +22,9 @@
 // NB it changes with each CPLEX release!
 #define DEFAULT_CPLEX_SEED 202009243 // from cplex> display settings all
 
-enum formulation_t {BENDERS, MTZ, GG, GGi, FLAST}; // FLAST is enum guard
+enum formulation_t {CUTS, BENDERS, MTZ, GG, GGi, FLAST}; // FLAST is enum guard
 enum distance_t {EUC_2D, ATT, GEO};
-const char *formulation_names[4];
+const char *formulation_names[5];
 
 // define a general instance of the problem
 typedef struct{
@@ -47,17 +47,19 @@ typedef struct{
     // ===== from file =====
     char *name[2];                  // name field (2nd cell for opt.tour)
     char *comment[2];               // comment field (2nd cell for opt.tour)
-    int tot_nodes;                  // dimension field
+    int nnodes;                     // number of nodes i.e. dimension field
     enum distance_t dist;           // distance type
     double *xcoord, *ycoord;        // points
     int *opt_tour;                  // optimal tour from .opt.tour file
 
     // ===== CPLEX =====
-    CPXENVptr CPXenv;
-    CPXLPptr CPXlp;
+    CPXENVptr CPXenv;               // CPLEX environment
+    CPXLPptr CPXlp;                 // CPLEX linear problem
+    int ncols;                      // number of column in the tableau
 
     // ===== other parameters =====
     bool directed;                  // use directed graph (for plot purpose)
+    struct timeval tstart;
 
     // ===== results =====
     long runtime;                   // overall runtime

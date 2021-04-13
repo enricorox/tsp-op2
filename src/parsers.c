@@ -186,17 +186,17 @@ void parse_file(instance *inst, char *file_name){
 
         if(strncmp(param_name, "DIMENSION", 9) == 0){
             int tot_nodes = atoi(param);
-            if(inst->tot_nodes > 0 && tot_nodes != inst->tot_nodes){
+            if(inst->nnodes > 0 && tot_nodes != inst->nnodes){
                 printf(BOLDRED "[ERROR] Different dimensions found!\n" RESET);
                 free_instance(inst);
                 exit(1);
             }
 
-            inst->tot_nodes = tot_nodes;
+            inst->nnodes = tot_nodes;
 
-            if(inst->verbose >=2) printf("DIMENSION = %d\n", inst->tot_nodes);
-            if(inst->tot_nodes <= 0) {
-                printf("[ERROR] Cannot allocate %d nodes!\n", inst->tot_nodes);
+            if(inst->verbose >=2) printf("DIMENSION = %d\n", inst->nnodes);
+            if(inst->nnodes <= 0) {
+                printf("[ERROR] Cannot allocate %d nodes!\n", inst->nnodes);
                 exit(1);
             }
             continue;
@@ -216,24 +216,24 @@ void parse_file(instance *inst, char *file_name){
         }
 
         if(strncmp(param_name, "NODE_COORD_SECTION", 18) == 0) {
-            // check if tot_nodes is given
-            if (inst->tot_nodes <= 0) {
+            // check if nnodes is given
+            if (inst->nnodes <= 0) {
                 printf("[ERROR] DIMENSION must be before NODE_COORD_SECTION!\n");
                 free_instance(inst);
                 exit(1);
             }
             if (inst->verbose >= 2) printf("NODE_COORD_SECTION:\n");
             // allocate arrays
-            inst->xcoord = (double *) calloc(inst->tot_nodes, sizeof(double));
-            inst->ycoord = (double *) calloc(inst->tot_nodes, sizeof(double));
+            inst->xcoord = (double *) calloc(inst->nnodes, sizeof(double));
+            inst->ycoord = (double *) calloc(inst->nnodes, sizeof(double));
             if (inst->xcoord == NULL || inst->ycoord == NULL){
-                printf(BOLDRED "[ERROR] Can't allocate memory: too many nodes (tot_nodes = %d)!\n" RESET, inst->tot_nodes);
+                printf(BOLDRED "[ERROR] Can't allocate memory: too many nodes (nnodes = %d)!\n" RESET, inst->nnodes);
                 free_instance(inst);
                 exit(1);
             }
             int node_number;
             // read nodes
-            for(int n = 0; n < inst->tot_nodes; n++){
+            for(int n = 0; n < inst->nnodes; n++){
                 if(fgets(line, sizeof(line), fin) == NULL){
                     printf(BOLDRED "[ERROR] I/O error" RESET);
                     free_instance(inst);
@@ -257,24 +257,24 @@ void parse_file(instance *inst, char *file_name){
         }
 
         if(strncmp(param_name, "TOUR_SECTION", 12) == 0){
-            // check if tot_nodes is given
-            if (inst->tot_nodes <= 0) {
+            // check if nnodes is given
+            if (inst->nnodes <= 0) {
                 printf(BOLDRED "[ERROR] DIMENSION must be before TOUR_SECTION!\n" RESET);
                 free_instance(inst);
                 exit(1);
             }
             if (inst->verbose >= 2) printf("TOUR_SECTION:\n");
             // allocate arrays
-            inst->opt_tour = (int *) calloc(inst->tot_nodes, sizeof(double));
-            bool *duplicates = (bool *) calloc(inst->tot_nodes, sizeof(bool));
+            inst->opt_tour = (int *) calloc(inst->nnodes, sizeof(double));
+            bool *duplicates = (bool *) calloc(inst->nnodes, sizeof(bool));
             if (inst->xcoord == NULL || inst->ycoord == NULL){
-                printf(BOLDRED "[ERROR] Can't allocate memory: too many nodes (tot_nodes = %d)!\n" RESET, inst->tot_nodes);
+                printf(BOLDRED "[ERROR] Can't allocate memory: too many nodes (nnodes = %d)!\n" RESET, inst->nnodes);
                 free_instance(inst);
                 exit(1);
             }
             // read nodes
             int node;
-            for(int n = 0; n < inst->tot_nodes; n++){
+            for(int n = 0; n < inst->nnodes; n++){
                 if(fgets(line, sizeof(line), fin) == NULL){
                     printf(BOLDRED "[ERROR] I/O error" RESET);
                     free_instance(inst);
@@ -289,7 +289,7 @@ void parse_file(instance *inst, char *file_name){
                     free_instance(inst);
                     exit(1);
                 }
-                if(node > inst->tot_nodes){
+                if(node > inst->nnodes){
                     printf(BOLDRED "[ERROR] Illegal node: %d\n" RESET, node);
                     free(duplicates);
                     free_instance(inst);
