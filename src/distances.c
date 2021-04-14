@@ -57,13 +57,17 @@ double dist_geo(int i, int j, const instance *inst){
 }
 
 double cost(int i, int j, instance *inst) {
+    double dist;
     switch(inst->dist){
-        case EUC_2D: return dist_euc2d(i, j, inst);
-        case ATT: return dist_att(i, j, inst);
-        case GEO: return dist_geo(i, j, inst);
+        case EUC_2D: dist = dist_euc2d(i, j, inst); break;
+        case ATT: dist = dist_att(i, j, inst); break;
+        case GEO: dist = dist_geo(i, j, inst); break;
         default:
             printf(BOLDRED "[ERROR] Unknown distance type!\n" RESET);
             free_instance(inst);
             exit(1);
     }
+    if(dist < 0)
+        printerr(inst, "Buffer Overflow detected while computing cost(%d,%d)!", i, j);
+    return dist;
 }

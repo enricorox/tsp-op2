@@ -25,6 +25,8 @@ void init_instance(instance *inst){
     inst->no_opt = false;
     inst->perfr = 0;
     inst->perfl = NULL;
+    inst->runs = 0;
+    inst->seeds = NULL;
     inst->verbose = 1;
 
     // ===== from file =====
@@ -53,6 +55,7 @@ void free_instance(instance *inst){
     free(inst->input_tsp_file_name);
     free(inst->input_opt_file_name);
     free(inst->perfl);
+    free(inst->seeds);
 
     free(inst->name[0]);
     free(inst->name[1]);

@@ -76,6 +76,23 @@ void parse_cli(int argc, char **argv, instance *inst){
                 inst->perfl = strdup(argv[i]);
             continue;
         }
+        if(strcmp(argv[i],"--runs") == 0){
+            if(argv[++i] != NULL)
+                inst->runs = atoi(argv[i]);
+            continue;
+        }
+        if(strcmp(argv[i],"--seeds") == 0){
+            if(inst->runs < 0)
+                printerr(inst, "You need to specify --runs before --seeds!");
+            inst->seeds = (int *) malloc(inst->runs * sizeof(int));
+            int k;
+            for(k = 0; k < inst->runs; k++)
+                if(argv[++i] != NULL)
+                    inst->seeds[k] = atoi(argv[i]);
+                else
+                    printerr(inst, "Got %d seeds, expected %d", k, inst->runs);
+            continue;
+        }
 
         if(strcmp(argv[i],"--help") == 0) { help = 1; break; }
 
@@ -103,6 +120,10 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--no-int-costs  %s\n", inst->integer_costs?"false":"true");
         printf("--perfr         %d\n", inst->perfr);
         printf("--perfl         %s\n", inst->perfl);
+        printf("--runs          %d\n", inst->runs);
+        printf("--seeds         ");
+        for(int i = 0; i < inst->runs; i++) printf("%d ", inst->seeds[i]);
+        printf("\n");
         printf("--verbose       %d\n", inst->verbose);
     }
 

@@ -13,10 +13,6 @@ static int CPXPUBLIC subtourcuts(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
     if(CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval))
         printerr(inst, "CPXcallbackgetcandidatepoint error");
 
-    //printf("Candidate point:\n");
-    //for(int i = 0; i < inst->ncols; i++)
-    //    printf("xstar[%d] = %f\n", i, xstar[i]);
-
     // find connected components
     int ncomp;
     int *succ = (int *) malloc(inst->nnodes * sizeof(int));
@@ -58,6 +54,8 @@ static int CPXPUBLIC subtourcuts(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
         if(inst->verbose >= 3)
             printf("Added cut for component %d of size %d\n", curr_comp, csize);
     }
+
+    free(xstar);
     free(index);
     free(value);
     free(succ);
