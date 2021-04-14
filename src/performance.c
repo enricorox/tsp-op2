@@ -118,6 +118,7 @@ void set_instance(instance *user_inst, instance *inst, int seed, int size){
     inst->gui = false;
     // set time-limit if not set
     inst->time_limit = (user_inst->time_limit < CPX_INFBOUND) ? user_inst->time_limit : 3600; // 1h time limit!
+    inst->mem_limit = 12000;
     inst->do_plot = user_inst->do_plot;
     inst->integer_costs = user_inst->integer_costs;
 }

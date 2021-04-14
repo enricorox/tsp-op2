@@ -19,7 +19,7 @@ void init_instance(instance *inst){
     inst->seed = DEFAULT_CPLEX_SEED;
     inst->integer_costs = true;
     inst->time_limit = CPX_INFBOUND;
-    inst->mem_limit = 15000;
+    inst->mem_limit = 12000;
     inst->gui = true;
     inst->do_plot = true;
     inst->no_opt = false;
