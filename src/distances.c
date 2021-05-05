@@ -5,8 +5,8 @@
 #include "distances.h"
 
 // nearest integer
-int nint(double x){
-    return  (int) (x + 0.499999999);
+long nint(double x){
+    return  (long) (x + 0.499999999);
     //return (int) x; // see http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/TSPFAQ.html
                     // problem whit berlin52 but still optimal
 }
@@ -14,9 +14,10 @@ int nint(double x){
 double dist_euc2d(int i, int j, instance *inst){
     double dx = inst->xcoord[i] - inst->xcoord[j];
     double dy = inst->ycoord[i] - inst->ycoord[j];
-    if ( !inst->integer_costs ) return sqrt(dx*dx+dy*dy);
-    int dis = nint(sqrt(dx*dx+dy*dy));
-    return dis+0.0;
+    double dis = sqrt(dx*dx+dy*dy);
+    if ( !inst->integer_costs ) return dis;
+    //long dis = nint(sqrt(dx*dx+dy*dy));
+    return round(dis);
 }
 
 double dist_att(int i, int j, instance *inst){
@@ -67,7 +68,10 @@ double cost(int i, int j, instance *inst) {
             free_instance(inst);
             exit(1);
     }
-    if(dist < 0)
-        printerr(inst, "Buffer Overflow detected while computing cost(%d,%d)!", i, j);
+    if(dist < 0) {
+        print(inst, 'W', 1, "Buffer Overflow detected while computing cost(%d,%d)!\n"
+                            "Using DBL_MAX instead.", i + 1, j + 1);
+        dist = DBL_MAX;
+    }
     return dist;
 }

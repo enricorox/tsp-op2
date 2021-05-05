@@ -6,10 +6,16 @@ set(CMAKE_C_STANDARD 11)
 # change path if needed
 set(CPLEX_HEADERS "/opt/ibm/ILOG/CPLEX_Studio201/cplex/include/ilcplex/")
 set(CPLEX_LIBS_STATIC "/opt/ibm/ILOG/CPLEX_Studio201/cplex/lib/x86-64_linux/static_pic/")
+set(CONCORDE_HEADER "/opt/concorde/")
+set(CONCORDE_LIB "/opt/concorde/")
 
 include_directories(src)
+
 include_directories(${CPLEX_HEADERS})
+include_directories(${CONCORDE_HEADER})
+
 link_directories(${CPLEX_LIBS_STATIC})
+link_directories(${CONCORDE_LIB})
 
 add_executable(tsp
         src/main.c
@@ -22,6 +28,6 @@ add_executable(tsp
         src/formulation_GG.c src/formulation_GG.h
         src/performance.c src/performance.h
         src/distances.c src/distances.h
-        src/parsers.c src/parsers.h src/formulation_cuts.c src/formulation_cuts.h)
+        src/parsers.c src/parsers.h src/formulation_cuts.c src/formulation_cuts.h src/formulation_sfixing.c src/formulation_sfixing.h)
 
 target_link_libraries(tsp cplex m pthread dl)

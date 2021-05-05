@@ -6,6 +6,7 @@
 #define TSP_OP2_DISTANCES_H
 
 #include <math.h>
+#include <float.h>
 
 #include "utils.h"
 

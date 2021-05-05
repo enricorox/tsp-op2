@@ -50,7 +50,7 @@ void plot(instance *inst, double const *rxstar){
         int s = inst->directed?0:i+1;
         for (int j = s; j < inst->nnodes; j++) {
             int idx = inst->directed?xpos_compact(i, j, inst):xpos(i, j, inst);
-            if (rxstar[idx])
+            if (rxstar[idx] > 0.5)
                 fprintf(fcom, "set arrow arrowstyle %d from %f,%f to %f,%f\n",
                         inst->directed?1:2, // choose right arrow style
                         inst->xcoord[i], inst->ycoord[i],
@@ -111,7 +111,7 @@ void plot(instance *inst, double const *rxstar){
 
     // show image
     if(inst->verbose >=1 && inst->gui) {
-        snprintf(command, BUFLEN, "/usr/bin/eog %s", image_name);
+        snprintf(command, BUFLEN, "/usr/bin/eog %s&", image_name);
         if (system(command))
             printf(BOLDRED "[WARN] Sorry, Eye Of Gnome not found: can't show graph\n" RESET);
     }

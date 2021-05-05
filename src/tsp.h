@@ -14,7 +14,7 @@
 #include "formulation_MTZ.h"
 #include "formulation_GG.h"
 
-double cost(int i, int j, instance *inst);
+#include "formulation_sfixing.h"
 
 void TSPOpt(instance *inst);
 

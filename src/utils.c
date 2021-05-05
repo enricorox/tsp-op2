@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include "utils.h"
 
-const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi"};
+const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hfixing", "sfixing"};
 
 void init_instance(instance *inst){
     // ===== from cli =====
@@ -40,7 +40,8 @@ void init_instance(instance *inst){
     // ===== CPLEX =====
     inst->CPXenv = NULL;
     inst->CPXlp = NULL;
-    inst->ncols = 0;
+    inst->ncols = -1;
+    inst->nrows = -1;
 
     // ===== other parameters =====
     inst->directed = false;
@@ -49,6 +50,9 @@ void init_instance(instance *inst){
     // ===== results =====
     inst->runtime = -1;
     inst->xstar = NULL;
+    inst->zstar = CPX_INFBOUND;
+    inst->xbest = NULL;
+    inst->zbest = CPX_INFBOUND;
     inst->status = -1; // to be set to >0 by CPLEX
 }
 void free_instance(instance *inst){
@@ -69,6 +73,7 @@ void free_instance(instance *inst){
     free(inst->opt_tour);
 
     free(inst->xstar);
+    free(inst->xbest);
 
     CPXfreeprob(inst->CPXenv, &inst->CPXlp);
     CPXcloseCPLEX(&inst->CPXenv);

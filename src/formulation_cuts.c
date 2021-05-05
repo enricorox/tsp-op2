@@ -6,6 +6,7 @@
 
 static int CPXPUBLIC subtourcuts(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle ){
     instance *inst = (instance *) userhandle;
+    print(inst, 'D', 3, "Callback called");
 
     // retrieve xstar
     double* xstar = (double*) malloc(inst->ncols * sizeof(double));
@@ -23,7 +24,6 @@ static int CPXPUBLIC subtourcuts(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
     if(ncomp == 1)
         return 0;
 
-    // ===== add cuts to the common pools =====
     double *value = (double *) malloc(inst->ncols * sizeof(double));
     int *index = (int *) malloc(inst->ncols * sizeof(int));
     // initialize value vector that doesn't change!
@@ -51,15 +51,15 @@ static int CPXPUBLIC subtourcuts(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
         int nnz = nedges;
         if(CPXcallbackrejectcandidate(context, 1, nnz, &rhs, &sense, &izero, index, value))
             printerr(inst, "Can't add cut!");
-        if(inst->verbose >= 3)
-            printf("Added cut for component %d of size %d\n", curr_comp, csize);
+
+        print(inst, 'D', 3,"Added cut for component %d of size %d", curr_comp, csize);
     }
 
     free(xstar);
-    free(index);
-    free(value);
     free(succ);
     free(comp);
+    free(index);
+    free(value);
 }
 
 void build_model_cuts(instance *inst){

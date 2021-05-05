@@ -176,8 +176,6 @@ void start_perf_test(instance *user_inst){
                 dummy_inst.xstar = NULL;
             }
         }
-        //free(dummy_inst.name[0]);
-        //free(dummy_inst.comment[0]);
         free_instance(&dummy_inst);
     }
 

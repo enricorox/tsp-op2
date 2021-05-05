@@ -2,12 +2,13 @@
 
 double get_zstar_opt(instance *inst){
     if(inst->opt_tour == NULL){
-        printf(BOLDRED "[ERROR] get_zstar_opt(): optimal tour needed!\n");
+        printf(BOLDRED "[ERROR] get_zstar_opt(): IllegalState: optimal tour needed!\n");
         free_instance(inst);
         exit(1);
     }
+
+    // compute optimal known cost
     double z = 0;
-    //save_to_tsp_file(inst);
     for(int i = 0; i < inst->nnodes; i++){
         int curr = inst->opt_tour[i] - 1; // nodes indexes start from 1!
         int next = inst->opt_tour[(i < inst->nnodes - 1) ? i + 1 : 0] - 1;
@@ -30,7 +31,7 @@ void TSPOpt(instance *inst){
         CPXsetlogfilename(inst->CPXenv, log_name, "w");
     }
 
-    // CPLEX parameters
+    // ===== CPLEX parameters =====
     // set random seed
     if(CPXsetintparam(inst->CPXenv, CPXPARAM_RandomSeed, inst->seed))
         print(inst, 'W', 1, "Error setting random seed.\n");
@@ -44,7 +45,7 @@ void TSPOpt(instance *inst){
     if(inst->verbose >= 3)
         CPXsetintparam(inst->CPXenv, CPX_PARAM_SCRIND, CPX_ON);
 
-    // create void lp problem
+    // create empty lp problem
     inst->CPXlp = CPXcreateprob(inst->CPXenv, &err, "TSP");
     if(err) printerr(inst, "Can't create LP problem");
 
@@ -53,6 +54,15 @@ void TSPOpt(instance *inst){
 
     // choose formulation
     switch(inst->formulation) {
+        // ============== matheuristics ==============
+        case SFIXING:
+            inst->directed = false;
+            build_model_sfixing(inst);
+            solve_sfixing(inst);
+            break;
+        case HFIXING:
+            inst->directed = false;
+            break;
         // ============== directed graphs ==============
         case MTZ:
             inst->directed = true;
@@ -113,6 +123,9 @@ void TSPOpt(instance *inst){
         case CPXMIP_TIME_LIM_FEAS:
             status = "feasible (time limit reached)";
             break;
+        case CPXMIP_NODE_LIM_FEAS:
+            status = "feasible (node limit reached)";
+            break;
         default:
             status = "unknown";
     }
@@ -130,6 +143,12 @@ void TSPOpt(instance *inst){
 
     // get solution
     switch(inst->formulation){
+        // ============== matheuristics ==============
+        case SFIXING:
+            get_solution_sfixing(inst);
+            break;
+        case HFIXING:
+            break;
         // ============== directed graphs ==============
         case MTZ:
             get_solution_MTZ(inst);
@@ -148,11 +167,10 @@ void TSPOpt(instance *inst){
     }
 
     // show cost
-    double obj;
-    if(CPXgetobjval(inst->CPXenv, inst->CPXlp, &obj)) // A solution must exist here!
+    if(inst->status < 0 && CPXgetobjval(inst->CPXenv, inst->CPXlp, &inst->zstar)) // A solution must exist here!
         printerr(inst, "Cannot get solution status");
     if(inst->verbose >= 1) {
-        printf(BOLDGREEN "[INFO] Found z* = %f\n" RESET, obj);
+        printf(BOLDGREEN "[INFO] Found z* = %f\n" RESET, inst->zstar);
         if(inst->opt_tour != NULL )
             printf(BOLDGREEN "[INFO] Known solution z* = %f\n" RESET, get_zstar_opt(inst));
     }
@@ -164,7 +182,8 @@ void save_model(instance *inst){
     char file_name[BUFLEN];
     snprintf(file_name, BUFLEN, file_template, inst->name[0], formulation_names[inst->formulation]);
 
-    CPXwriteprob(inst->CPXenv, inst->CPXlp, file_name, "lp");
+    if(CPXwriteprob(inst->CPXenv, inst->CPXlp, file_name, "lp"))
+        print(inst, 'W', 1, "Can't save LP to file");
 
     if(inst->verbose >=1) printf(BOLDGREEN "[INFO] Model saved to %s\n" RESET, file_name);
 }

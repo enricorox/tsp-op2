@@ -22,9 +22,9 @@
 // NB it changes with each CPLEX release!
 #define DEFAULT_CPLEX_SEED 202009243 // from cplex> display settings all
 
-enum formulation_t {CUTS, BENDERS, MTZ, GG, GGi, FLAST}; // FLAST is enum guard
+enum formulation_t {CUTS, BENDERS, MTZ, GG, GGi, HFIXING, SFIXING, FLAST}; // FLAST is enum guard
 enum distance_t {EUC_2D, ATT, GEO};
-const char *formulation_names[5];
+const char *formulation_names[7];
 
 // define a general instance of the problem
 typedef struct{
@@ -57,7 +57,8 @@ typedef struct{
     // ===== CPLEX =====
     CPXENVptr CPXenv;               // CPLEX environment
     CPXLPptr CPXlp;                 // CPLEX linear problem
-    int ncols;                      // number of column in the tableau
+    int ncols;                      // number of columns in the tableau
+    int nrows;                      // number of rows in the tableau
 
     // ===== other parameters =====
     bool directed;                  // use directed graph (for plot purpose)
@@ -66,10 +67,13 @@ typedef struct{
     // ===== results =====
     long runtime;                   // overall runtime
     double *xstar;                  // (rounded) optimal solution
+    double zstar;                   // optimal solution value
+    double zbest;                   // best solution value found for euristics
+    double *xbest;                  // best solution found for euristics
     int status;                     // cplex status
 } instance;
 
-void init_instance(instance * inst);
+void init_instance(instance *inst);
 
 void free_instance(instance *inst);
 
