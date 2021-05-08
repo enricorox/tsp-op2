@@ -7,7 +7,7 @@
 // nearest integer
 long nint(double x){
     return  (long) (x + 0.499999999);
-    //return (int) x; // see http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/TSPFAQ.html
+    //return (long) x; // see http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/TSPFAQ.html
                     // problem whit berlin52 but still optimal
 }
 
@@ -24,7 +24,7 @@ double dist_att(int i, int j, instance *inst){
     double dx = inst->xcoord[i] - inst->xcoord[j];
     double dy = inst->ycoord[i] - inst->ycoord[j];
     double rij = sqrt( (dx*dx + dy*dy) / 10.0 );
-    int tij = nint(rij);
+    double tij = (double) nint(rij);
     return (tij < rij) ? tij + 1 : tij;
 }
 

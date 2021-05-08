@@ -52,7 +52,7 @@ void updconstr(instance *inst, int ncomp, const int *comp, int it){
                 // here `i` and `j` must belong to `curr_comp`
                 if(nedges >= tot_cols) printerr(inst, "Illegal state: must be tot_edges < tot_cols!");
                 // save index
-                index[nedges++] = xpos(i, j, inst);
+                index[nedges++] = xpos_undirected(i, j, inst);
             }
         }
         double rhs = csize - 1;
@@ -109,14 +109,14 @@ void loop_benders(instance *inst) {
         if(inst->verbose >= 2)
             printf(BOLDGREEN "[Benders] Found %d connected components\n" RESET, ncomp);
 
+        CPXgetobjval(inst->CPXenv, inst->CPXlp, &inst->zstar);
+        print(inst, 'D', 2, "Found z* = %f", inst->zstar);
+
         if(ncomp == 1)
             break;
 
         // set new lower bound
-        double zstar;
-        CPXgetobjval(inst->CPXenv, inst->CPXlp, &zstar);
-        print(inst, 'D', 2, "Found z* = %f", zstar);
-        CPXsetdblparam(inst->CPXenv, CPX_PARAM_OBJLLIM, zstar);
+        CPXsetdblparam(inst->CPXenv, CPX_PARAM_OBJLLIM, inst->zstar);
 
         // check and update time limit
         gettimeofday(&ctime, NULL);

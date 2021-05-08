@@ -120,7 +120,7 @@ void add_linking_constraints(instance *inst){
         for(int j = 1; j < inst->nnodes; j++) {
             index[0] = ypos(i, j, inst);
             value[0] = 1;
-            index[1] = xpos_compact(i, j, inst);
+            index[1] = xpos_directed(i, j, inst);
             value[1] = -inst->nnodes + 2;
             snprintf(rname[0], BUFLEN, "link(%d,%d)", i + 1, j + 1);
             if(inst->lazy){
@@ -145,7 +145,7 @@ void add_linking_constraints(instance *inst){
         snprintf(rname[0], BUFLEN, "link(1, %d)", j + 1);
         index[0] = ypos(0, j, inst);
         value[0] = 1;
-        index[1] = xpos_compact(0, j, inst);
+        index[1] = xpos_directed(0, j, inst);
         value[1] = -inst->nnodes + 1;
         if(inst->lazy) {
             if(CPXaddlazyconstraints(inst->CPXenv, inst->CPXlp, 1, nnz, &rhs, &sense, &izero, index, value, rname)) {
@@ -201,7 +201,7 @@ void get_solution_GG(instance *inst){
     double *rxstar = (double *) calloc(tot_cols, sizeof(double));
     for(int i = 0; i < inst->nnodes; i++){
         for (int j = 0; j < inst->nnodes; j++ ){
-            int idx = xpos_compact(i,j,inst);
+            int idx = xpos_directed(i, j, inst);
             if(xstar[idx] > 0.5) {
                 if(inst->verbose >= 2) printf("x(%3d,%3d) = 1\n", i + 1, j + 1);
                 rxstar[idx] = 1;

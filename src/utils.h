@@ -23,8 +23,11 @@
 #define DEFAULT_CPLEX_SEED 202009243 // from cplex> display settings all
 
 enum formulation_t {CUTS, BENDERS, MTZ, GG, GGi, HFIXING, SFIXING, FLAST}; // FLAST is enum guard
+enum heuristic_t {GREEDY, GREEDYGRASP, EXTRAMILEAGE, HLAST}; // HLAST is enum guard
 enum distance_t {EUC_2D, ATT, GEO};
+
 const char *formulation_names[7];
+const char *heuristic_names[3];
 
 // define a general instance of the problem
 typedef struct{
@@ -32,6 +35,7 @@ typedef struct{
     char *input_tsp_file_name;      // input file in TSPLIB format http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp95.pdf
     char *input_opt_file_name;      // input file in TSPLIB format needed only to check correctness
     enum formulation_t formulation; // formulation type
+    enum heuristic_t heuristic;     // heuristic type
     bool lazy;                      // add formulation-specific constraints in lazy way
     int seed;                       // cplex random seed
     bool integer_costs;             // force to use integer cost (only for EUC_2D)
@@ -82,6 +86,10 @@ void save_instance_to_tsp_file(instance *inst);
 void printerr(instance *inst, const char *err, ...) __attribute__ ((__noreturn__));
 
 void print(instance *inst, char type, int lv, const char *msg, ...);
+
+bool uprob(double perc);
+
+int nrand();
 
 #endif //TSP_OP2_UTILS_H
 

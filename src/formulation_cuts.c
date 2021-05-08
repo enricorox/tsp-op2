@@ -44,7 +44,7 @@ static int CPXPUBLIC subtourcuts(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
                 // here `i` and `j` must belong to `curr_comp`
                 if(nedges >= inst->ncols) printerr(inst, "Illegal state: must be tot_edges < tot_cols!");
                 // save index
-                index[nedges++] = xpos(i, j, inst);
+                index[nedges++] = xpos_undirected(i, j, inst);
             }
         }
         double rhs = csize - 1;

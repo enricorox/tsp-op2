@@ -6,7 +6,7 @@
 
 int upos(int i, instance *inst){
     if(i < 0 || i >= inst->nnodes){
-        printf(BOLDRED"[ERROR] xpos(): unexpected i = %d\n" RESET, i);
+        printf(BOLDRED"[ERROR] xpos_undirected(): unexpected i = %d\n" RESET, i);
         exit(1);
     }
     int upos = inst->nnodes * inst->nnodes + i;
@@ -30,7 +30,7 @@ void add_uconsistency_vars(instance *inst){
             free_instance(inst); free(cname[0]);
             exit(1);
         }
-        // check xpos on the fly (can be removed if I'm sure it's ok)
+        // check xpos_undirected on the fly (can be removed if I'm sure it's ok)
         if(CPXgetnumcols(inst->CPXenv, inst->CPXlp)-1 != upos(i, inst)) {
             printf(BOLDRED "[ERROR] upos() got a bad index!\n" RESET);
             free_instance(inst); free(cname[0]);
@@ -60,7 +60,7 @@ void add_uconsistency_constraints(instance *inst){
             value[0] = 1;
             index[1] = upos(j, inst);
             value[1] = -1;
-            index[2] = xpos_compact(i, j, inst);
+            index[2] = xpos_directed(i, j, inst);
             value[2] = big_M;
             if(inst->lazy) {
                 if ((err = CPXaddlazyconstraints(inst->CPXenv, inst->CPXlp, 1, nnz, &rhs, &sense, &izero, index, value, rname))) {
@@ -105,7 +105,7 @@ void get_solution_MTZ(instance *inst){
     double *rxstar = (double *) calloc(tot_cols, sizeof(double));
     for(int i = 0; i < inst->nnodes; i++){
         for (int j = 0; j < inst->nnodes; j++ ){
-            int idx = xpos_compact(i,j,inst);
+            int idx = xpos_directed(i, j, inst);
             if (xstar[idx] > 0.5) {
                 if(inst->verbose >= 2) printf("x(%3d,%3d) = 1\n", i + 1, j + 1);
                 rxstar[idx] = 1;

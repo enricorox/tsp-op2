@@ -9,12 +9,14 @@
 #include "utils.h"
 
 const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hfixing", "sfixing"};
+const char *heuristic_names[] = {"greedy", "greedygrasp", "extra-mileage"};
 
 void init_instance(instance *inst){
     // ===== from cli =====
     inst->input_tsp_file_name = NULL;
     inst->input_opt_file_name = NULL;
     inst->formulation = BENDERS;
+    inst->heuristic = HLAST;
     inst->lazy = false;
     inst->seed = DEFAULT_CPLEX_SEED;
     inst->integer_costs = true;
@@ -137,4 +139,12 @@ void print(instance *inst, char type, int lv, const char *msg, ...){
         break;
     }
     va_end(args);
+}
+
+bool uprob(double perc){
+    return rand() % 100 + 1 <= perc;
+}
+
+int nrand(){
+    return rand() % 100 + 1;
 }

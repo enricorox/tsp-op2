@@ -6,9 +6,9 @@
 
 // ===== DIRECTED GRAPH FUNCTIONS =====
 
-int xpos_compact(int i, int j, instance *inst){
+int xpos_directed(int i, int j, instance *inst){
     if((j < 0) || (i < 0) || (j >= inst->nnodes) || (i >= inst->nnodes)){
-        printf(BOLDRED"[ERROR] xpos_compact(): unexpected i = %d, j = %d\n" RESET, i, j);
+        printf(BOLDRED"[ERROR] xpos_directed(): unexpected i = %d, j = %d\n" RESET, i, j);
         free_instance(inst);
         exit(1);
     }
@@ -39,9 +39,9 @@ void add_x_vars_directed(instance *inst){
                 printf(BOLDRED "[ERROR] CPXnewcols(): error code %d\n" RESET, err);
                 exit(1);
             }
-            // check xpos on the fly (can be removed if I'm sure it's ok)
-            if (CPXgetnumcols(inst->CPXenv,inst->CPXlp)-1 != xpos_compact(i,j, inst)) {
-                printf(BOLDRED "[ERROR] xpos_compact() got a bad index!\n" RESET);
+            // check xpos_undirected on the fly (can be removed if I'm sure it's ok)
+            if (CPXgetnumcols(inst->CPXenv,inst->CPXlp)-1 != xpos_directed(i, j, inst)) {
+                printf(BOLDRED "[ERROR] xpos_directed() got a bad index!\n" RESET);
                 free(cname[0]);
                 free_instance(inst);
                 exit(1);
@@ -73,7 +73,8 @@ void add_degree_constraints_directed(instance *inst){
             // change last row coefficients from 0 to 1
             for(int i = 0; i < inst->nnodes; i++){
                 if(i == h) continue;
-                if ((err = CPXchgcoef(inst->CPXenv, inst->CPXlp, lastrow_idx, xpos_compact(out?h:i, out?i:h, inst), 1.0))) {
+                if ((err = CPXchgcoef(inst->CPXenv, inst->CPXlp, lastrow_idx,
+                                      xpos_directed(out ? h : i, out ? i : h, inst), 1.0))) {
                     printf(BOLDRED "[ERROR] Cannot change coefficient: error code %d", err);
                 }
             }
@@ -100,8 +101,8 @@ void add_SEC2_constraints_directed(instance *inst){
             }
             int lastrow_idx = CPXgetnumrows(inst->CPXenv, inst->CPXlp) - 1; // constraint index starts from 0
             // change last row coefficients from 0 to 1 or -1
-            err1 = CPXchgcoef(inst->CPXenv, inst->CPXlp, lastrow_idx, xpos_compact(i, j, inst), 1.0);
-            err2 = CPXchgcoef(inst->CPXenv, inst->CPXlp, lastrow_idx, xpos_compact(j, i, inst), 1.0);
+            err1 = CPXchgcoef(inst->CPXenv, inst->CPXlp, lastrow_idx, xpos_directed(i, j, inst), 1.0);
+            err2 = CPXchgcoef(inst->CPXenv, inst->CPXlp, lastrow_idx, xpos_directed(j, i, inst), 1.0);
             if (err1 || err2) {
                 printf(BOLDRED "[ERROR] Cannot change coefficient: error code %d", err);
             }
@@ -123,14 +124,14 @@ void build_model_base_directed(instance *inst){
 // ===== UNDIRECTED GRAPH FUNCTIONS ====
 
 // return CPLEX column position given an arc (i,j)
-int xpos(int i, int j, instance *inst) {
+int xpos_undirected(int i, int j, instance *inst) {
     if((i == j) || (j < 0) || (i < 0) || (j >= inst->nnodes) || (i >= inst->nnodes)){
-        printf(BOLDRED"[ERROR] xpos(): unexpected i = %d, j = %d\n" RESET, i, j);
+        printf(BOLDRED"[ERROR] xpos_undirected(): unexpected i = %d, j = %d\n" RESET, i, j);
         free_instance(inst);
         exit(1);
     }
     // Check if it's a cell above diagonal
-    if(i > j) return xpos(j, i, inst);
+    if(i > j) return xpos_undirected(j, i, inst);
 
     // Below formula derives from
     // pos = j - 1 + i*n - sum_1^i(k+1)
@@ -160,10 +161,10 @@ void add_x_vars_undirected(instance *inst){
                 free(cname[0]);
                 printerr(inst, "Cannot add columns!");
             }
-            // check xpos on the fly (can be removed if I'm sure it's ok?)
-            if (CPXgetnumcols(inst->CPXenv,inst->CPXlp)-1 != xpos(i, j, inst)) {
+            // check xpos_undirected on the fly (can be removed if I'm sure it's ok?)
+            if (CPXgetnumcols(inst->CPXenv,inst->CPXlp)-1 != xpos_undirected(i, j, inst)) {
                 free(cname[0]);
-                printerr(inst, "xpos() got a bad index!");
+                printerr(inst, "xpos_undirected() got a bad index!");
             }
         }
     }
@@ -189,7 +190,7 @@ void add_degree_constraints_undirected(instance *inst){
         // build index array
         int k = 0;
         for(int i = 0; i < inst->nnodes; i++)
-            if(i != h) index[k++] = xpos(h, i, inst);
+            if(i != h) index[k++] = xpos_undirected(h, i, inst);
         // define constraint name
         snprintf(rname[0], BUFLEN, "degree(%d)", h+1);
         if(CPXaddrows(inst->CPXenv, inst->CPXlp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
@@ -225,7 +226,7 @@ void get_solution_base_undirected(instance *inst){
     double *rxstar = (double *) calloc(tot_cols, sizeof(double));
     for(int i = 0; i < inst->nnodes; i++){
         for (int j = i+1; j < inst->nnodes; j++ ){
-            int idx = xpos(i,j,inst);
+            int idx = xpos_undirected(i, j, inst);
             if(xstar[idx] > 0.5) {
                 if(inst->verbose >= 2) printf("x(%3d,%3d) = 1\n", i + 1, j + 1);
                 rxstar[idx] = 1;
@@ -267,7 +268,7 @@ void findccomp(instance *inst, const double *xstar, int *ncomp, int *succ, int *
             done = true;
             for(int next = 0; next < inst->nnodes; next++){
                 // the edge [curr, next] is selected in xstar and j was not visited before
-                if(curr != next && xstar[xpos(curr, next, inst)] > 0.5 && comp[next] == -1){
+                if(curr != next && xstar[xpos_undirected(curr, next, inst)] > 0.5 && comp[next] == -1){
                     // set `i` successor
                     succ[curr] = next;
                     // change current node

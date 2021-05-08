@@ -12,7 +12,7 @@
 #include "distances.h"
 
 // ===== DIRECTED GRAPH =====
-int xpos_compact(int i, int j, instance *inst);
+int xpos_directed(int i, int j, instance *inst);
 
 void add_x_vars_directed(instance *inst);
 
@@ -23,7 +23,7 @@ void add_SEC2_constraints_directed(instance *inst);
 void build_model_base_directed(instance *inst);
 
 // ===== UNDIRECTED GRAPH =====
-int xpos(int i, int j, instance *inst);
+int xpos_undirected(int i, int j, instance *inst);
 
 void build_model_base_undirected(instance *inst);
 

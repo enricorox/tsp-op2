@@ -33,6 +33,21 @@ void parse_cli(int argc, char **argv, instance *inst){
             }
             continue;
         }
+        if(strncmp(argv[i],"--heuristic", 3) == 0){
+            if(argv[++i] != NULL) {
+                bool found = false;
+                for(int k = 0; k < HLAST; k++)
+                    if (strcasecmp(argv[i], heuristic_names[k]) == 0) {
+                        inst->heuristic = k;
+                        found = true;
+                        break;
+                    }
+                if(!found)
+                    printerr(inst, "Unknown heuristic");
+
+            }
+            continue;
+        }
         if(strcmp(argv[i],"--seed") == 0){
             if(argv[++i] != NULL)
                 inst->seed = atoi(argv[i]);
@@ -111,6 +126,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--file          %s\n", inst->input_tsp_file_name);
         printf("--opt-tour      %s\n", inst->input_opt_file_name);
         printf("--formulation   %s\n", formulation_names[inst->formulation]);
+        printf("--heuristic     %s\n", heuristic_names[inst->heuristic]);
         printf("--seed          %d\n", inst->seed);
         printf("--lazy          %s\n", inst->lazy?"true":"false");
         printf("--time-limit    %f\n", inst->time_limit);

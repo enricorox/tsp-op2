@@ -58,24 +58,42 @@ void solve_sfixing(instance *inst){
     double zbest;
     double *xbest;
     CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 0L);
+    CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_FEASIBILITY);
 
+    // allocate arrays and variables
     xbest = (double *) calloc(inst->ncols, sizeof(double));
     inst->xbest = (double *) calloc(inst->ncols, sizeof(double));
     struct timeval now;
+
+    // indices for warm start
+    int varindices[inst->ncols];
+    for(int i = 0; i < inst->ncols; i++) varindices[i] = i;
+    int beg[] = {0};
 
     int k = 5;
     bool init = true;
     while(true){
         // check time limit
         gettimeofday(&now, NULL);
-        double elapsed = (double) (now.tv_sec - inst->tstart.tv_sec) + timelim;
+        double elapsed = (double) (now.tv_sec - inst->tstart.tv_sec) ;
         if(elapsed >= inst->time_limit) {
             print(inst, 'D', 1, "Reached time limit: %f", elapsed);
             break;
         }
+        double left = inst->time_limit - elapsed;
 
-        // add local branching constraints
-        if(!init) addconstr(inst, k);
+        if(!init) {
+            // set short time limit
+            CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (left < timelim)? left:timelim);
+
+            // add local branching constraints
+            addconstr(inst, k);
+
+            // add warm start
+            CPXaddmipstarts(inst->CPXenv, inst->CPXlp, 1, inst->ncols, beg, varindices, inst->xbest,
+                            CPX_MIPSTART_AUTO, NULL);
+        }
+
 
         // save model
         save_model(inst);
@@ -89,8 +107,10 @@ void solve_sfixing(instance *inst){
             if(init)
                 printerr(inst, "Not enough time to find a starting solution!", status);
             else {
-                print(inst, 'W', 1, "Not enough time to find an incumbent solution!");
-                break;
+                print(inst, 'W', 1, "Not enough time to find an incumbent solution! Increasing individual time-limit");
+                timelim +=  0.5 * timelim;
+                CPXdelrows(inst->CPXenv, inst->CPXlp, inst->nrows, inst->nrows);
+                continue;
             }
         }
         CPXgetobjval(inst->CPXenv, inst->CPXlp, &zbest);
@@ -99,12 +119,12 @@ void solve_sfixing(instance *inst){
             inst->zbest = zbest;
             inst->status = CPXgetstat(inst->CPXenv, inst->CPXlp);
 
-            // switch array pointers
+            // swap array pointers
             double *temp = xbest;
             xbest = inst->xbest;
             inst->xbest = temp;
         }else {
-            k += 2;
+            k++;
             print(inst, 'D', 1, "Increased k = %d", k);
             if(k > 20) {
                 print(inst, 'W', 1, "k exceeded limit");
@@ -117,14 +137,11 @@ void solve_sfixing(instance *inst){
         if(!init) // keep in mind we added a constraint after model definition
             CPXdelrows(inst->CPXenv, inst->CPXlp, inst->nrows, inst->nrows);
         else {
-            // initialization done
+            // unset initialization
             init = false;
 
-            // set short time limit
-            //CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, timelim);
-
             // unset node limit
-            //CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 9223372036800000000L);
+            CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 9223372036800000000L);
         }
     }
     free(xbest);
