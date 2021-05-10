@@ -23,11 +23,11 @@
 #define DEFAULT_CPLEX_SEED 202009243 // from cplex> display settings all
 
 enum formulation_t {CUTS, BENDERS, MTZ, GG, GGi, HFIXING, SFIXING, FLAST}; // FLAST is enum guard
-enum heuristic_t {GREEDY, GREEDYGRASP, EXTRAMILEAGE, HLAST}; // HLAST is enum guard
+enum heuristic_t {GREEDY, GREEDYGRASP, EXTRAMILEAGE, CHEXTRAMILEAGE, HLAST}; // HLAST is enum guard
 enum distance_t {EUC_2D, ATT, GEO};
 
 const char *formulation_names[7];
-const char *heuristic_names[3];
+const char *heuristic_names[4];
 
 // define a general instance of the problem
 typedef struct{
@@ -90,6 +90,10 @@ void print(instance *inst, char type, int lv, const char *msg, ...);
 bool uprob(double perc);
 
 int nrand();
+
+void start(instance *inst);
+
+bool timeout(instance *inst);
 
 #endif //TSP_OP2_UTILS_H
 

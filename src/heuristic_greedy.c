@@ -6,17 +6,7 @@
 #include "distances.h"
 #include "formulation_commons.h"
 
-int swap(int *a, int *b){
-    int t = *a;
-    *a = *b;
-    *b = t;
-}
-
-void shift(int *array, int dim, int pos, int value){
-    for(int i = pos + 1; i < dim; i++)
-        array[i] = array[i - 1];
-    array[pos] = value;
-}
+#define NTHREAD 4
 
 int findnearest(instance *inst, const bool * visited, int node, int order){
     // flag for used nodes
@@ -74,7 +64,7 @@ double gorilla(instance *inst, int nstart, bool *visited, double *result){
             if(t > 95) order = 3;
         }
         int next = findnearest(inst, visited, curr, order);
-        if(next == -1) next = nstart;
+        if(next == -1) next = nstart; // close the circuit
         visited[next] = true;
 
         print(inst, 'D', 3, "curr = %d, next = %d", curr + 1, next + 1);
@@ -92,16 +82,21 @@ void gorilla_init(instance *inst){
     double * xbest = (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
     inst->xbest =  (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
     double zbest = inst->zbest = DBL_MAX;
-    for(int i = 0; i < inst->nnodes; i++){
-        zbest = gorilla(inst, i, visited, xbest);
-        if(zbest < inst->zbest) {
-            inst->zbest = zbest;
 
-            // swap vectors to preserve memory
-            double *t = xbest;
-            xbest = inst->xbest;
-            inst->xbest = t;
+    while(!timeout(inst)) {
+        for (int i = 0; (i < inst->nnodes) && !timeout(inst); i++) {
+            zbest = gorilla(inst, i, visited, xbest);
+            if (zbest < inst->zbest) {
+                inst->zbest = zbest;
+
+                // swap vectors to preserve memory
+                double *t = xbest;
+                xbest = inst->xbest;
+                inst->xbest = t;
+            }
         }
+        // avoid repetitions
+        if(inst->heuristic != GREEDYGRASP) break;
     }
     free(visited);
     free(xbest);

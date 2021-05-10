@@ -14,7 +14,7 @@ void plot(instance *inst, double const *rxstar){
         fprintf(fdata, "%f %f\n", inst->xcoord[i], inst->ycoord[i]);
     fclose(fdata);
 
-    if(inst->verbose >= 1) printf(BOLDGREEN "[INFO] Points written to file %s\n" RESET, data_file);
+    print(inst, 'D', 3, "Points written to file %s", data_file);
 
     // write gnuplot script
     char *script_template = "%s.%s%s-gnuplot-script.plt";
@@ -97,23 +97,21 @@ void plot(instance *inst, double const *rxstar){
 
     fclose(fcom);
 
-    if(inst->verbose >= 1) printf(BOLDGREEN "[INFO] Gnuplot script written to file %s\n" RESET, script_name);
+    print(inst, 'D', 3, "Gnuplot script written to file %s", script_name);
 
     // run gnuplot
     char *command_template = "/usr/bin/gnuplot -c %s";
     char command[BUFLEN];
     snprintf(command, BUFLEN, command_template, script_name);
-    if(system(command)) {
-        printf(BOLDRED "[ERROR] Please install gnuplot!\n" RESET);
-        free_instance(inst);
-        exit(1);
-    }
-    if(inst->verbose >= 1) printf(BOLDGREEN "[INFO] Tour drawn in %s\n" RESET, image_name);
+    if(system(command))
+        printerr(inst, "Please install gnuplot!");
+
+    print(inst, 'D', 3, "Tour drawn in %s", image_name);
 
     // show image
     if(inst->verbose >=1 && inst->gui) {
         snprintf(command, BUFLEN, "/usr/bin/eog %s&", image_name);
         if (system(command))
-            printf(BOLDRED "[WARN] Sorry, Eye Of Gnome not found: can't show graph\n" RESET);
+            print(inst, 'W', 1, "[WARN] Sorry, Eye Of Gnome not found: can't show graph");
     }
 }

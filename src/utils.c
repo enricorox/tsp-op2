@@ -6,10 +6,11 @@
 #include <cplex.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <sys/time.h>
 #include "utils.h"
 
 const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hfixing", "sfixing"};
-const char *heuristic_names[] = {"greedy", "greedygrasp", "extra-mileage"};
+const char *heuristic_names[] = {"greedy", "greedygrasp", "extra-mileage", "extra-mileage-convex-hull"};
 
 void init_instance(instance *inst){
     // ===== from cli =====
@@ -147,4 +148,14 @@ bool uprob(double perc){
 
 int nrand(){
     return rand() % 100 + 1;
+}
+
+void start(instance *inst){
+    gettimeofday(&inst->tstart, NULL);
+}
+
+bool timeout(instance *inst){
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return ((double)(now.tv_sec - inst->tstart.tv_sec) >= inst->time_limit);
 }
