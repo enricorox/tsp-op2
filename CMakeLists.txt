@@ -28,6 +28,12 @@ add_executable(tsp
         src/formulation_GG.c src/formulation_GG.h
         src/performance.c src/performance.h
         src/distances.c src/distances.h
-        src/parsers.c src/parsers.h src/formulation_cuts.c src/formulation_cuts.h src/formulation_sfixing.c src/formulation_sfixing.h src/heuristics.c src/heuristics.h src/heuristic_greedy.c src/heuristic_greedy.h src/heuristic_extramileage.c src/heuristic_extramileage.h)
+        src/parsers.c src/parsers.h
+        src/formulation_cuts.c src/formulation_cuts.h
+        src/formulation_sfixing.c src/formulation_sfixing.h
+        src/heuristics.c src/heuristics.h
+        src/heuristic_greedy.c src/heuristic_greedy.h
+        src/heuristic_extramileage.c src/heuristic_extramileage.h
+        src/graham_scan.c src/graham_scan.h)
 
 target_link_libraries(tsp cplex m pthread dl)

@@ -10,6 +10,7 @@ void heuristic(instance * inst){
     start(inst);
     switch(inst->heuristic){
         case EXTRAMILEAGE:
+        case CHEXTRAMILEAGE:
             if(inst->dist != EUC_2D)
                 printerr(inst, "You need EUC_2D costs to use this heuristic!");
             extramileage(inst);

@@ -32,8 +32,8 @@ int findnearest(instance *inst, const bool * visited, int node, int order){
                 min = c;
             }
         }
-        if(min == DBL_MAX) break;
-        selected[latest] = true;
+        if(min == DBL_MAX) break; // nothing found
+        selected[latest] = true; // flag node as used
     }
     free(selected);
     return latest;
@@ -77,27 +77,39 @@ double gorilla(instance *inst, int nstart, bool *visited, double *result){
 }
 
 void gorilla_init(instance *inst){
+    // set graph as undirected
     inst->directed = true;
-    bool * visited = (bool *) calloc(inst->nnodes, sizeof(bool));
-    double * xbest = (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
+
+    // visited nodes (eaten bananas)
+    bool *visited = (bool *) calloc(inst->nnodes, sizeof(bool));
+
+    // initialize vectors
+    double *x = (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
     inst->xbest =  (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
-    double zbest = inst->zbest = DBL_MAX;
+
+    // initialize cost
+    double z = inst->zbest = DBL_MAX;
 
     while(!timeout(inst)) {
-        for (int i = 0; (i < inst->nnodes) && !timeout(inst); i++) {
-            zbest = gorilla(inst, i, visited, xbest);
-            if (zbest < inst->zbest) {
-                inst->zbest = zbest;
+        // use every nodes as initial node
+        for (int start = 0; (start < inst->nnodes) && !timeout(inst); start++) {
+            z = gorilla(inst, start, visited, x);
 
-                // swap vectors to preserve memory
-                double *t = xbest;
-                xbest = inst->xbest;
+            // update the minimum
+            if (z < inst->zbest) {
+                inst->zbest = z;
+
+                // swap vectors
+                double *t = x;
+                x = inst->xbest;
                 inst->xbest = t;
             }
         }
-        // avoid repetitions
-        if(inst->heuristic != GREEDYGRASP) break;
+
+        // break if deterministic cycle
+        if(inst->heuristic == GREEDY) break;
     }
+
     free(visited);
-    free(xbest);
+    free(x);
 }

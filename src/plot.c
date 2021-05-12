@@ -20,7 +20,8 @@ void plot(instance *inst, double const *rxstar){
     char *script_template = "%s.%s%s-gnuplot-script.plt";
     char script_name[BUFLEN];
     snprintf(script_name, BUFLEN, script_template, inst->name[0],
-            formulation_names[inst->formulation], inst->lazy?"-lazy":"");
+             (inst->heuristic != HLAST)?heuristic_names[inst->heuristic]:formulation_names[inst->formulation],
+             inst->lazy?"-lazy":"");
     FILE *fcom = fopen(script_name, "w");
 
     char *image_template = "%s.%s%s-graph.svg";
