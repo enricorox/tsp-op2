@@ -33,17 +33,31 @@ void parse_cli(int argc, char **argv, instance *inst){
             }
             continue;
         }
-        if(strncmp(argv[i],"--heuristic", 3) == 0){
+        if(strncmp(argv[i],"--constructive-heuristic", 3) == 0){
             if(argv[++i] != NULL) {
                 bool found = false;
-                for(int k = 0; k < HLAST; k++)
-                    if (strcasecmp(argv[i], heuristic_names[k]) == 0) {
-                        inst->heuristic = k;
+                for(int k = 0; k < CHLAST; k++)
+                    if (strcasecmp(argv[i], cons_heuristic_names[k]) == 0) {
+                        inst->cons_heuristic = k;
                         found = true;
                         break;
                     }
                 if(!found)
-                    printerr(inst, "Unknown heuristic");
+                    printerr(inst, "Unknown constructive heuristic");
+            }
+            continue;
+        }
+        if(strncmp(argv[i],"--refinement-heuristic", 3) == 0){
+            if(argv[++i] != NULL) {
+                bool found = false;
+                for(int k = 0; k < RHLAST; k++)
+                    if (strcasecmp(argv[i], ref_heuristic_names[k]) == 0) {
+                        inst->ref_heuristic = k;
+                        found = true;
+                        break;
+                    }
+                if(!found)
+                    printerr(inst, "Unknown refinement heuristic");
 
             }
             continue;
@@ -126,7 +140,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--file          %s\n", inst->input_tsp_file_name);
         printf("--opt-tour      %s\n", inst->input_opt_file_name);
         printf("--formulation   %s\n", formulation_names[inst->formulation]);
-        printf("--heuristic     %s\n", heuristic_names[inst->heuristic]);
+        printf("--cons_heuristic     %s\n", cons_heuristic_names[inst->cons_heuristic]);
         printf("--seed          %d\n", inst->seed);
         printf("--lazy          %s\n", inst->lazy?"true":"false");
         printf("--time-limit    %f\n", inst->time_limit);

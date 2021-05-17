@@ -7,6 +7,6 @@
 
 #include "utils.h"
 
-void gorilla_init(instance *inst);
+void greedy(instance *inst, double timelimit);
 
 #endif //TSP_OP2_HEURISTIC_GREEDY_H

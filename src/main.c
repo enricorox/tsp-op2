@@ -25,21 +25,17 @@ int main(int argc, char **argv){
                 parse_file(&inst, inst.input_opt_file_name);
             }
         }
-        if(inst.heuristic != HLAST){
-            print(&inst, 'I', 1, "Solving %s with %s heuristic", inst.name[0], heuristic_names[inst.heuristic]);
+        if(inst.cons_heuristic != CHLAST){
+            print(&inst, 'I', 1, "Solving %s with %s constructive and %s refinement heuristic",
+                  inst.name[0], cons_heuristic_names[inst.cons_heuristic],
+                  (inst.ref_heuristic != RHLAST)?ref_heuristic_names[inst.ref_heuristic]:"none");
             heuristic(&inst);
         }else {
             print(&inst, 'I', 1, "Solving %s with %s formulation", inst.name[0], formulation_names[inst.formulation]);
             // start optimization
             TSPOpt(&inst);
         }
-        // plot
-        if (inst.do_plot) {
-            if(inst.xstar != NULL)
-                plot(&inst, inst.xstar);
-            else if(inst.xbest != NULL)
-                plot(&inst, inst.xbest);
-        }
+
     }
 
     // release memory!

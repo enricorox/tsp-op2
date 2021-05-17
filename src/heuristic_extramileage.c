@@ -7,6 +7,7 @@
 //
 // Created by enrico on 08/05/21.
 //
+
 /**
  * Convert the instance points into a PointSet
  * @param inst instance pointer
@@ -30,7 +31,7 @@ PointSet * insttopointset(instance *inst){
  * @param inst instance pointer
  * @param visited array of visited nodes
  */
-void selecthull(instance *inst, bool *visited){
+int selecthull(instance *inst, bool *visited){
     PointSet *ps = insttopointset(inst);
     PointSet *sol = remove_degeneracy(compute_convex_hull(ps));
 
@@ -52,10 +53,9 @@ void selecthull(instance *inst, bool *visited){
     inst->xbest[xpos_directed(a, b, inst)] = 1;
 
     printf("Hull selected!\n");
-    if(inst->verbose >= 3) {
+    if(inst->verbose >= 3)
         plot(inst, inst->xbest);
-        getchar();
-    }
+    return sol->num_points;
 }
 
 double diameter(instance *inst, int *a, int *b){
@@ -75,8 +75,8 @@ double diameter(instance *inst, int *a, int *b){
     return d;
 }
 
-void init_extramileage(instance *inst, bool *visited){
-    if(inst->heuristic == EXTRAMILEAGE) { // find set diameter
+int init_extramileage(instance *inst, bool *visited){
+    if(inst->cons_heuristic == EXTRAMILEAGE) { // find set diameter
         int a, b;
         diameter(inst, &a, &b);
         visited[a] = visited[b] = true;
@@ -84,39 +84,47 @@ void init_extramileage(instance *inst, bool *visited){
         // select (a,b) and (b,a) edges
         inst->xbest[xpos_directed(a, b, inst)] = 1;
         inst->xbest[xpos_directed(b, a, inst)] = 1;
-        if(inst->verbose >= 3) {
+        if(inst->verbose >= 3)
             plot(inst, inst->xbest);
-            getchar();
-        }
+
+        return 2;
     }else // find convex hull
-        selecthull(inst, visited);
+        return selecthull(inst, visited);
 }
 
 void extramileage(instance *inst){
+    // use directed graph
     inst->directed = true;
+
+    // initialize vectors
     bool *visited = (bool *) calloc(inst->nnodes, sizeof(bool));
     inst->xbest = (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
 
-    init_extramileage(inst, visited);
+    // find diameter or convex hull
+    int selected = init_extramileage(inst, visited);
 
-    // select one edge at each iteration
-    for(int it = 0; it < inst->nnodes - 2; it++){
+    // add one edge at each iteration
+    for(int it = 0; it < inst->nnodes - selected; it++){
         double min = DBL_MAX;   // minimum extra-mileage
         int im, jm, hm;         // minimum corresponding nodes
 
         // scan selected edges
         for(int i = 0; i < inst->nnodes; i++){
             if(!visited[i]) continue; // skip not used nodes
+            if(timeout(inst)) break;
+
             for(int j = 0; j < inst->nnodes; j++){
                 if(i == j) continue; // skip auto-loops
                 if(!visited[j]) continue; // skip not used nodes
+                if(timeout(inst)) break;
 
                 // select a free node with minimum extra-mileage
                 for(int h = 0; h < inst->nnodes; h++){
                     if(visited[h]) continue; // skip used nodes
-
+                    if(inst->xbest[xpos_directed(i, j, inst)] == 0) continue; // skip unselected edges
                     // compute extra-mileage
                     double extram = cost(i, h, inst) + cost(h, i, inst) - cost(i, j, inst);
+
                     // update the minimum
                     if(extram < min){
                         min = extram;
@@ -134,6 +142,8 @@ void extramileage(instance *inst){
         inst->xbest[xpos_directed(hm, jm, inst)] = 1;
         // visit the node
         visited[hm] = true;
+
+        //plot(inst, inst->xbest);
 
         if(timeout(inst))
             printerr(inst,"Time-limit too short!");

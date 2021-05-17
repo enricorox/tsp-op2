@@ -20,4 +20,6 @@ void TSPOpt(instance *inst);
 
 void save_model(instance *inst);
 
+double get_zstar_opt(instance *inst);
+
 #endif // end ifndef

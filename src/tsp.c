@@ -174,6 +174,14 @@ void TSPOpt(instance *inst){
         if(inst->opt_tour != NULL )
             printf(BOLDGREEN "[INFO] Known solution z* = %f\n" RESET, get_zstar_opt(inst));
     }
+
+    // plot
+    if (inst->do_plot) {
+        if(inst->xstar != NULL)
+            plot(inst, inst->xstar);
+        else if(inst->xbest != NULL)
+            plot(inst, inst->xbest);
+    }
 }
 
 // write model to file

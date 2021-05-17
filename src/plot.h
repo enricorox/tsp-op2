@@ -7,6 +7,8 @@
 #include "utils.h"
 #include "tsp.h"
 
-void plot(instance *inst, double const *rxstar);
+void plot(instance *inst, const double *rxstar);
+
+void plot_succ(instance *inst, int *succ);
 
 #endif //TSP_OP2_PLOT_H

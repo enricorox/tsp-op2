@@ -8,16 +8,19 @@
 #include <stdarg.h>
 #include <sys/time.h>
 #include "utils.h"
+#include "formulation_commons.h"
 
-const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hfixing", "sfixing"};
-const char *heuristic_names[] = {"greedy", "greedygrasp", "extra-mileage", "extra-mileage-convex-hull"};
+const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hard-fixing", "soft-fixing"};
+const char *cons_heuristic_names[] = {"greedy", "greedy-grasp", "extra-mileage", "extra-mileage-convex-hull"};
+const char *ref_heuristic_names[] = {"two-opt", "two-opt-min"};
 
 void init_instance(instance *inst){
     // ===== from cli =====
     inst->input_tsp_file_name = NULL;
     inst->input_opt_file_name = NULL;
     inst->formulation = BENDERS;
-    inst->heuristic = HLAST;
+    inst->cons_heuristic = CHLAST;
+    inst->ref_heuristic = RHLAST;
     inst->lazy = false;
     inst->seed = DEFAULT_CPLEX_SEED;
     inst->integer_costs = true;
@@ -57,6 +60,7 @@ void init_instance(instance *inst){
     inst->xbest = NULL;
     inst->zbest = CPX_INFBOUND;
     inst->status = -1; // to be set to >0 by CPLEX
+    inst->succ = NULL;
 }
 void free_instance(instance *inst){
     free(inst->input_tsp_file_name);
@@ -77,6 +81,8 @@ void free_instance(instance *inst){
 
     free(inst->xstar);
     free(inst->xbest);
+
+    free(inst->succ);
 
     CPXfreeprob(inst->CPXenv, &inst->CPXlp);
     CPXcloseCPLEX(&inst->CPXenv);
@@ -155,7 +161,61 @@ void start(instance *inst){
 }
 
 bool timeout(instance *inst){
+    return timeouts(inst, inst->time_limit);
+}
+
+bool timeouts(instance *inst, double s){
     struct timeval now;
     gettimeofday(&now, NULL);
-    return ((double)(now.tv_sec - inst->tstart.tv_sec) >= inst->time_limit);
+    return ((double)(now.tv_sec - inst->tstart.tv_sec) >= s);
+}
+
+int * xtosucc(instance *inst, const double *x){
+    int *succ = calloc(inst->nnodes, sizeof(int));
+    for(int i = 0; i < inst->nnodes; i++)
+        for(int j = 0; j < inst->nnodes; j++) {
+            int k;
+            if(inst->directed)
+                k = xpos_directed(i, j, inst);
+            else
+                k = xpos_undirected(i, j, inst);
+            if (x[k] >= 0.5)
+                succ[i] = j;
+        }
+    return succ;
+}
+
+double * succtox(instance *inst, int *succ){
+    // covert succ to rxstar
+    double *rxstar = (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
+    for(int i = 0; i < inst->nnodes; i++) {
+        int k = inst->directed?xpos_directed(i, succ[i],inst):xpos_undirected(i, succ[i],inst);
+        rxstar[k] = 1;
+    }
+    return rxstar;
+}
+
+void printsucc(instance *inst, int *succ){
+    int curr = 0;
+    int counter = 0;
+    do{
+        printf("%d -> ", curr + 1);
+        curr = succ[curr];
+        if(++counter > inst->nnodes)
+            printerr(inst, "Malformed succ[]");
+    }while(curr != 0);
+
+    printf("\n");
+}
+
+double cost_succ(instance *inst){
+    if(inst->succ == NULL)
+        printerr(inst, "cost_succ(): succ is NULL");
+    int curr = 0;
+    double z = 0;
+    do{
+       z += cost(curr, inst->succ[curr], inst);
+       curr = inst->succ[curr];
+    }while(curr != 0);
+    return z;
 }
