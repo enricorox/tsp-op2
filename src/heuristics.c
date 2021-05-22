@@ -2,11 +2,13 @@
 // Created by enrico on 07/05/21.
 //
 
+#include <unistd.h>
 #include "heuristics.h"
 #include "heuristic_greedy.h"
 #include "heuristic_extramileage.h"
 #include "tsp.h"
 #include "heuristic_kopt.h"
+#include "heuristic_VNS.h"
 
 void heuristic(instance * inst){
     start(inst);
@@ -18,6 +20,7 @@ void heuristic(instance * inst){
     else
         timelimit = inst->time_limit;
 
+    // choose constructive heuristic
     switch(inst->cons_heuristic){
         case EXTRAMILEAGE:
         case EXTRAMILEAGECONVEXHULL:
@@ -33,15 +36,22 @@ void heuristic(instance * inst){
             printerr(inst, "Heuristic not found (internal error)");
     }
 
-    plot(inst, inst->xbest);
+    if(inst->verbose >= 3)
+        plot(inst, inst->xbest);
 
+    // convert xbest to successors vector
+    inst->succ = xtosucc(inst, inst->xbest);
+
+    // choose refinement heuristic
     switch(inst->ref_heuristic) {
         case TWO_OPT:
-            kopt(inst, false);
+            inst->zbest = two_opt(inst, inst->succ, false);
             break;
         case TWO_OPT_MIN:
-            kopt(inst, true);
+            inst->zbest = two_opt(inst, inst->succ, true);
             break;
+        case VNS1:
+            inst->zbest = VNS(inst);
         default:
             print(inst, 'D', 3, "No refinement heuristic used");
             break;
@@ -55,4 +65,6 @@ void heuristic(instance * inst){
         double error = (ratio - 1) * 100;
         print(inst, 'I', 1, "Known solution z* = %f, ratio = %f, error = %f%", zopt, ratio, error);
     }
+
+    plot_succ(inst, inst->succ);
 }

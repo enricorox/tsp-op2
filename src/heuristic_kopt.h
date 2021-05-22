@@ -9,8 +9,8 @@
 
 #define EPSILON 0.0000001
 
-void kopt(instance *inst, bool findmin);
+void reverse_chain(int *succ, int start, int stop);
 
-
+double two_opt(instance *inst, int *succ, bool findmin);
 
 #endif //TSP_OP2_HEURISTIC_KOPT_H

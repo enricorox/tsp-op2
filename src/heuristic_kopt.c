@@ -18,20 +18,27 @@ void reverse_chain(int *succ, int start, int stop){
         succ[next] = curr;
         curr = next;
         next = temp;
+
+        // check errors
+        if(curr == start){
+            printf("ERROR reversing chain\n");
+            exit(1);
+        }
+
     }
 }
 
 void two_opt_move(int *succ, int a, int b){
-    int asucc = succ[a];
-    int bsucc = succ[b];
+    int aprime = succ[a];
+    int bprime = succ[b];
 
-    reverse_chain(succ, asucc, b);
+    reverse_chain(succ, aprime, b);
 
-    succ[asucc] = bsucc;
+    succ[aprime] = bprime;
     succ[a] = b;
 }
 
-void two_opt(instance *inst, int *succ, bool findmin){
+double two_opt(instance *inst, int *succ, bool findmin){
     while(!timeout(inst)){
         bool done = false;
         double min = DBL_MAX;
@@ -55,7 +62,7 @@ void two_opt(instance *inst, int *succ, bool findmin){
             }
         }
 
-        // exit if nothing found
+        // exit if no shortcut
         if(min >= 0)
             break;
 
@@ -70,21 +77,5 @@ void two_opt(instance *inst, int *succ, bool findmin){
         if(inst->verbose >= 3)
             printsucc(inst, succ);
     }
-}
-
-void kopt(instance *inst, bool findmin){
-    inst->succ = xtosucc(inst, inst->xbest);
-    switch(inst->ref_heuristic) {
-        case TWO_OPT:
-            two_opt(inst, inst->succ, false);
-            break;
-        case TWO_OPT_MIN:
-            two_opt(inst, inst->succ, true);
-            break;
-        default:
-            printerr(inst, "kopt() internal error");
-    }
-    inst->zbest = cost_succ(inst);
-
-    plot_succ(inst, inst->succ);
+    return cost_succ(inst, succ);
 }

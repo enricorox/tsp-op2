@@ -6,6 +6,8 @@
 #include "distances.h"
 #include "formulation_commons.h"
 
+
+#define NONE -1
 #define NTHREAD 4
 
 int findnearest(instance *inst, const bool * visited, int node, int order){
@@ -14,7 +16,7 @@ int findnearest(instance *inst, const bool * visited, int node, int order){
     selected[node] = true;
 
     // latest node found
-    int latest = -1;
+    int latest = NONE;
 
     // find kth smallest edge
     for(int k = 0; k < order; k++) {
@@ -60,7 +62,7 @@ double gorilla(instance *inst, int nstart, bool *visited, double *result){
     int curr = nstart; // current node
     visited[curr] = true; // flag as used
 
-    // find nnodes edges
+    // find exactly nnodes edges
     for(int i = 0; i < inst->nnodes; i++){
         //print_visited(inst, visited);
 
@@ -76,7 +78,7 @@ double gorilla(instance *inst, int nstart, bool *visited, double *result){
         int next = findnearest(inst, visited, curr, order);
 
         // close the circuit if there are no nodes
-        if(next == -1) next = nstart;
+        if(next == NONE) next = nstart;
 
         // flag the node
         visited[next] = true;
@@ -104,10 +106,10 @@ void greedy(instance *inst, double timelimit){
     // set graph as undirected
     inst->directed = true;
 
-    // visited nodes (eaten bananas)
+    // visited nodes
     bool *visited = (bool *) calloc(inst->nnodes, sizeof(bool));
 
-    // initialize vectors
+    // initialize solution vectors
     double *x = (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
     inst->xbest =  (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
 

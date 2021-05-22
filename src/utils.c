@@ -12,7 +12,7 @@
 
 const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hard-fixing", "soft-fixing"};
 const char *cons_heuristic_names[] = {"greedy", "greedy-grasp", "extra-mileage", "extra-mileage-convex-hull"};
-const char *ref_heuristic_names[] = {"two-opt", "two-opt-min"};
+const char *ref_heuristic_names[] = {"two-opt", "two-opt-min", "vns1"};
 
 void init_instance(instance *inst){
     // ===== from cli =====
@@ -208,14 +208,14 @@ void printsucc(instance *inst, int *succ){
     printf("\n");
 }
 
-double cost_succ(instance *inst){
-    if(inst->succ == NULL)
+double cost_succ(instance *inst, int *succ){
+    if(succ == NULL)
         printerr(inst, "cost_succ(): succ is NULL");
     int curr = 0;
     double z = 0;
     do{
-       z += cost(curr, inst->succ[curr], inst);
-       curr = inst->succ[curr];
+       z += cost(curr, succ[curr], inst);
+       curr = succ[curr];
     }while(curr != 0);
     return z;
 }

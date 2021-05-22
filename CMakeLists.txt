@@ -34,6 +34,6 @@ add_executable(tsp
         src/heuristics.c src/heuristics.h
         src/heuristic_greedy.c src/heuristic_greedy.h
         src/heuristic_extramileage.c src/heuristic_extramileage.h
-        src/graham_scan.c src/graham_scan.h src/heuristic_kopt.c src/heuristic_kopt.h)
+        src/graham_scan.c src/graham_scan.h src/heuristic_kopt.c src/heuristic_kopt.h src/heuristic_VNS.c src/heuristic_VNS.h)
 
 target_link_libraries(tsp cplex m pthread dl)
