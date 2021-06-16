@@ -66,7 +66,6 @@ double two_opt(instance *inst, int *succ, bool findmin){
         if(min >= 0)
             break;
 
-        // swap edges
         if(inst->verbose >= 3)
             printsucc(inst, succ);
 

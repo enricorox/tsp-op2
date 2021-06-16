@@ -7,12 +7,15 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/time.h>
+
 #include "utils.h"
 #include "formulation_commons.h"
 
 const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hard-fixing", "soft-fixing"};
+
 const char *cons_heuristic_names[] = {"greedy", "greedy-grasp", "extra-mileage", "extra-mileage-convex-hull"};
-const char *ref_heuristic_names[] = {"two-opt", "two-opt-min", "vns1"};
+
+const char *ref_heuristic_names[] = {"two-opt", "two-opt-min", "vns1", "vns2", "tabu-search"};
 
 void init_instance(instance *inst){
     // ===== from cli =====
@@ -185,7 +188,7 @@ int * xtosucc(instance *inst, const double *x){
     return succ;
 }
 
-double * succtox(instance *inst, int *succ){
+double *succtox(instance *inst, const int *succ){
     // covert succ to rxstar
     double *rxstar = (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
     for(int i = 0; i < inst->nnodes; i++) {
@@ -195,7 +198,7 @@ double * succtox(instance *inst, int *succ){
     return rxstar;
 }
 
-void printsucc(instance *inst, int *succ){
+void printsucc(instance *inst, const int *succ){
     int curr = 0;
     int counter = 0;
     do{
@@ -208,7 +211,7 @@ void printsucc(instance *inst, int *succ){
     printf("\n");
 }
 
-double cost_succ(instance *inst, int *succ){
+double cost_succ(instance *inst, const int *succ){
     if(succ == NULL)
         printerr(inst, "cost_succ(): succ is NULL");
     int curr = 0;

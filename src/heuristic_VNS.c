@@ -68,8 +68,12 @@ double VNS(instance *inst){
 
     double zbest = DBL_MAX;
 
+    bool findmin = true;
+
     switch(inst->ref_heuristic){
-        case VNS1: // two-opt and jump on three-opt neighbourhood
+        case VNS1: // two-opt(-min) and jump on three-opt neighbourhood
+            findmin = false;
+        case VNS2:
             while(!timeout(inst)){
                 // copy best solution
                 memcpy(sol, inst->succ, inst->nnodes * sizeof(int));
@@ -78,7 +82,7 @@ double VNS(instance *inst){
                 kick(inst, sol, 3);
 
                 // find local optimum in 2-opt neighborhood
-                double z = two_opt(inst, sol, true);
+                double z = two_opt(inst, sol, findmin);
 
                 // update minimum
                 if(z < zbest){

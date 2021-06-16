@@ -24,12 +24,12 @@
 
 enum formulation_t {CUTS, BENDERS, MTZ, GG, GGi, HFIXING, SFIXING, FLAST}; // FLAST is enum guard
 enum cons_heuristic_t {GREEDY, GREEDYGRASP, EXTRAMILEAGE, EXTRAMILEAGECONVEXHULL, CHLAST}; // CHLAST is enum guard
-enum ref_heuristic_t {TWO_OPT, TWO_OPT_MIN, VNS1, RHLAST};
+enum ref_heuristic_t {TWO_OPT, TWO_OPT_MIN, VNS1, VNS2, TABU_SEARCH, RHLAST};
 enum distance_t {EUC_2D, ATT, GEO};
 
 const char *formulation_names[7];
 const char *cons_heuristic_names[4];
-const char *ref_heuristic_names[3];
+const char *ref_heuristic_names[5];
 
 // define a general instance of the problem
 typedef struct{
@@ -103,10 +103,10 @@ bool timeouts(instance *inst, double s);
 
 int * xtosucc(instance *inst, const double *x);
 
-double * succtox(instance *inst, int *succ);
+double * succtox(instance *inst, const int *succ);
 
-void printsucc(instance *inst, int *succ);
+void printsucc(instance *inst, const int *succ);
 
-double cost_succ(instance *inst, int *succ);
+double cost_succ(instance *inst, const int *succ);
 
 #endif //TSP_OP2_UTILS_H

@@ -36,11 +36,14 @@ void heuristic(instance * inst){
             printerr(inst, "Heuristic not found (internal error)");
     }
 
-    if(inst->verbose >= 3)
+    if(inst->verbose >= 30)
         plot(inst, inst->xbest);
 
     // convert xbest to successors vector
     inst->succ = xtosucc(inst, inst->xbest);
+
+    // TODO for some reason --verbose 3 is faster than --verbose 1
+    // TODO maybe because succ are in cache
 
     // choose refinement heuristic
     switch(inst->ref_heuristic) {
@@ -51,7 +54,12 @@ void heuristic(instance * inst){
             inst->zbest = two_opt(inst, inst->succ, true);
             break;
         case VNS1:
+        case VNS2:
             inst->zbest = VNS(inst);
+            break;
+        case TABU_SEARCH:
+
+            break;
         default:
             print(inst, 'D', 3, "No refinement heuristic used");
             break;
