@@ -56,7 +56,7 @@ void kick(instance *inst, int *succ, int k){
             succ[bprime] = aprime;
             succ[b] = cprime;
             break;
-        case 4: // TODO k = 4
+        case 4: // TODO k = 4?
         default:
             printerr(inst,"kick(): k = %d not implemented", k);
     }

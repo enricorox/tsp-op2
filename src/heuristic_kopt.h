@@ -13,4 +13,6 @@ void reverse_chain(int *succ, int start, int stop);
 
 double two_opt(instance *inst, int *succ, bool findmin);
 
+void two_opt_move(int *succ, int a, int b);
+
 #endif //TSP_OP2_HEURISTIC_KOPT_H

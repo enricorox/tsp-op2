@@ -15,7 +15,7 @@ const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hard-
 
 const char *cons_heuristic_names[] = {"greedy", "greedy-grasp", "extra-mileage", "extra-mileage-convex-hull"};
 
-const char *ref_heuristic_names[] = {"two-opt", "two-opt-min", "vns1", "vns2", "tabu-search"};
+const char *ref_heuristic_names[] = {"two-opt", "two-opt-min", "vns1", "vns2", "tabu-search1", "tabu-search2"};
 
 void init_instance(instance *inst){
     // ===== from cli =====

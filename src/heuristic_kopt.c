@@ -52,7 +52,7 @@ double two_opt(instance *inst, int *succ, bool findmin){
                 double delta = cost(i, j, inst) + cost(succ[i], succ[j], inst)
                         - cost(i, succ[i], inst) - cost(j, succ[j], inst);
                 if((delta < 0 - EPSILON) && (delta < min)) {
-                    print(inst, 'D', 2, "Shortcut found! i = %d, j = %d, delta = %f", i + 1, j + 1, delta);
+                    //print(inst, 'D', 2, "Shortcut found! i = %d, j = %d, delta = %f", i + 1, j + 1, delta);
                     min = delta;
                     a = i;
                     b = j;
@@ -66,15 +66,15 @@ double two_opt(instance *inst, int *succ, bool findmin){
         if(min >= 0)
             break;
 
-        if(inst->verbose >= 3)
-            printsucc(inst, succ);
+        //if(inst->verbose >= 3)
+            //printsucc(inst, succ);
 
         print(inst, 'D', 2, "Making a two-opt move...");
 
         two_opt_move(succ, a, b);
 
-        if(inst->verbose >= 3)
-            printsucc(inst, succ);
+        //if(inst->verbose >= 3)
+            //printsucc(inst, succ);
     }
     return cost_succ(inst, succ);
 }

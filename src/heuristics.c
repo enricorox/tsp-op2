@@ -9,8 +9,10 @@
 #include "tsp.h"
 #include "heuristic_kopt.h"
 #include "heuristic_VNS.h"
+#include "heuristic_tabu_search.h"
 
 void heuristic(instance * inst){
+    // initialize starting time
     start(inst);
 
     // define time limit for construction heuristics
@@ -42,8 +44,11 @@ void heuristic(instance * inst){
     // convert xbest to successors vector
     inst->succ = xtosucc(inst, inst->xbest);
 
-    // TODO for some reason --verbose 3 is faster than --verbose 1
-    // TODO maybe because succ are in cache
+    // record initial cost
+    double initial_cost = cost_succ(inst, inst->succ);
+
+    // NB --verbose 3 is more precise than --verbose 1
+    // NB that's because it starts from a different (worse!) starting solution!
 
     // choose refinement heuristic
     switch(inst->ref_heuristic) {
@@ -57,14 +62,16 @@ void heuristic(instance * inst){
         case VNS2:
             inst->zbest = VNS(inst);
             break;
-        case TABU_SEARCH:
-
+        case TABU_SEARCH1:
+        case TABU_SEARCH2:
+            inst->zbest = tabu_search(inst, inst->succ);
             break;
         default:
             print(inst, 'D', 3, "No refinement heuristic used");
             break;
     }
 
+    print(inst, 'I', 1, "Initial cost = %f", initial_cost);
     print(inst, 'I', 1, "Found zbest = %f", inst->zbest);
 
     if(inst->opt_tour != NULL ) {
