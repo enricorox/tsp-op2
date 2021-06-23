@@ -202,6 +202,8 @@ void add_degree_constraints_undirected(instance *inst){
 }
 
 void build_model_base_undirected(instance *inst){
+    inst->directed = false;
+
     add_x_vars_undirected(inst);
 
     add_degree_constraints_undirected(inst);

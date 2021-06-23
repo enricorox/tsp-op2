@@ -64,6 +64,7 @@ void heuristic(instance * inst){
             break;
         case TABU_SEARCH1:
         case TABU_SEARCH2:
+        case TABU_SEARCH3:
             inst->zbest = tabu_search(inst, inst->succ);
             break;
         default:

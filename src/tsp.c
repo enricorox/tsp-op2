@@ -1,4 +1,5 @@
 #include "tsp.h"
+#include "formulation_hfixing.h"
 
 double get_zstar_opt(instance *inst){
     if(inst->opt_tour == NULL){
@@ -62,6 +63,8 @@ void TSPOpt(instance *inst){
             break;
         case HFIXING:
             inst->directed = false;
+            build_model_hfixing(inst);
+            solve_hfixing(inst);
             break;
         // ============== directed graphs ==============
         case MTZ:
@@ -148,6 +151,7 @@ void TSPOpt(instance *inst){
             get_solution_sfixing(inst);
             break;
         case HFIXING:
+            get_solution_hfixing(inst);
             break;
         // ============== directed graphs ==============
         case MTZ:

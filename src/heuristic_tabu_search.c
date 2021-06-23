@@ -14,17 +14,18 @@ double search(instance *inst, int *succ, bool findmin, long *tabu, long tenure){
     double zbest = cost_succ(inst, succ);
 
     long now = 0; // iteration counter
+
     while(!timeout(inst)){
         now++;
         bool found = false;
         double min = DBL_MAX;
         int a, b;
 
-        // select node pairs, skip tabu
+        // select node pairs (2-opt neighbourhood), skip tabu
         for(int i = 0; i < inst->nnodes; i++){
             if((found && !findmin) || timeout(inst)) break;
 
-            // check tabu
+            // check tabu nodes
             if(now - tabu[i] <= tenure) {
                 print(inst, 'D', 2, "Node %d is tabu!", i);
                 continue;
@@ -87,6 +88,10 @@ double tabu_search(instance *inst, int *succ){
         case TABU_SEARCH2:
             findmin = true;
             tenure = inst->nnodes / 10;
+            break;
+        case TABU_SEARCH3:
+            findmin = true;
+            tenure = inst->nnodes / 15;
             break;
         default:
             printerr(inst, "tabu_search(): illegal heuristic");

@@ -1,4 +1,10 @@
 //
+// Created by enrico on 21/06/21.
+//
+
+#include "formulation_hfixing.h"
+
+//
 // Created by enrico on 03/05/21.
 //
 
@@ -6,53 +12,53 @@
 #include "formulation_sfixing.h"
 #include "plot.h"
 
-void build_model_sfixing(instance *inst){
+void build_model_hfixing(instance *inst){
     build_model_cuts(inst);
     inst->ncols = CPXgetnumcols(inst->CPXenv, inst->CPXlp);
     inst->nrows = CPXgetnumrows(inst->CPXenv, inst->CPXlp);
 }
 
-void get_solution_sfixing(instance *inst){
+void get_solution_hfixing(instance *inst){
     // xstar is already populated!
     //get_solution_cuts(inst);
 }
 
-// add sum_{e:x_e^h = 1}(x_e) >= n - k
-void addcnstr(instance *inst, int perc){
-    if(perc < 0 || perc > inst->nnodes) printerr(inst, "Cannot use k = %d", perc);
+void fix_edges(instance *inst, int perc){
+    if(perc < 0 || perc > 100) printerr(inst, "Cannot use perc = %d", perc);
     if(inst->xbest == NULL) printerr(inst, "xbest must be not null!");
 
-    char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};
+    double *bd = calloc(inst->ncols, sizeof(double));
 
-    int nnz = inst->nnodes;
-    int index[nnz];
-    double value[nnz];
-    for(int i = 0; i < nnz; i++) value[i] = 1;
+    int *indices = calloc(inst->ncols, sizeof(int));
+    for(int i = 0; i < inst->ncols; i++) indices[i] = i;
 
-    // build left hand side
-    int j = 0;
-    for(int i = 0; i < inst->ncols; i++)
-        if(inst->xbest[i] > 0.5) index[j++] = i;
+    char *lu = calloc(inst->ncols, sizeof(char));
+    for(int i = 0; i < inst->ncols; i++) lu[i] = 'L';
 
-    print(inst, 'D', 2, "j = %d", j);
+    // choose edges
+    int counter = 0;
+    for(int i = 0; i < inst->nnodes; i++)
+        for(int j = i + 1; j < inst->nnodes; j++){
+            int k = xpos_undirected(i, j, inst);
+            if(inst->xbest[k] > 0.5)
+                if((bd[k] = (uprob(perc) ? 1 : 0))) {
+                    print(inst, 'D', 3, "Edge x(%d, %d) fixed", i, j);
+                    counter++;
+                }
+        }
+    print(inst, 'D', 1, "fixed %d edges", counter);
 
-    // define right hand side
-    double rhs = inst->nnodes - perc;
-    // define the type of constraint (array) ('E' for equality)
-    char sense = 'L';
-    // define starting index
-    int izero = 0;
-    // define constraint name
-    snprintf(rname[0], BUFLEN, "local_branching");
-    if(CPXaddrows(inst->CPXenv, inst->CPXlp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, rname)) {
-        free(rname[0]);
-        printerr(inst, "Cannot add rows!");
-    }
+    // change lower bounds
+    int status = CPXchgbds(inst->CPXenv, inst->CPXlp, inst->ncols, indices, lu, bd);
+    if(status)
+        print(inst, 'D', 1, "Change bound error %d", status);
 
-    free(rname[0]);
+    free(bd);
+    free(indices);
+    free(lu);
 }
 
-void solve_sfixing(instance *inst){
+void solve_hfixing(instance *inst){
     // set short time limit
     double timelim = inst->time_limit / 20;
     double zbest;
@@ -87,7 +93,7 @@ void solve_sfixing(instance *inst){
             CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (left < timelim)? left:timelim);
 
             // add local branching constraints
-            addcnstr(inst, k);
+            fix_edges(inst, 90);
 
             // add warm start
             CPXaddmipstarts(inst->CPXenv, inst->CPXlp, 1, inst->ncols, beg, varindices, inst->xbest,
@@ -96,7 +102,7 @@ void solve_sfixing(instance *inst){
 
 
         // save model
-        save_model(inst);
+        // save_model(inst);
 
         // solve until (short) time limit or node limit expires
         CPXmipopt(inst->CPXenv, inst->CPXlp);
@@ -105,9 +111,9 @@ void solve_sfixing(instance *inst){
         int status = CPXgetx(inst->CPXenv, inst->CPXlp, xbest, 0, inst->ncols - 1);
         if(status) {
             if(init)
-                printerr(inst, "Not enough time to find a starting solution!", status);
+                printerr(inst, "Not enough time to find a starting solution!");
             else {
-                print(inst, 'W', 1, "Not enough time to find an incumbent solution! Increasing individual time-limit");
+                print(inst, 'W', 1, "Not enough time to find an incumbent solution! Increasing individual time-limit: status %d", status);
                 timelim +=  0.5 * timelim;
                 CPXdelrows(inst->CPXenv, inst->CPXlp, inst->nrows, inst->nrows);
                 continue;
@@ -123,20 +129,11 @@ void solve_sfixing(instance *inst){
             double *temp = xbest;
             xbest = inst->xbest;
             inst->xbest = temp;
-        }else {
-            k++;
-            print(inst, 'D', 1, "Increased k = %d", k);
-            if(k > 20) {
-                print(inst, 'W', 1, "k exceeded limit");
-                break;
-            }
         }
         // plot
-        plot(inst, inst->xbest);
+        //plot(inst, inst->xbest);
 
-        if(!init) // keep in mind we added a constraint after model definition
-            CPXdelrows(inst->CPXenv, inst->CPXlp, inst->nrows, inst->nrows);
-        else {
+        if(init){
             // unset initialization
             init = false;
 

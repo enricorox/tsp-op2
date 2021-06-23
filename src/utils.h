@@ -24,12 +24,12 @@
 
 enum formulation_t {CUTS, BENDERS, MTZ, GG, GGi, HFIXING, SFIXING, FLAST}; // FLAST is enum guard
 enum cons_heuristic_t {GREEDY, GREEDYGRASP, EXTRAMILEAGE, EXTRAMILEAGECONVEXHULL, CHLAST}; // CHLAST is enum guard
-enum ref_heuristic_t {TWO_OPT, TWO_OPT_MIN, VNS1, VNS2, TABU_SEARCH1, TABU_SEARCH2, RHLAST};
+enum ref_heuristic_t {TWO_OPT, TWO_OPT_MIN, VNS1, VNS2, TABU_SEARCH1, TABU_SEARCH2, TABU_SEARCH3, RHLAST};
 enum distance_t {EUC_2D, ATT, GEO};
 
 const char *formulation_names[7];
 const char *cons_heuristic_names[4];
-const char *ref_heuristic_names[6];
+const char *ref_heuristic_names[7];
 
 // define a general instance of the problem
 typedef struct{
