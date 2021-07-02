@@ -67,6 +67,11 @@ void parse_cli(int argc, char **argv, instance *inst){
                 inst->seed = atoi(argv[i]);
             continue;
         }
+        if(strcmp(argv[i],"--test") == 0){
+            if(argv[++i] != NULL)
+                inst->test = atoi(argv[i]);
+            continue;
+        }
         if(strcmp(argv[i],"--lazy")  == 0){ inst->lazy = true; continue;}
         if(strcmp(argv[i],"--time-limit") == 0){
             if(argv[++i] != NULL){
@@ -107,19 +112,19 @@ void parse_cli(int argc, char **argv, instance *inst){
         }
         if(strcmp(argv[i],"--runs") == 0){
             if(argv[++i] != NULL)
-                inst->runs = atoi(argv[i]);
+                inst->run = atoi(argv[i]);
             continue;
         }
         if(strcmp(argv[i],"--seeds") == 0){
-            if(inst->runs < 0)
+            if(inst->run < 0)
                 printerr(inst, "You need to specify --runs before --seeds!");
-            inst->seeds = (int *) malloc(inst->runs * sizeof(int));
+            inst->seeds = (int *) malloc(inst->run * sizeof(int));
             int k;
-            for(k = 0; k < inst->runs; k++)
+            for(k = 0; k < inst->run; k++)
                 if(argv[++i] != NULL)
                     inst->seeds[k] = atoi(argv[i]);
                 else
-                    printerr(inst, "Got %d seeds, expected %d", k, inst->runs);
+                    printerr(inst, "Got %d seeds, expected %d", k, inst->run);
             continue;
         }
 
@@ -150,9 +155,9 @@ void parse_cli(int argc, char **argv, instance *inst){
         printf("--no-int-costs  %s\n", inst->integer_costs?"false":"true");
         printf("--perfr         %d\n", inst->perfr);
         printf("--perfl         %s\n", inst->perfl);
-        printf("--runs          %d\n", inst->runs);
+        printf("--runs          %d\n", inst->run);
         printf("--seeds         ");
-        for(int i = 0; i < inst->runs; i++) printf("%d ", inst->seeds[i]);
+        for(int i = 0; i < inst->run; i++) printf("%d ", inst->seeds[i]);
         printf("\n");
         printf("--verbose       %d\n", inst->verbose);
     }
@@ -162,7 +167,7 @@ void parse_cli(int argc, char **argv, instance *inst){
         exit(1);
     }
 
-    if(inst->input_tsp_file_name == NULL && !inst->perfr && inst->perfl == NULL){
+    if(inst->input_tsp_file_name == NULL && !inst->perfr && !inst->perfl && !inst->test){
         printf(BOLDRED "[ERROR] Check mandatory arguments: ./tsp --help\n" RESET);
         free_instance(inst);
         exit(1);

@@ -34,8 +34,9 @@ void init_instance(instance *inst){
     inst->no_opt = false;
     inst->perfr = 0;
     inst->perfl = NULL;
-    inst->runs = 0;
+    inst->run = 0;
     inst->seeds = NULL;
+    inst->test = 0;
     inst->verbose = 1;
 
     // ===== from file =====

@@ -48,9 +48,10 @@ typedef struct{
     bool do_plot;                   // use gnu-plot
     bool no_opt;                    // don't show known optimal solution
     int perfr;                      // run performance test on random points up to <max> size
-    int runs;                       // number of performance runs
-    int *seeds;                      // list of `runs` seeds
+    int run;                        // number of performance run
+    int *seeds;                     // list of `runs` seeds
     char *perfl;                    // run performance test on a list written to file
+    int test;                       // test number
     int verbose;                    // print level
 
     // ===== from file =====

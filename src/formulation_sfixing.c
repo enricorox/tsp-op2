@@ -18,8 +18,8 @@ void get_solution_sfixing(instance *inst){
 }
 
 // add sum_{e:x_e^h = 1}(x_e) >= n - k
-void addcnstr(instance *inst, int perc){
-    if(perc < 0 || perc > inst->nnodes) printerr(inst, "Cannot use k = %d", perc);
+void addcnstr(instance *inst, int k){
+    if(k < 0 || k > inst->nnodes) printerr(inst, "Cannot use k = %d", k);
     if(inst->xbest == NULL) printerr(inst, "xbest must be not null!");
 
     char *rname[] = {(char *) calloc(BUFLEN, sizeof(char))};
@@ -34,10 +34,8 @@ void addcnstr(instance *inst, int perc){
     for(int i = 0; i < inst->ncols; i++)
         if(inst->xbest[i] > 0.5) index[j++] = i;
 
-    print(inst, 'D', 2, "j = %d", j);
-
     // define right hand side
-    double rhs = inst->nnodes - perc;
+    double rhs = inst->nnodes - k;
     // define the type of constraint (array) ('E' for equality)
     char sense = 'L';
     // define starting index
@@ -57,7 +55,8 @@ void solve_sfixing(instance *inst){
     double timelim = inst->time_limit / 20;
     double zbest;
     double *xbest;
-    CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 0L);
+    //CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 0L);
+    CPXsetintparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 1);
     CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_FEASIBILITY);
 
     // allocate arrays and variables
@@ -108,7 +107,7 @@ void solve_sfixing(instance *inst){
                 printerr(inst, "Not enough time to find a starting solution!", status);
             else {
                 print(inst, 'W', 1, "Not enough time to find an incumbent solution! Increasing individual time-limit");
-                timelim +=  0.5 * timelim;
+                timelim +=  0.75 * timelim;
                 CPXdelrows(inst->CPXenv, inst->CPXlp, inst->nrows, inst->nrows);
                 continue;
             }
@@ -132,16 +131,17 @@ void solve_sfixing(instance *inst){
             }
         }
         // plot
-        plot(inst, inst->xbest);
+        //plot(inst, inst->xbest);
 
-        if(!init) // keep in mind we added a constraint after model definition
+        if(!init) // remove last constraint
             CPXdelrows(inst->CPXenv, inst->CPXlp, inst->nrows, inst->nrows);
         else {
             // unset initialization
             init = false;
 
             // unset node limit
-            CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 9223372036800000000L);
+            //CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 9223372036800000000L);
+            CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 9223372036800000000L);
         }
     }
     free(xbest);

@@ -9,7 +9,7 @@
 #define MAX_COORD 10000
 
 double ** generate_points(int seed, int size){
-    srand(seed);
+    if(seed != 0) srand(seed);
     double **points = (double **) malloc(2 * sizeof(double *));
     points[0] = (double *) malloc(size * sizeof(double));
     points[1] = (double *) malloc(size * sizeof(double));
@@ -100,88 +100,194 @@ void set_instance_(instance *user_inst, instance *inst, double ***points, int st
     inst->integer_costs = user_inst->integer_costs;
 }
 
-void set_instance(instance *user_inst, instance *inst, int seed, int size){
-    char iname[BUFLEN];
-    char cname[BUFLEN];
+void set_instance(instance *inst, int size, double time_limit, int ntest, int ninst){
+    char name[BUFLEN];
+    char comment[BUFLEN];
 
     inst->nnodes = size;
-    double **points = generate_points(seed, size);
+    double **points = generate_points(0, size);
     inst->xcoord = points[0];
     inst->ycoord = points[1];
 
-    snprintf(iname, BUFLEN, "instSize%dSeed%d", inst->nnodes, seed);
-    snprintf(cname, BUFLEN, "perf test");
-    inst->name[0] = strdup(iname);
-    inst->comment[0] = strdup(cname);
+    snprintf(name, BUFLEN, "t%d-s%d-n%d", ntest, size, ninst);
+    snprintf(comment, BUFLEN, "perf test");
+    inst->name[0] = strdup(name);
+    inst->comment[0] = strdup(comment);
 
     inst->verbose = 0;
     inst->gui = false;
-    // set time-limit if not set
-    inst->time_limit = (user_inst->time_limit < CPX_INFBOUND) ? user_inst->time_limit : 3600; // 1h time limit!
+    inst->time_limit = time_limit;
     inst->mem_limit = 12000;
-    inst->do_plot = user_inst->do_plot;
-    inst->integer_costs = user_inst->integer_costs;
+    inst->do_plot = false;
 }
 
-void start_perf_test(instance *user_inst){
-    int max = user_inst->perfr;
-    if(max < 4){
-        printerr(user_inst, "<max> must be >4!");
-    }
-    if(max > 88){
-        if(max > 10000){
-            printerr(user_inst, "Too much nodes!");
-        }
-        printf(BOLDRED "[WARN] %d points may be too much for your computer!\n", max);
-        printf(BOLDRED "[WARN] Press CTR+C or wait 10s...\n" RESET);
-        sleep(10); // script-friendly timer
-    }
+void reset_instance(instance *dummy_inst){
+    free(dummy_inst->xstar);
+    dummy_inst->xstar = NULL;
 
-    print(user_inst, 'I', 1, "Starting performance mode...");
+    free(dummy_inst->xbest);
+    dummy_inst->xbest = NULL;
+
+    dummy_inst->zstar = 0;
+
+    dummy_inst->zbest = 0;
+
+    dummy_inst->runtime = 0;
+
+    dummy_inst->status = 0;
+}
+
+// number of random instances
+#define NINSTANCES 20
+
+// compact models
+#define NNODES1 60
+#define TLIMIT1 1000
+
+// cuts & benders
+#define NNODES2 500
+#define TLIMIT2 1000
+
+// math-heuristic
+#define NNODES3 1000
+#define TLIMIT3 1000
+
+// heuristics
+#define NNODES4 2000
+#define TLIMIT4 1000
+
+void test(instance *user_inst){
+    // the instance to solve
     instance dummy_inst;
     init_instance(&dummy_inst);
 
-    // open comma separated value file for storing values!
+    // use the random seed that coincide with test number:
+    // thus different tests have different instances!
+    srand(user_inst->test);
+
+    // open comma separated value file for storing times or approximations!
     char filename[BUFLEN];
-    snprintf(filename, BUFLEN, "times%d.csv", user_inst->seed);
-    FILE *values = fopen(filename,"w");
-    fprintf(values, "%d,", (FLAST-1) * 2);
-    for(int i = BENDERS + 1; i < FLAST; i++)
-        for(int lazy = 0; lazy < ((i >= MTZ)?2:1); lazy++)
-            fprintf(values, "%s %s,", formulation_names[i], lazy?"lazy":"");
+    snprintf(filename, BUFLEN, "../test/times-%d.csv", user_inst->test);
+    FILE *times = fopen(filename, "w");
 
-    for(int set = 0; set < user_inst->runs; set++) { // change set
-        print(user_inst, 'I', 1, "==== Entering set %d/%d of size %d ====", set + 1, user_inst->runs, user_inst->perfr);
-        set_instance(user_inst, &dummy_inst, user_inst->seeds[set], user_inst->perfr);
-        save_instance_to_tsp_file(&dummy_inst);
-        fprintf(values, "\n%d,", dummy_inst.nnodes);
-        fclose(values);
-        values = fopen(filename, "a");
-        for (enum formulation_t form = 0; form < FLAST; form++) {
-            bool compact = false;
-            if(form == MTZ || form == GG || form == GGi)
-                compact = true;
-            for (int lazy = 0; lazy < (compact?2:1); lazy++) { // add lazy constraints
-                set_instance_formulation(&dummy_inst, form, lazy);
-                if(user_inst->verbose >= 2) save_instance_to_tsp_file(&dummy_inst);
-                TSPOpt(&dummy_inst);
-                fprintf(values, "%ld,", dummy_inst.runtime);
-                print(user_inst, 'I', 1, "%7s %4s: %ld seconds",
-                       formulation_names[form], lazy?"lazy":"", dummy_inst.runtime);
+    switch(user_inst->test){
+        case 1: // compact models
+        {
+            // print first line for performance profile
+            bool lazy[] = {false, true};
+            enum formulation_t formulations[] = {GG, MTZ};
+            fprintf(times, "4,");
+            for (int l = 0; l < 2; l++)
+                for (int f = 0; f < 2; f++) {
+                    fprintf(times, "%s%s,", formulation_names[formulations[f]], lazy[l] ? "-lazy" : "");
+                }
+            fprintf(times, "\n");
 
-                // cleaning resources
-                free(dummy_inst.xstar);
+            for (int i = 0; i < NINSTANCES; i++) {
+                // generate and assign points and parameters
+                set_instance(&dummy_inst, NNODES1, TLIMIT1, user_inst->test, i + 1);
+                print(user_inst, 'I', 1, "Generating instance #%d with %d nodes", i + 1, dummy_inst.nnodes);
+                fprintf(times, "%s,", dummy_inst.name[0]);
 
-                // requested by TSPOpt
-                dummy_inst.xstar = NULL;
+                for (int l = 0; l < 2; l++)
+                    for (int f = 0; f < 2; f++) {
+                        print(user_inst, 'I', 1, "Executing %s%s...", formulation_names[formulations[f]],
+                              lazy[l] ? " lazy" : "");
+                        dummy_inst.lazy = lazy[l];
+                        dummy_inst.formulation = formulations[f];
+
+                        TSPOpt(&dummy_inst);
+                        fprintf(times, "%ld,", dummy_inst.runtime);
+                        print(user_inst, 'I', 1, "Runtime = %ld", dummy_inst.runtime);
+                        reset_instance(&dummy_inst);
+                    }
+                fprintf(times, "\n");
+                free_instance(&dummy_inst);
             }
+            break;
         }
-        free_instance(&dummy_inst);
+        case 2: // cuts & benders
+        {
+            // print first line for performance profile
+            enum formulation_t formulations[] = {CUTS, BENDERS};
+            fprintf(times, "2,");
+            for (int l = 0; l < 2; l++)
+                for (int f = 0; f < 2; f++) {
+                    fprintf(times, "%s,", formulation_names[formulations[f]]);
+                }
+            fprintf(times, "\n");
+
+            for (int i = 0; i < NINSTANCES; i++) {
+                // generate and assign points and parameters
+                set_instance(&dummy_inst, NNODES2, TLIMIT2, user_inst->test, i + 1);
+                print(user_inst, 'I', 1, "Generating instance #%d with %d nodes", i + 1, dummy_inst.nnodes);
+                fprintf(times, "#%d,", i + 1);
+
+                for (int f = 0; f < 2; f++) {
+                    print(user_inst, 'I', 1, "Executing %s...", formulation_names[formulations[f]]);
+                    dummy_inst.formulation = formulations[f];
+
+                    TSPOpt(&dummy_inst);
+                    fprintf(times, "%ld,", dummy_inst.runtime);
+                    print(user_inst, 'I', 1, "Runtime = %ld", dummy_inst.runtime);
+                    reset_instance(&dummy_inst);
+                }
+                fprintf(times, "\n");
+                free_instance(&dummy_inst);
+            }
+            break;
+        }
+        case 3: // math-heuristic
+        {
+            // print first line for performance profile
+            enum formulation_t formulations[] = {HFIXING, SFIXING};
+            fprintf(times, "2,");
+            for (int l = 0; l < 2; l++)
+                for (int f = 0; f < 2; f++) {
+                    fprintf(times, "%s,", formulation_names[formulations[f]]);
+                }
+            fprintf(times, "\n");
+
+            for (int i = 0; i < NINSTANCES; i++) {
+                // generate and assign points and parameters
+                set_instance(&dummy_inst, NNODES3, TLIMIT3, user_inst->test, i + 1);
+                print(user_inst, 'I', 1, "Generating instance #%d with %d nodes", i + 1, dummy_inst.nnodes);
+                fprintf(times, "#%d,", i + 1);
+
+                for (int f = 0; f < 2; f++) {
+                    print(user_inst, 'I', 1, "Executing %s...", formulation_names[formulations[f]]);
+                    dummy_inst.formulation = formulations[f];
+                    save_instance_to_tsp_file(&dummy_inst);
+                    TSPOpt(&dummy_inst);
+                    fprintf(times, "%f,", dummy_inst.zbest);
+                    print(user_inst, 'I', 1, "zbest = %ld", dummy_inst.zbest);
+                    reset_instance(&dummy_inst);
+                }
+                fprintf(times, "\n");
+                free_instance(&dummy_inst);
+            }
+            break;
+        }
+        case 4: // heuristics
+            // print first line for performace profile
+            fprintf(times, "4, greedy+vns, greedy+tabu, extra-mileage+vns, extra-mileage+tabu\n"); // TODO add variations
+
+            // customize the instance
+            dummy_inst.time_limit = TLIMIT4;
+            dummy_inst.nnodes = NNODES4;
+            break;
+
+        default:
+            printerr(user_inst, "Unknown test number");
     }
 
-    fclose(values);
-    printf(BOLDGREEN "[INFO] Test finished. Times saved to %s\n" RESET, filename);
-    // freeing memory
-    //free_points(points, max, step);
-    // do not call free_instance(): double free!
+    // close file
+    fclose(times);
+
+    // use performance profile TODO
+    char command[BUFLEN];
+    snprintf(command, BUFLEN, "python2 ../perfprof.py -D , -T %f -S 2 -M 20 -P \"test %d, shift 2 sec.s\" ../test/times-%d.csv ../test/test-%d.pdf",
+             dummy_inst.time_limit, user_inst->test, user_inst->test, user_inst->test);
+    print(user_inst, 'I', 1, "Executing %s", command);
+    system(command);
 }

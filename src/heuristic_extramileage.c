@@ -148,4 +148,6 @@ void extramileage(instance *inst){
         if(timeout(inst))
             printerr(inst,"Time-limit too short!");
     }
+
+    free(visited);
 }

@@ -9,7 +9,7 @@ static int CPXPUBLIC subtourcuts(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
     print(inst, 'D', 3, "Callback called");
 
     // retrieve xstar
-    double* xstar = (double*) malloc(inst->ncols * sizeof(double));
+    double *xstar = (double*) malloc(inst->ncols * sizeof(double));
     double objval = CPX_INFBOUND;
     if(CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval))
         printerr(inst, "CPXcallbackgetcandidatepoint error");
@@ -58,8 +58,8 @@ static int CPXPUBLIC subtourcuts(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
     free(xstar);
     free(succ);
     free(comp);
-    free(index);
     free(value);
+    free(index);
 }
 
 void build_model_cuts(instance *inst){

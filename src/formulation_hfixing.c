@@ -40,8 +40,8 @@ void fix_edges(instance *inst, int perc){
     for(int i = 0; i < inst->nnodes; i++)
         for(int j = i + 1; j < inst->nnodes; j++){
             int k = xpos_undirected(i, j, inst);
-            if(inst->xbest[k] > 0.5)
-                if((bd[k] = (uprob(perc) ? 1 : 0))) {
+            if(inst->xbest[k] > 0.5) // if previously selected
+                if((bd[k] = (uprob(perc) ? 1 : 0))) { // put to 1 with 90% probability
                     print(inst, 'D', 3, "Edge x(%d, %d) fixed", i, j);
                     counter++;
                 }
@@ -63,8 +63,11 @@ void solve_hfixing(instance *inst){
     double timelim = inst->time_limit / 20;
     double zbest;
     double *xbest;
-    CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 0L);
+    //CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 0L);
+    CPXsetintparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 1); // exit after first feasible solution
     CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_FEASIBILITY);
+
+    print(inst, 'D', 1, "ncols = %d", inst->ncols);
 
     // allocate arrays and variables
     xbest = (double *) calloc(inst->ncols, sizeof(double));
@@ -76,7 +79,6 @@ void solve_hfixing(instance *inst){
     for(int i = 0; i < inst->ncols; i++) varindices[i] = i;
     int beg[] = {0};
 
-    int k = 5;
     bool init = true;
     while(true){
         // check time limit
@@ -90,7 +92,7 @@ void solve_hfixing(instance *inst){
 
         if(!init) {
             // set short time limit
-            CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (left < timelim)? left:timelim);
+            CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (left < timelim)?left:timelim);
 
             // add local branching constraints
             fix_edges(inst, 90);
@@ -109,11 +111,14 @@ void solve_hfixing(instance *inst){
 
         // get solution
         int status = CPXgetx(inst->CPXenv, inst->CPXlp, xbest, 0, inst->ncols - 1);
-        if(status) {
-            if(init)
-                printerr(inst, "Not enough time to find a starting solution!");
+        if(status != 0) {
+            if(init) {
+                print(inst, 'W', 1, "Writing last LP model...");
+                save_model(inst);
+                printerr(inst, "Not enough time to find a starting solution! (error %d)", status);
+            }
             else {
-                print(inst, 'W', 1, "Not enough time to find an incumbent solution! Increasing individual time-limit: status %d", status);
+                print(inst, 'W', 1, "Not enough time to find an incumbent solution! Increasing individual time-limit");
                 timelim +=  0.5 * timelim;
                 CPXdelrows(inst->CPXenv, inst->CPXlp, inst->nrows, inst->nrows);
                 continue;
@@ -138,7 +143,9 @@ void solve_hfixing(instance *inst){
             init = false;
 
             // unset node limit
-            CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 9223372036800000000L);
+            //CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 9223372036800000000L);
+            // unset number of solution limit
+            CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 9223372036800000000L);
         }
     }
     free(xbest);

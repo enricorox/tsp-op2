@@ -14,8 +14,8 @@ int main(int argc, char **argv){
     // parse command line
     parse_cli(argc, argv, &inst);
 
-    if(inst.perfr || inst.perfl != NULL)
-        start_perf_test(&inst); // start formulations performance test
+    if(inst.test != 0)
+        test(&inst);
     else {
         // parse tsp file
         parse_file(&inst, inst.input_tsp_file_name);

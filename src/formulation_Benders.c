@@ -115,8 +115,8 @@ void loop_benders(instance *inst) {
         if(ncomp == 1)
             break;
 
-        // set new lower bound
-        CPXsetdblparam(inst->CPXenv, CPX_PARAM_OBJLLIM, inst->zstar);
+        // set new lower bound TODO remove
+        //CPXsetdblparam(inst->CPXenv, CPX_PARAM_OBJLLIM, inst->zstar);
 
         // check and update time limit
         gettimeofday(&ctime, NULL);
