@@ -25,7 +25,7 @@ void TSPOpt(instance *inst){
     if(err) printerr(inst, "Can't create CPLEX enviroment");
 
     // activate cplex log file
-    if(inst->verbose >= 2) {
+    if(inst->verbose >= 1) {
         char log_name[BUFLEN];
         snprintf(log_name, BUFLEN, "%s.%s%s%d.cplex.log",
                  inst->name[0], formulation_names[inst->formulation], inst->lazy?".lazy.":".", inst->seed);

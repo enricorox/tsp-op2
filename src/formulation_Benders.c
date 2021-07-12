@@ -130,6 +130,11 @@ void loop_benders(instance *inst) {
         if(CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (double) (inst->time_limit - (double) eltime)))
             print(inst, 'W', 1, "Error setting time limit.");
 
+        if(inst->time_limit >= 4) {
+            print(inst, 'I', '4', "Press ENTER to continue...");
+            plot(inst, inst->xstar);
+            printerr(inst, "Exiting...");
+        }
         // add sec for connected components
         updconstr(inst, ncomp, comp, it);
     }

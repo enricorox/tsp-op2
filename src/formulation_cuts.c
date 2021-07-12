@@ -75,5 +75,6 @@ void build_model_cuts(instance *inst){
 }
 
 void get_solution_cuts(instance *inst){
+    CPXgetobjval(inst->CPXenv, inst->CPXlp, &inst->zstar);
     get_solution_base_undirected(inst);
 }

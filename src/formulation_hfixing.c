@@ -65,7 +65,8 @@ void solve_hfixing(instance *inst){
     double *xbest;
     //CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 0L);
     CPXsetintparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 1); // exit after first feasible solution
-    CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_FEASIBILITY);
+    //CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_FEASIBILITY);
+    CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_OPTIMALITY);
 
     print(inst, 'D', 1, "ncols = %d", inst->ncols);
 
@@ -115,7 +116,9 @@ void solve_hfixing(instance *inst){
             if(init) {
                 print(inst, 'W', 1, "Writing last LP model...");
                 save_model(inst);
-                printerr(inst, "Not enough time to find a starting solution! (error %d)", status);
+                print(inst, 'W', 1, "Not enough time to find a starting solution! (error %d)", status);
+                inst->zbest = inst->zstar = DBL_MAX;
+                break;
             }
             else {
                 print(inst, 'W', 1, "Not enough time to find an incumbent solution! Increasing individual time-limit");

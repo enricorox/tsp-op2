@@ -101,14 +101,13 @@ void set_instance_(instance *user_inst, instance *inst, double ***points, int st
 }
 
 void set_instance(instance *inst, int size, double time_limit, int ntest, int ninst){
-    char name[BUFLEN];
-    char comment[BUFLEN];
-
     inst->nnodes = size;
     double **points = generate_points(0, size);
     inst->xcoord = points[0];
     inst->ycoord = points[1];
 
+    char name[BUFLEN];
+    char comment[BUFLEN];
     snprintf(name, BUFLEN, "t%d-s%d-n%d", ntest, size, ninst);
     snprintf(comment, BUFLEN, "perf test");
     inst->name[0] = strdup(name);
@@ -116,9 +115,9 @@ void set_instance(instance *inst, int size, double time_limit, int ntest, int ni
 
     inst->verbose = 0;
     inst->gui = false;
+    inst->do_plot = false;
     inst->time_limit = time_limit;
     inst->mem_limit = 12000;
-    inst->do_plot = false;
 }
 
 void reset_instance(instance *dummy_inst){
@@ -128,9 +127,9 @@ void reset_instance(instance *dummy_inst){
     free(dummy_inst->xbest);
     dummy_inst->xbest = NULL;
 
-    dummy_inst->zstar = 0;
+    dummy_inst->zstar = CPX_INFBOUND;
 
-    dummy_inst->zbest = 0;
+    dummy_inst->zbest = CPX_INFBOUND;
 
     dummy_inst->runtime = 0;
 
@@ -138,7 +137,7 @@ void reset_instance(instance *dummy_inst){
 }
 
 // number of random instances
-#define NINSTANCES 20
+#define NINSTANCES 2//20
 
 // compact models
 #define NNODES1 60
@@ -149,8 +148,8 @@ void reset_instance(instance *dummy_inst){
 #define TLIMIT2 1000
 
 // math-heuristic
-#define NNODES3 1000
-#define TLIMIT3 1000
+#define NNODES3 10//1000
+#define TLIMIT3 10//1000
 
 // heuristics
 #define NNODES4 2000
@@ -204,8 +203,8 @@ void test(instance *user_inst){
                 fprintf(times, "\n");
                 free_instance(&dummy_inst);
             }
-            break;
         }
+            break;
         case 2: // cuts & benders
         {
             // print first line for performance profile
@@ -235,8 +234,8 @@ void test(instance *user_inst){
                 fprintf(times, "\n");
                 free_instance(&dummy_inst);
             }
-            break;
         }
+            break;
         case 3: // math-heuristic
         {
             // print first line for performance profile
@@ -251,32 +250,34 @@ void test(instance *user_inst){
             for (int i = 0; i < NINSTANCES; i++) {
                 // generate and assign points and parameters
                 set_instance(&dummy_inst, NNODES3, TLIMIT3, user_inst->test, i + 1);
+                save_instance_to_tsp_file(&dummy_inst);
                 print(user_inst, 'I', 1, "Generating instance #%d with %d nodes", i + 1, dummy_inst.nnodes);
                 fprintf(times, "#%d,", i + 1);
 
                 for (int f = 0; f < 2; f++) {
                     print(user_inst, 'I', 1, "Executing %s...", formulation_names[formulations[f]]);
                     dummy_inst.formulation = formulations[f];
-                    save_instance_to_tsp_file(&dummy_inst);
                     TSPOpt(&dummy_inst);
                     fprintf(times, "%f,", dummy_inst.zbest);
-                    print(user_inst, 'I', 1, "zbest = %ld", dummy_inst.zbest);
+                    print(user_inst, 'I', 1, "zbest = %f", dummy_inst.zbest);
                     reset_instance(&dummy_inst);
                 }
                 fprintf(times, "\n");
                 free_instance(&dummy_inst);
             }
-            break;
         }
+            break;
         case 4: // heuristics
+        {
             // print first line for performace profile
-            fprintf(times, "4, greedy+vns, greedy+tabu, extra-mileage+vns, extra-mileage+tabu\n"); // TODO add variations
+            fprintf(times,
+                    "4, greedy+vns, greedy+tabu, extra-mileage+vns, extra-mileage+tabu\n"); // TODO add variations
 
             // customize the instance
             dummy_inst.time_limit = TLIMIT4;
             dummy_inst.nnodes = NNODES4;
+        }
             break;
-
         default:
             printerr(user_inst, "Unknown test number");
     }
