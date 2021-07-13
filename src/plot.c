@@ -109,7 +109,7 @@ void plot(instance *inst, const double *rxstar){
 
     print(inst, 'D', 3, "Gnuplot script written to file %s", script_name);
 
-    // run gnuplot
+    // size gnuplot
     char *command_template = "/usr/bin/gnuplot -p -c %s";
     char command[BUFLEN];
     snprintf(command, BUFLEN, command_template, script_name);

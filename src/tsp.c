@@ -66,7 +66,7 @@ void TSPOpt(instance *inst){
             build_model_hfixing(inst);
             solve_hfixing(inst);
             break;
-        // ============== directed graphs ==============
+        // ============== exact methods: directed graphs ==============
         case MTZ:
             inst->directed = true;
             build_model_MTZ(inst);
@@ -76,7 +76,7 @@ void TSPOpt(instance *inst){
             inst->directed = true;
             build_model_GG(inst);
             break;
-        // ============== undirected graphs ==============
+        // ============== exact methods: undirected graphs ==============
         case CUTS:
             inst->directed = false;
             build_model_cuts(inst);

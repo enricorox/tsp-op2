@@ -11,17 +11,17 @@
 #include "utils.h"
 #include "formulation_commons.h"
 
-const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hard-fixing", "soft-fixing"};
+const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hard-fixing", "soft-fixing", "none"};
 
-const char *cons_heuristic_names[] = {"greedy", "greedy-grasp", "extra-mileage", "extra-mileage-convex-hull"};
+const char *cons_heuristic_names[] = {"greedy", "greedy-grasp", "extra-mileage", "extra-mileage-convex-hull", "none"};
 
-const char *ref_heuristic_names[] = {"two-opt", "two-opt-min", "vns1", "vns2", "tabu-search1", "tabu-search2", "tabu-search3"};
+const char *ref_heuristic_names[] = {"two-opt", "two-opt-min", "vns1", "vns2", "tabu-search1", "tabu-search2", "tabu-search3", "none"};
 
 void init_instance(instance *inst){
     // ===== from cli =====
     inst->input_tsp_file_name = NULL;
     inst->input_opt_file_name = NULL;
-    inst->formulation = BENDERS;
+    inst->formulation = FLAST;
     inst->cons_heuristic = CHLAST;
     inst->ref_heuristic = RHLAST;
     inst->lazy = false;
@@ -34,7 +34,7 @@ void init_instance(instance *inst){
     inst->no_opt = false;
     inst->perfr = 0;
     inst->perfl = NULL;
-    inst->run = 0;
+    inst->size = 0;
     inst->seeds = NULL;
     inst->test = 0;
     inst->verbose = 1;

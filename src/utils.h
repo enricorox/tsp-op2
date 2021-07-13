@@ -27,9 +27,9 @@ enum cons_heuristic_t {GREEDY, GREEDYGRASP, EXTRAMILEAGE, EXTRAMILEAGECONVEXHULL
 enum ref_heuristic_t {TWO_OPT, TWO_OPT_MIN, VNS1, VNS2, TABU_SEARCH1, TABU_SEARCH2, TABU_SEARCH3, RHLAST};
 enum distance_t {EUC_2D, ATT, GEO};
 
-const char *formulation_names[7];
-const char *cons_heuristic_names[4];
-const char *ref_heuristic_names[7];
+const char *formulation_names[8];
+const char *cons_heuristic_names[5];
+const char *ref_heuristic_names[8];
 
 // define a general instance of the problem
 typedef struct{
@@ -47,10 +47,10 @@ typedef struct{
     bool gui;                       // show image to the user
     bool do_plot;                   // use gnu-plot
     bool no_opt;                    // don't show known optimal solution
-    int perfr;                      // run performance test on random points up to <max> size
-    int run;                        // number of performance run
+    int perfr;                      // random instance seed
+    int size;                       // size of random instance
     int *seeds;                     // list of `runs` seeds
-    char *perfl;                    // run performance test on a list written to file
+    char *perfl;                    // size performance test on a list written to file
     int test;                       // test number
     int verbose;                    // print level
 

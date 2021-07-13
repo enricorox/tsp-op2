@@ -110,21 +110,21 @@ void parse_cli(int argc, char **argv, instance *inst){
                 inst->perfl = strdup(argv[i]);
             continue;
         }
-        if(strcmp(argv[i],"--runs") == 0){
+        if(strcmp(argv[i],"--size") == 0){
             if(argv[++i] != NULL)
-                inst->run = atoi(argv[i]);
+                inst->size = atoi(argv[i]);
             continue;
         }
         if(strcmp(argv[i],"--seeds") == 0){
-            if(inst->run < 0)
+            if(inst->size < 0)
                 printerr(inst, "You need to specify --runs before --seeds!");
-            inst->seeds = (int *) malloc(inst->run * sizeof(int));
+            inst->seeds = (int *) malloc(inst->size * sizeof(int));
             int k;
-            for(k = 0; k < inst->run; k++)
+            for(k = 0; k < inst->size; k++)
                 if(argv[++i] != NULL)
                     inst->seeds[k] = atoi(argv[i]);
                 else
-                    printerr(inst, "Got %d seeds, expected %d", k, inst->run);
+                    printerr(inst, "Got %d seeds, expected %d", k, inst->size);
             continue;
         }
 
@@ -142,24 +142,22 @@ void parse_cli(int argc, char **argv, instance *inst){
             printf(USAGE);
 
         printf("Command line arguments found (include defaults):\n");
-        printf("--file          %s\n", inst->input_tsp_file_name);
-        printf("--opt-tour      %s\n", inst->input_opt_file_name);
-        printf("--formulation   %s\n", formulation_names[inst->formulation]);
-        printf("--cons_heuristic     %s\n", cons_heuristic_names[inst->cons_heuristic]);
-        printf("--seed          %d\n", inst->seed);
-        printf("--lazy          %s\n", inst->lazy?"true":"false");
-        printf("--time-limit    %f\n", inst->time_limit);
-        printf("--mem-limit     %f\n", inst->mem_limit);
-        printf("--no-gui        %s\n", inst->gui?"false":"true");
-        printf("--no-plot       %s\n", inst->do_plot?"false":"true");
-        printf("--no-int-costs  %s\n", inst->integer_costs?"false":"true");
-        printf("--perfr         %d\n", inst->perfr);
-        printf("--perfl         %s\n", inst->perfl);
-        printf("--runs          %d\n", inst->run);
-        printf("--seeds         ");
-        for(int i = 0; i < inst->run; i++) printf("%d ", inst->seeds[i]);
-        printf("\n");
-        printf("--verbose       %d\n", inst->verbose);
+        printf("--file                      %s\n", inst->input_tsp_file_name);
+        printf("--opt-tour                  %s\n", inst->input_opt_file_name);
+        printf("--formulation               %s\n", formulation_names[inst->formulation]);
+        printf("--constructive-heuristic    %s\n", cons_heuristic_names[inst->cons_heuristic]);
+        printf("--refinement-heuristic      %s\n", ref_heuristic_names[inst->ref_heuristic]);
+        printf("--seed                      %d\n", inst->seed);
+        printf("--lazy                      %s\n", inst->lazy?"true":"false");
+        printf("--time-limit                %f\n", inst->time_limit);
+        printf("--mem-limit                 %f\n", inst->mem_limit);
+        printf("--no-gui                    %s\n", inst->gui?"false":"true");
+        printf("--no-plot                   %s\n", inst->do_plot?"false":"true");
+        printf("--no-int-costs              %s\n", inst->integer_costs?"false":"true");
+        printf("--perfr                     %d\n", inst->perfr);
+        printf("--perfl                     %s\n", inst->perfl);
+        printf("--size                      %d\n", inst->size);
+        printf("--verbose                   %d\n", inst->verbose);
     }
 
     if(help){

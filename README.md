@@ -7,7 +7,7 @@ Install [IMB CPLEX Optimizer](https://www.ibm.com/analytics/cplex-optimizer).
 2. Run `mkdir build && cd build`
 3. Run `cmake ..`
 4. Run `make`
-## How to run
+## How to size
 Type `./tsp --help` to see available parameters.  
 Mandatory parameters are:
 1. `--file <file>` specify tsp file path

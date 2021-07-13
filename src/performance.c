@@ -121,6 +121,9 @@ void set_instance(instance *inst, int size, double time_limit, int ntest, int ni
 }
 
 void reset_instance(instance *dummy_inst){
+    CPXfreeprob(dummy_inst->CPXenv, &dummy_inst->CPXlp);
+    CPXcloseCPLEX(&dummy_inst->CPXenv);
+
     free(dummy_inst->xstar);
     dummy_inst->xstar = NULL;
 
@@ -131,9 +134,9 @@ void reset_instance(instance *dummy_inst){
 
     dummy_inst->zbest = CPX_INFBOUND;
 
-    dummy_inst->runtime = 0;
+    dummy_inst->runtime = -1;
 
-    dummy_inst->status = 0;
+    dummy_inst->status = -1;
 }
 
 // number of random instances
@@ -148,8 +151,8 @@ void reset_instance(instance *dummy_inst){
 #define TLIMIT2 1000
 
 // math-heuristic
-#define NNODES3 10//1000
-#define TLIMIT3 10//1000
+#define NNODES3 1000
+#define TLIMIT3 1000
 
 // heuristics
 #define NNODES4 2000
@@ -167,7 +170,7 @@ void test(instance *user_inst){
     // open comma separated value file for storing times or approximations!
     char filename[BUFLEN];
     snprintf(filename, BUFLEN, "../test/times-%d.csv", user_inst->test);
-    FILE *times = fopen(filename, "w");
+    FILE *times = fopen(filename, "a");
 
     switch(user_inst->test){
         case 1: // compact models
@@ -278,17 +281,40 @@ void test(instance *user_inst){
             dummy_inst.nnodes = NNODES4;
         }
             break;
-        default:
-            printerr(user_inst, "Unknown test number");
+        default: // custom test
+            if(user_inst->formulation == FLAST && user_inst->cons_heuristic == CHLAST)
+                printerr(user_inst, "Heuristic or formulation not defined!");
+
+            // set random instance seed
+            srand(user_inst->perfr);
+
+            // set instance solution models
+            dummy_inst.formulation = user_inst->formulation;
+            dummy_inst.cons_heuristic = user_inst->cons_heuristic;
+            dummy_inst.ref_heuristic = user_inst->ref_heuristic;
+            // generate random points, set options...
+            set_instance(&dummy_inst, user_inst->size, user_inst->time_limit, user_inst->test, user_inst->perfr);
+
+            TSPOpt(&dummy_inst);
+
+            if(user_inst->formulation < HFIXING){ // print time
+                print(user_inst, 'I', 1, "runtime = %ld", dummy_inst.runtime);
+                fprintf(times, "%ld, ", dummy_inst.runtime);
+            }else{ // print approx
+                fprintf(times, "%f, ", dummy_inst.zbest);
+                print(user_inst, 'I', 1, "zbest = %f", dummy_inst.zbest);
+            }
     }
 
     // close file
     fclose(times);
+}
 
+void perprof(instance *dummy_inst, instance *user_inst){
     // use performance profile TODO
     char command[BUFLEN];
     snprintf(command, BUFLEN, "python2 ../perfprof.py -D , -T %f -S 2 -M 20 -P \"test %d, shift 2 sec.s\" ../test/times-%d.csv ../test/test-%d.pdf",
-             dummy_inst.time_limit, user_inst->test, user_inst->test, user_inst->test);
+             dummy_inst->time_limit, user_inst->test, user_inst->test, user_inst->test);
     print(user_inst, 'I', 1, "Executing %s", command);
     system(command);
 }
