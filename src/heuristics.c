@@ -69,6 +69,7 @@ void heuristic(instance * inst){
             break;
         default:
             print(inst, 'D', 3, "No refinement heuristic used");
+            inst->zbest = initial_cost;
             break;
     }
 
@@ -83,4 +84,12 @@ void heuristic(instance * inst){
     }
 
     plot_succ(inst, inst->succ);
+}
+
+void initial_solution(instance *inst, double timelimit){
+    start(inst);
+    greedy(inst, timelimit);
+    inst->succ = xtosucc(inst, inst->xbest);
+    two_opt(inst, inst->succ, true);
+    // return as inst->succ
 }

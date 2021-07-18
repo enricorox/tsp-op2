@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <float.h>
 #include "performance.h"
+#include "heuristics.h"
+#include "parsers.h"
 
 #define MAX_COORD 10000
 
@@ -242,7 +244,7 @@ void test(instance *user_inst){
         case 3: // math-heuristic
         {
             // print first line for performance profile
-            enum formulation_t formulations[] = {HFIXING, SFIXING};
+            enum formulation_t formulations[] = {HFIXING1, SFIXING1};
             fprintf(times, "2,");
             for (int l = 0; l < 2; l++)
                 for (int f = 0; f < 2; f++) {
@@ -294,10 +296,15 @@ void test(instance *user_inst){
             dummy_inst.ref_heuristic = user_inst->ref_heuristic;
             // generate random points, set options...
             set_instance(&dummy_inst, user_inst->size, user_inst->time_limit, user_inst->test, user_inst->perfr);
+            if(user_inst->input_tsp_file_name != NULL)
+                parse_file(&dummy_inst, user_inst->input_tsp_file_name);
+            if(user_inst->formulation != FLAST)
+                TSPOpt(&dummy_inst);
+            else
+                heuristic(&dummy_inst);
 
-            TSPOpt(&dummy_inst);
 
-            if(user_inst->formulation < HFIXING){ // print time
+            if(user_inst->formulation < HFIXING1){ // print time
                 print(user_inst, 'I', 1, "runtime = %ld", dummy_inst.runtime);
                 fprintf(times, "%ld, ", dummy_inst.runtime);
             }else{ // print approx

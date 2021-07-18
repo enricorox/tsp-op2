@@ -134,7 +134,7 @@ void greedy(instance *inst, double timelimit){
         }
 
         // break if deterministic cycle
-        if(inst->cons_heuristic == GREEDY) break;
+        if(inst->cons_heuristic != GREEDYGRASP) break;
     }
 
     free(visited);

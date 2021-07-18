@@ -56,12 +56,17 @@ void TSPOpt(instance *inst){
     // choose formulation
     switch(inst->formulation) {
         // ============== matheuristics ==============
-        case SFIXING:
+        case SFIXING1:
+        case SFIXING2:
+        case SFIXING3:
             inst->directed = false;
             build_model_sfixing(inst);
             solve_sfixing(inst);
             break;
-        case HFIXING:
+        case HFIXING1:
+        case HFIXING2:
+        case HFIXING3:
+        case HFIXING4:
             inst->directed = false;
             build_model_hfixing(inst);
             solve_hfixing(inst);
@@ -83,8 +88,7 @@ void TSPOpt(instance *inst){
             break;
         case BENDERS:
         default:
-            inst->directed = false;
-            loop_benders(inst);
+            printerr(inst, "Method not implemented!");
     }
 
     // save model to file
@@ -147,10 +151,10 @@ void TSPOpt(instance *inst){
     // get solution
     switch(inst->formulation){
         // ============== matheuristics ==============
-        case SFIXING:
+        case SFIXING1:
             get_solution_sfixing(inst);
             break;
-        case HFIXING:
+        case HFIXING1:
             get_solution_hfixing(inst);
             break;
         // ============== directed graphs ==============

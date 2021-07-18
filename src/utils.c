@@ -11,7 +11,10 @@
 #include "utils.h"
 #include "formulation_commons.h"
 
-const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi", "hard-fixing", "soft-fixing", "none"};
+const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi",
+                                   "hard-fixing1", "hard-fixing2", "hard-fixing3", "hard-fixing4",
+                                   "soft-fixing1", "soft-fixing2", "soft-fixing3",
+                                   "none"};
 
 const char *cons_heuristic_names[] = {"greedy", "greedy-grasp", "extra-mileage", "extra-mileage-convex-hull", "none"};
 
@@ -189,11 +192,11 @@ int * xtosucc(instance *inst, const double *x){
     return succ;
 }
 
-double *succtox(instance *inst, const int *succ){
+double *succtox(instance *inst, const int *succ, bool directed){
     // covert succ to rxstar
-    double *rxstar = (double *) calloc(inst->nnodes * inst->nnodes, sizeof(double));
+    double *rxstar = (double *) calloc(directed?inst->nnodes * inst->nnodes: inst->nnodes * (inst->nnodes - 1)/2, sizeof(double));
     for(int i = 0; i < inst->nnodes; i++) {
-        int k = inst->directed?xpos_directed(i, succ[i],inst):xpos_undirected(i, succ[i],inst);
+        int k = directed?xpos_directed(i, succ[i],inst):xpos_undirected(i, succ[i],inst);
         rxstar[k] = 1;
     }
     return rxstar;

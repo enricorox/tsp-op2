@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include "formulation_sfixing.h"
 #include "plot.h"
+#include "heuristic_greedy.h"
 
 void build_model_sfixing(instance *inst){
     build_model_cuts(inst);
@@ -33,6 +34,8 @@ void addcnstr(instance *inst, int k){
     int j = 0;
     for(int i = 0; i < inst->ncols; i++)
         if(inst->xbest[i] > 0.5) index[j++] = i;
+
+    // debug
     if(j != nnz) {
         print(inst, 'D', 0, "ncols = %d, nnz = %d, j = %d", inst->ncols, nnz, j);
 
@@ -42,6 +45,7 @@ void addcnstr(instance *inst, int k){
 
         printerr(inst, "Ooops! That should not happen: j != nnz");
     }
+
     // define right hand side
     double rhs = inst->nnodes - k;
     // define the type of constraint (array) ('E' for equality)
@@ -68,10 +72,11 @@ void solve_sfixing(instance *inst){
     int min_k = (int) (0.1 * inst->nnodes);
     if(min_k < 2) min_k = 2;
     int max_k = 2 * min_k;
+    if(max_k > inst->nnodes) max_k = inst->nnodes;
 
     CPXsetintparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 1);
-    //CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_FEASIBILITY);
-    CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_OPTIMALITY);
+    CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP,
+                   (inst->formulation == SFIXING1)?CPX_MIPEMPHASIS_FEASIBILITY:CPX_MIPEMPHASIS_OPTIMALITY);
 
     // allocate arrays and variables
     xbest = (double *) calloc(inst->ncols, sizeof(double));
@@ -85,10 +90,33 @@ void solve_sfixing(instance *inst){
 
     // local branching parameter
     int k = min_k;//2;
+
     // need initialization on first iteration
     bool init = true;
+
     // max number of integer solution per sub-problem
     long nsol = 1;
+
+    if(inst->formulation == SFIXING3) {
+        init = false;
+        free(inst->xbest);
+        //initial_solution(inst, inst->time_limit);
+        greedy(inst, inst->time_limit);
+        inst->directed = false;
+        for(int i = 0; i < inst->nnodes; i++){
+            for(int j = 0; j < inst->nnodes; j++){
+                if(inst->xbest[xpos_directed(i,j,inst)] > 0.5)
+                    xbest[xpos_undirected(i,j,inst)] = 1;
+            }
+        }
+        free(inst->xbest);
+        inst->xbest = xbest;
+        xbest = (double *) calloc(inst->ncols, sizeof(double));
+        nsol = 2;
+        min_k = 5;
+        max_k = 20;
+        //plot(inst, inst->xbest);
+    }
 
     while(true){
         // check time limit
@@ -103,11 +131,13 @@ void solve_sfixing(instance *inst){
 
         if(!init) {
             // set short time limit
-            //CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (left < timelim)? left:timelim);
+            if(inst->formulation == SFIXING1)
+                CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (left < timelim)? left:timelim);
 
-            // changed approach
-            CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, left);
-            CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, nsol);
+            if(inst->formulation == SFIXING2 || inst->formulation == SFIXING3) {
+                CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, left);
+                CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, nsol);
+            }
 
             // add local branching constraints
             addcnstr(inst, k);
@@ -115,11 +145,9 @@ void solve_sfixing(instance *inst){
             // add warm start
             CPXaddmipstarts(inst->CPXenv, inst->CPXlp, 1, inst->ncols, beg, varindices, inst->xbest,
                             CPX_MIPSTART_AUTO, NULL);
+            // save model
+            save_model(inst);
         }
-
-
-        // save model
-        save_model(inst);
 
         // solve until (short) time limit or node limit expires
         CPXmipopt(inst->CPXenv, inst->CPXlp);
@@ -127,9 +155,13 @@ void solve_sfixing(instance *inst){
         // get solution
         int status = CPXgetx(inst->CPXenv, inst->CPXlp, xbest, 0, inst->ncols - 1);
         if(status) {
-            if(init)
-                printerr(inst, "Not enough time to find a starting solution! (code %d)", status);
-            else {
+            if(init) {
+                print(inst, 'W', 1, "Writing last LP model...");
+                save_model(inst);
+                print(inst, 'W', 1, "Not enough time to find a starting solution! (error %d)", status);
+                inst->zbest = inst->zstar = DBL_MAX;
+                break;
+            }else {
                 timelim +=  0.75 * timelim;
                 print(inst, 'W', 1, "Not enough time to find an incumbent solution! (code %d)\n\tIncreasing individual time-limit to %f", status, timelim);
                 if(CPXdelrows(inst->CPXenv, inst->CPXlp, inst->nrows, inst->nrows))
@@ -150,7 +182,7 @@ void solve_sfixing(instance *inst){
             double *temp = xbest;
             xbest = inst->xbest;
             inst->xbest = temp;
-        }else {
+        }else { // zbest == inst->zbest
             k++;
             nsol++;
             print(inst, 'D', 1, "Increased k = %d", k);
@@ -175,9 +207,8 @@ void solve_sfixing(instance *inst){
             init = false;
             nsol = 2;
 
-            // unset node limit
-            //CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 9223372036800000000L);
-            //CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 9223372036800000000L);
+            if(inst->formulation == SFIXING1)
+                CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 9223372036800000000L);
         }
     }
     free(xbest);

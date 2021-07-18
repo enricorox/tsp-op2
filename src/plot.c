@@ -4,7 +4,7 @@
 #include "plot.h"
 
 void plot_succ(instance *inst, int *succ){
-    double *rxstar = succtox(inst, succ);
+    double *rxstar = succtox(inst, succ, inst->directed);
     plot(inst, rxstar);
     free(rxstar);
 }

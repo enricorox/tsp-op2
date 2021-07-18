@@ -179,11 +179,13 @@ void parse_file(instance *inst, char *file_name){
         opt = false;
     else if(file_name == inst->input_opt_file_name)
         opt = true;
+/*
     else{
         printf(BOLDRED "[ERROR] parse_file(): Illegal argument\n" RESET);
         free_instance(inst);
         exit(1);
     }
+*/
     // open file
     FILE *fin = fopen(file_name, "r");
     if (fin == NULL ){

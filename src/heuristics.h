@@ -9,4 +9,6 @@
 
 void heuristic(instance *);
 
+void initial_solution(instance *inst, double timelimit);
+
 #endif //TSP_OP2_HEURISTICS_H

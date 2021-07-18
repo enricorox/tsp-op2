@@ -22,12 +22,12 @@
 // NB it changes with each CPLEX release!
 #define DEFAULT_CPLEX_SEED 202009243 // from cplex (display settings all)
 
-enum formulation_t {CUTS, BENDERS, MTZ, GG, GGi, HFIXING, SFIXING, FLAST}; // FLAST is enum guard
+enum formulation_t {CUTS, BENDERS, MTZ, GG, GGi, HFIXING1, HFIXING2, HFIXING3, HFIXING4, SFIXING1, SFIXING2, SFIXING3, FLAST}; // FLAST is enum guard
 enum cons_heuristic_t {GREEDY, GREEDYGRASP, EXTRAMILEAGE, EXTRAMILEAGECONVEXHULL, CHLAST}; // CHLAST is enum guard
 enum ref_heuristic_t {TWO_OPT, TWO_OPT_MIN, VNS1, VNS2, TABU_SEARCH1, TABU_SEARCH2, TABU_SEARCH3, RHLAST};
 enum distance_t {EUC_2D, ATT, GEO};
 
-const char *formulation_names[8];
+const char *formulation_names[13];
 const char *cons_heuristic_names[5];
 const char *ref_heuristic_names[8];
 
@@ -104,7 +104,7 @@ bool timeouts(instance *inst, double s);
 
 int * xtosucc(instance *inst, const double *x);
 
-double * succtox(instance *inst, const int *succ);
+double * succtox(instance *inst, const int *succ, bool directed);
 
 void printsucc(instance *inst, const int *succ);
 

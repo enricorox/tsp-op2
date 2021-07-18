@@ -11,6 +11,8 @@
 #include <sys/time.h>
 #include "formulation_sfixing.h"
 #include "plot.h"
+#include "heuristics.h"
+#include "heuristic_greedy.h"
 
 void build_model_hfixing(instance *inst){
     build_model_cuts(inst);
@@ -23,8 +25,14 @@ void get_solution_hfixing(instance *inst){
     //get_solution_cuts(inst);
 }
 
-void fix_edges(instance *inst, int perc){
-    if(perc < 0 || perc > 100) printerr(inst, "Cannot use perc = %d", perc);
+double lin_func(double x, double m, double q){
+    double y = m * x + q;
+    //printf("[DEBUG] %f --> %f\n", x, y);
+    return y;
+}
+
+void fix_edges(instance *inst, double m, double q){
+    // if(perc < 0 || perc > 100) printerr(inst, "Cannot use perc = %d", perc);
     if(inst->xbest == NULL) printerr(inst, "xbest must be not null!");
 
     double *bd = calloc(inst->ncols, sizeof(double));
@@ -40,6 +48,11 @@ void fix_edges(instance *inst, int perc){
     for(int i = 0; i < inst->nnodes; i++)
         for(int j = i + 1; j < inst->nnodes; j++){
             int k = xpos_undirected(i, j, inst);
+            double perc;
+            if(inst->formulation == HFIXING3 || inst->formulation == HFIXING4)
+                perc = lin_func(cost(i, j, inst), m, q);
+            else
+                perc = 90;
             if(inst->xbest[k] > 0.5) // if previously selected
                 if((bd[k] = (uprob(perc) ? 1 : 0))) { // put to 1 with 90% probability
                     print(inst, 'D', 3, "Edge x(%d, %d) fixed", i, j);
@@ -58,15 +71,39 @@ void fix_edges(instance *inst, int perc){
     free(lu);
 }
 
+void find_min_max(instance *inst, double *min, double *max){
+    *min = DBL_MAX; *max = DBL_MIN;
+    for(int i = 0; i < inst->nnodes; i++){
+        for(int j = 0; j < inst->nnodes; j++){
+            double c = cost(i, j, inst);
+            if(c < *min)
+                *min = c;
+            if(c > *max)
+                *max = c;
+        }
+    }
+}
+
+void comp_lin_func(double x0, double x1, double y0, double y1, double *m, double *q){
+    *m = (y1 - y0)/(x1 - x0);
+    *q = (x0*y1 - x1*y0)/(x0 - x1);
+}
+
 void solve_hfixing(instance *inst){
     // set short time limit
     double timelim = inst->time_limit / 20;
     double zbest;
     double *xbest;
-    //CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 0L);
+
+    double min, max, m, q;
+    if(inst->formulation == HFIXING3 || inst->formulation == HFIXING4){
+        find_min_max(inst, &min, &max);
+        comp_lin_func(min, max, 90, 10, &m, &q);
+    }
+
     CPXsetintparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 1); // exit after first feasible solution
-    //CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_FEASIBILITY);
-    CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP, CPX_MIPEMPHASIS_OPTIMALITY);
+    CPXsetintparam(inst->CPXenv, CPXPARAM_Emphasis_MIP,
+                   (inst->formulation == HFIXING1)?CPX_MIPEMPHASIS_FEASIBILITY:CPX_MIPEMPHASIS_OPTIMALITY);
 
     print(inst, 'D', 1, "ncols = %d", inst->ncols);
 
@@ -81,6 +118,26 @@ void solve_hfixing(instance *inst){
     int beg[] = {0};
 
     bool init = true;
+
+    if(inst->formulation == HFIXING4) {
+        init = false;
+        free(inst->xbest);
+        //initial_solution(inst, inst->time_limit);
+        greedy(inst, inst->time_limit);
+        inst->directed = false;
+        for(int i = 0; i < inst->nnodes; i++){
+            for(int j = 0; j < inst->nnodes; j++){
+                if(inst->xbest[xpos_directed(i,j,inst)] > 0.5)
+                    xbest[xpos_undirected(i,j,inst)] = 1;
+            }
+        }
+        free(inst->xbest);
+        inst->xbest = xbest;
+        xbest = (double *) calloc(inst->ncols, sizeof(double));
+        CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions,2);
+        //plot(inst, inst->xbest);
+    }
+
     while(true){
         // check time limit
         gettimeofday(&now, NULL);
@@ -93,10 +150,13 @@ void solve_hfixing(instance *inst){
 
         if(!init) {
             // set short time limit
-            CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (left < timelim)?left:timelim);
+            if(inst->formulation == HFIXING1)
+                CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (left < timelim)?left:timelim);
+            else
+                CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, left);
 
             // add local branching constraints
-            fix_edges(inst, 90);
+            fix_edges(inst, m, q);
 
             // add warm start
             CPXaddmipstarts(inst->CPXenv, inst->CPXlp, 1, inst->ncols, beg, varindices, inst->xbest,
@@ -119,8 +179,7 @@ void solve_hfixing(instance *inst){
                 print(inst, 'W', 1, "Not enough time to find a starting solution! (error %d)", status);
                 inst->zbest = inst->zstar = DBL_MAX;
                 break;
-            }
-            else {
+            }else {
                 print(inst, 'W', 1, "Not enough time to find an incumbent solution! Increasing individual time-limit");
                 timelim +=  0.5 * timelim;
                 CPXdelrows(inst->CPXenv, inst->CPXlp, inst->nrows, inst->nrows);
@@ -145,10 +204,9 @@ void solve_hfixing(instance *inst){
             // unset initialization
             init = false;
 
-            // unset node limit
-            //CPXsetlongparam(inst->CPXenv, CPX_PARAM_NODELIM, 9223372036800000000L);
             // unset number of solution limit
-            CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 9223372036800000000L);
+            CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions,
+                            (inst->formulation == HFIXING1)?9223372036800000000L:2);
         }
     }
     free(xbest);
