@@ -3,6 +3,7 @@
 //
 
 #include "formulation_cuts.h"
+#include "heuristic_greedy.h"
 
 static int CPXPUBLIC subtourcuts(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle ){
     instance *inst = (instance *) userhandle;
@@ -72,6 +73,26 @@ void build_model_cuts(instance *inst){
     CPXLONG contextid = CPX_CALLBACKCONTEXT_CANDIDATE;
     if(CPXcallbacksetfunc(inst->CPXenv, inst->CPXlp, contextid, subtourcuts, inst))
         printerr(inst,"CPXcallbacksetfunc() error");
+
+    // put a warm start
+    if(inst->formulation == CUTS2) {
+        double *xbest = calloc(inst->ncols, sizeof(double));
+        greedy(inst, inst->time_limit / 10);
+        inst->directed = false;
+        for (int i = 0; i < inst->nnodes; i++) {
+            for (int j = 0; j < inst->nnodes; j++) {
+                if (inst->xbest[xpos_directed(i, j, inst)] > 0.5)
+                    xbest[xpos_undirected(i, j, inst)] = 1;
+            }
+        }
+        int varindices[inst->ncols];
+        for(int i = 0; i < inst->ncols; i++) varindices[i] = i;
+        int beg[] = {0};
+        if(CPXaddmipstarts(inst->CPXenv, inst->CPXlp, 1, inst->ncols, beg, varindices, xbest,
+                        CPX_MIPSTART_AUTO, NULL))
+            print(inst, 'W', 1,"Can't add warm start");
+        print(inst, 'I', 1, "Heuristic solution cost: %f", inst->zbest);
+    }
 }
 
 void get_solution_cuts(instance *inst){

@@ -11,7 +11,7 @@
 #include "utils.h"
 #include "formulation_commons.h"
 
-const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi",
+const char *formulation_names[] = {"cuts1", "cuts2", "Benders", "MTZ", "GG", "GGi",
                                    "hard-fixing1", "hard-fixing2", "hard-fixing3", "hard-fixing4", "hard-fixing5",
                                    "soft-fixing1", "soft-fixing2", "soft-fixing3", "soft-fixing4",
                                    "none"};

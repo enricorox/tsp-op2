@@ -216,7 +216,7 @@ void test(instance *user_inst){
         case 2: // cuts & benders
         {
             // print first line for performance profile
-            enum formulation_t formulations[] = {CUTS, BENDERS};
+            enum formulation_t formulations[] = {CUTS1, BENDERS};
             fprintf(times, "2,");
             for (int l = 0; l < 2; l++)
                 for (int f = 0; f < 2; f++) {

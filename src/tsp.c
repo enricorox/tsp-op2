@@ -84,7 +84,8 @@ void TSPOpt(instance *inst){
             build_model_GG(inst);
             break;
         // ============== exact methods: undirected graphs ==============
-        case CUTS:
+        case CUTS1:
+        case CUTS2:
             inst->directed = false;
             build_model_cuts(inst);
             break;
@@ -154,9 +155,16 @@ void TSPOpt(instance *inst){
     switch(inst->formulation){
         // ============== matheuristics ==============
         case SFIXING1:
+        case SFIXING2:
+        case SFIXING3:
+        case SFIXING4:
             get_solution_sfixing(inst);
             break;
         case HFIXING1:
+        case HFIXING2:
+        case HFIXING3:
+        case HFIXING4:
+        case HFIXING5:
             get_solution_hfixing(inst);
             break;
         // ============== directed graphs ==============
@@ -168,7 +176,8 @@ void TSPOpt(instance *inst){
             get_solution_GG(inst);
             break;
         // ============== undirected graphs ==============
-        case CUTS:
+        case CUTS1:
+        case CUTS2:
             get_solution_cuts(inst);
             break;
         case BENDERS:
