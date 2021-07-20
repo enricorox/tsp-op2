@@ -12,8 +12,8 @@
 #include "formulation_commons.h"
 
 const char *formulation_names[] = {"cuts", "Benders", "MTZ", "GG", "GGi",
-                                   "hard-fixing1", "hard-fixing2", "hard-fixing3", "hard-fixing4",
-                                   "soft-fixing1", "soft-fixing2", "soft-fixing3",
+                                   "hard-fixing1", "hard-fixing2", "hard-fixing3", "hard-fixing4", "hard-fixing5",
+                                   "soft-fixing1", "soft-fixing2", "soft-fixing3", "soft-fixing4",
                                    "none"};
 
 const char *cons_heuristic_names[] = {"greedy", "greedy-grasp", "extra-mileage", "extra-mileage-convex-hull", "none"};

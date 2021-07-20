@@ -97,11 +97,12 @@ void solve_sfixing(instance *inst){
     // max number of integer solution per sub-problem
     long nsol = 1;
 
-    if(inst->formulation == SFIXING3) {
+    if(inst->formulation == SFIXING3 || inst->formulation == SFIXING4) {
         init = false;
         free(inst->xbest);
-        //initial_solution(inst, inst->time_limit);
-        greedy(inst, inst->time_limit);
+        if(inst->formulation == SFIXING4)
+            inst->cons_heuristic = GREEDYGRASP;
+        greedy(inst, inst->time_limit/10);
         inst->directed = false;
         for(int i = 0; i < inst->nnodes; i++){
             for(int j = 0; j < inst->nnodes; j++){
@@ -133,8 +134,7 @@ void solve_sfixing(instance *inst){
             // set short time limit
             if(inst->formulation == SFIXING1)
                 CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, (left < timelim)? left:timelim);
-
-            if(inst->formulation == SFIXING2 || inst->formulation == SFIXING3) {
+            else{
                 CPXsetdblparam(inst->CPXenv, CPXPARAM_TimeLimit, left);
                 CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, nsol);
             }

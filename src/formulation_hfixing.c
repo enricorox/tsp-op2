@@ -48,11 +48,7 @@ void fix_edges(instance *inst, double m, double q){
     for(int i = 0; i < inst->nnodes; i++)
         for(int j = i + 1; j < inst->nnodes; j++){
             int k = xpos_undirected(i, j, inst);
-            double perc;
-            if(inst->formulation == HFIXING3 || inst->formulation == HFIXING4)
-                perc = lin_func(cost(i, j, inst), m, q);
-            else
-                perc = 90;
+            double perc = lin_func(cost(i, j, inst), m, q);
             if(inst->xbest[k] > 0.5) // if previously selected
                 if((bd[k] = (uprob(perc) ? 1 : 0))) { // put to 1 with 90% probability
                     print(inst, 'D', 3, "Edge x(%d, %d) fixed", i, j);
@@ -95,10 +91,13 @@ void solve_hfixing(instance *inst){
     double zbest;
     double *xbest;
 
-    double min, max, m, q;
-    if(inst->formulation == HFIXING3 || inst->formulation == HFIXING4){
+    double m, q;
+    if(inst->formulation == HFIXING3 || inst->formulation == HFIXING4 || inst->formulation == HFIXING5){
+        double min, max;
         find_min_max(inst, &min, &max);
         comp_lin_func(min, max, 90, 10, &m, &q);
+    }else{
+        m = 0; q = 90;
     }
 
     CPXsetintparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions, 1); // exit after first feasible solution
@@ -119,11 +118,12 @@ void solve_hfixing(instance *inst){
 
     bool init = true;
 
-    if(inst->formulation == HFIXING4) {
+    if(inst->formulation == HFIXING4 || inst->formulation == HFIXING5) {
         init = false;
         free(inst->xbest);
-        //initial_solution(inst, inst->time_limit);
-        greedy(inst, inst->time_limit);
+        if(inst->formulation == HFIXING5)
+            inst->cons_heuristic = GREEDYGRASP;
+        greedy(inst, inst->time_limit/10);
         inst->directed = false;
         for(int i = 0; i < inst->nnodes; i++){
             for(int j = 0; j < inst->nnodes; j++){
@@ -203,7 +203,6 @@ void solve_hfixing(instance *inst){
         if(init){
             // unset initialization
             init = false;
-
             // unset number of solution limit
             CPXsetlongparam(inst->CPXenv, CPXPARAM_MIP_Limits_Solutions,
                             (inst->formulation == HFIXING1)?9223372036800000000L:2);

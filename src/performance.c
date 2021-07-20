@@ -174,6 +174,9 @@ void test(instance *user_inst){
     snprintf(filename, BUFLEN, "../test/times-%d.csv", user_inst->test);
     FILE *times = fopen(filename, "a");
 
+    if(times == NULL)
+        printerr(user_inst, "Cannot find %s", filename);
+
     switch(user_inst->test){
         case 1: // compact models
         {

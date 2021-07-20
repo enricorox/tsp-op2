@@ -59,6 +59,7 @@ void TSPOpt(instance *inst){
         case SFIXING1:
         case SFIXING2:
         case SFIXING3:
+        case SFIXING4:
             inst->directed = false;
             build_model_sfixing(inst);
             solve_sfixing(inst);
@@ -67,6 +68,7 @@ void TSPOpt(instance *inst){
         case HFIXING2:
         case HFIXING3:
         case HFIXING4:
+        case HFIXING5:
             inst->directed = false;
             build_model_hfixing(inst);
             solve_hfixing(inst);
