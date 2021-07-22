@@ -185,6 +185,8 @@ void build_model_GG(instance *inst) {
  * @param lp CPLEX LP
  */
 void get_solution_GG(instance *inst){
+    CPXgetobjval(inst->CPXenv, inst->CPXlp, &inst->zstar);
+
     // get solution from CPLEX
     int tot_cols = CPXgetnumcols(inst->CPXenv, inst->CPXlp);
     double *xstar = (double *) calloc(tot_cols, sizeof(double));
